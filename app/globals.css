@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glow-border {
+    position: relative;
+  }
+
+  .glow-border::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 9999px;
+    background: conic-gradient(
+      from 180deg at 50% 50%,
+      #53d22d,
+      #152012,
+      #53d22d
+    );
+    z-index: -1;
+    animation: spin 3s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  .glow-border:focus-within::before {
+    opacity: 0.6;
+  }
+
+  .bg-grid {
+    background-image: linear-gradient(
+        to right,
+        rgba(83, 210, 45, 0.1) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(83, 210, 45, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: bg-pan 15s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bg-pan {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
