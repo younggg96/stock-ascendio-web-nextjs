@@ -1,4 +1,7 @@
+"use client";
+
 import EmailSignup from "@/components/EmailSignup";
+import TypewriterText from "@/components/TypewriterText";
 import Link from "next/link";
 
 export default function Home() {
@@ -29,12 +32,22 @@ export default function Home() {
         <div className="w-full max-w-2xl">
           <div className="flex min-h-[480px] flex-col gap-8 items-center justify-center">
             <div className="flex flex-col gap-3">
-              <h1 className="text-white text-5xl font-black tracking-tighter">
-                Welcome to Ascendio
+              <h1 className="text-white text-5xl font-black tracking-tighter min-h-[120px] flex items-center justify-center">
+                <TypewriterText
+                  phrases={[
+                    "Welcome to Ascendio",
+                    "The Future of Investing",
+                    "Smart Stock Analysis",
+                    "Real-Time Market Data",
+                    "Your Investment Partner",
+                  ]}
+                  typingSpeed={80}
+                  deletingSpeed={40}
+                  delayBetweenPhrases={2500}
+                />
               </h1>
               <h2 className="text-white/70 text-lg font-normal">
-                The Future of Investing is Here. Sign up for early access or
-                updates.
+                Sign up for early access or updates.
               </h2>
             </div>
             <EmailSignup />
@@ -45,7 +58,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="relative z-10 w-full px-8 py-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
-          <p>© 2023 Ascendio. All rights reserved.</p>
+          <p>© 2025 Ascendio. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link href="#" className="hover:text-white transition-colors">
               Terms of Service
@@ -54,7 +67,7 @@ export default function Home() {
               Privacy Policy
             </Link>
           </div>
-          <div className="flex justify-center gap-4">
+          {/* <div className="flex justify-center gap-4">
             <Link href="#" className="hover:text-white transition-colors">
               <span className="material-symbols-outlined text-2xl">group</span>
             </Link>
@@ -66,7 +79,7 @@ export default function Home() {
                 apartment
               </span>
             </Link>
-          </div>
+          </div> */}
         </div>
       </footer>
     </div>
