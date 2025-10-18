@@ -68,9 +68,9 @@ export default function TypewriterText({
   ]);
 
   return (
-    <span className={className}>
-      {currentText}
-      <span className="animate-pulse text-primary">|</span>
+    <span className={`inline-block ${className}`}>
+      <span className="break-words">{currentText}</span>
+      <span className="animate-pulse text-primary ml-0.5">|</span>
     </span>
   );
 }
