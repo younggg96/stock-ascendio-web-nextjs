@@ -21,19 +21,19 @@ export default function Home() {
             Ascendio
           </span>
         </div>
-        <Link
+        {/* <Link
           href="/dashboard"
           className="text-white/80 hover:text-white transition-colors text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20 hover:border-primary hover:bg-primary/10"
         >
           Dashboard
-        </Link>
+        </Link> */}
       </header>
 
       {/* Main Content */}
       <div className="relative z-10 flex-1 flex items-start justify-center text-center px-4 sm:px-6 md:px-8 pt-12 sm:pt-16 md:pt-20">
         <div className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl">
-          <div className="flex flex-col gap-6 sm:gap-8 items-center justify-center">
-            <div className="flex flex-col gap-2 sm:gap-3">
+          <div className="flex flex-col gap-8 sm:gap-12 items-center justify-center">
+            <div className="flex flex-col gap-1 sm:gap-2">
               <h1 className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter min-h-[80px] sm:min-h-[100px] md:min-h-[120px] flex items-center justify-center px-2">
                 <TypewriterText
                   phrases={[
