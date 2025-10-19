@@ -2,25 +2,25 @@
 
 import { useState, FormEvent, useEffect } from "react";
 
-// Country options
+// Country options with language mapping
 const countries = [
-  { code: "US", flag: "🇺🇸" },
-  { code: "CN", flag: "🇨🇳" },
-  { code: "JP", flag: "🇯🇵" },
-  { code: "KR", flag: "🇰🇷" },
-  { code: "GB", flag: "🇬🇧" },
-  { code: "CA", flag: "🇨🇦" },
-  { code: "AU", flag: "🇦🇺" },
-  { code: "DE", flag: "🇩🇪" },
-  { code: "FR", flag: "🇫🇷" },
-  { code: "ES", flag: "🇪🇸" },
-  { code: "IT", flag: "🇮🇹" },
-  { code: "BR", flag: "🇧🇷" },
-  { code: "MX", flag: "🇲🇽" },
-  { code: "IN", flag: "🇮🇳" },
-  { code: "SG", flag: "🇸🇬" },
-  { code: "HK", flag: "🇭🇰" },
-  { code: "TW", flag: "🇹🇼" },
+  { code: "US", flag: "🇺🇸", language: "en" },
+  { code: "CN", flag: "🇨🇳", language: "zh" },
+  { code: "JP", flag: "🇯🇵", language: "ja" },
+  { code: "KR", flag: "🇰🇷", language: "ko" },
+  { code: "GB", flag: "🇬🇧", language: "en" },
+  { code: "CA", flag: "🇨🇦", language: "en" },
+  { code: "AU", flag: "🇦🇺", language: "en" },
+  { code: "DE", flag: "🇩🇪", language: "de" },
+  { code: "FR", flag: "🇫🇷", language: "fr" },
+  { code: "ES", flag: "🇪🇸", language: "es" },
+  { code: "IT", flag: "🇮🇹", language: "it" },
+  { code: "BR", flag: "🇧🇷", language: "pt" },
+  { code: "MX", flag: "🇲🇽", language: "es" },
+  { code: "IN", flag: "🇮🇳", language: "en" },
+  { code: "SG", flag: "🇸🇬", language: "en" },
+  { code: "HK", flag: "🇭🇰", language: "zh" },
+  { code: "TW", flag: "🇹🇼", language: "zh" },
 ];
 
 export default function EmailSignup() {
@@ -59,25 +59,26 @@ export default function EmailSignup() {
       return;
     }
 
+    // Get language from selected country
+    const selectedCountry = countries.find((c) => c.code === country);
+    const language = selectedCountry?.language || "en";
+
     setIsSubmitting(true);
     setMessage("");
     setMessageType("");
 
     try {
-      const response = await fetch(
-        "https://xvs6o6nhe2iquybd2cjqqmifeq0hxgaf.lambda-url.us-east-1.on.aws/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            language: "en",
-            isActive: "true",
-          }),
-        }
-      );
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          language,
+          isActive: "true",
+        }),
+      });
 
       if (response.ok) {
         setMessage("✓ Success! We'll keep you updated.");
