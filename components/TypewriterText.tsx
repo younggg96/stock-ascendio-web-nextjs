@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface TypewriterTextProps {
   phrases: string[];
@@ -17,50 +17,55 @@ export default function TypewriterText({
   delayBetweenPhrases = 2000,
   className = "",
 }: TypewriterTextProps) {
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [currentText, setCurrentText] = useState("");
+  const [displayText, setDisplayText] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const currentPhrase = phrases[currentPhraseIndex];
+    if (phrases.length === 0) return;
 
-    if (isPaused) {
-      const pauseTimer = setTimeout(() => {
-        setIsPaused(false);
-        setIsDeleting(true);
-      }, delayBetweenPhrases);
-      return () => clearTimeout(pauseTimer);
-    }
+    const currentPhrase = phrases[phraseIndex];
 
-    if (!isDeleting && currentText === currentPhrase) {
-      setIsPaused(true);
-      return;
-    }
-
-    if (isDeleting && currentText === "") {
-      setIsDeleting(false);
-      setCurrentPhraseIndex((prev) => (prev + 1) % phrases.length);
-      return;
-    }
-
-    const timeout = setTimeout(
-      () => {
-        if (isDeleting) {
-          setCurrentText(currentPhrase.substring(0, currentText.length - 1));
+    const handleTyping = () => {
+      if (!isDeleting) {
+        // Typing
+        if (displayText.length < currentPhrase.length) {
+          setDisplayText(currentPhrase.substring(0, displayText.length + 1));
+          timeoutRef.current = setTimeout(handleTyping, typingSpeed);
         } else {
-          setCurrentText(currentPhrase.substring(0, currentText.length + 1));
+          // Finished typing, wait before deleting
+          timeoutRef.current = setTimeout(() => {
+            setIsDeleting(true);
+          }, delayBetweenPhrases);
         }
-      },
+      } else {
+        // Deleting
+        if (displayText.length > 0) {
+          setDisplayText(currentPhrase.substring(0, displayText.length - 1));
+          timeoutRef.current = setTimeout(handleTyping, deletingSpeed);
+        } else {
+          // Finished deleting, move to next phrase
+          setIsDeleting(false);
+          setPhraseIndex((prev) => (prev + 1) % phrases.length);
+        }
+      }
+    };
+
+    timeoutRef.current = setTimeout(
+      handleTyping,
       isDeleting ? deletingSpeed : typingSpeed
     );
 
-    return () => clearTimeout(timeout);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [
-    currentText,
+    displayText,
+    phraseIndex,
     isDeleting,
-    isPaused,
-    currentPhraseIndex,
     phrases,
     typingSpeed,
     deletingSpeed,
@@ -69,7 +74,7 @@ export default function TypewriterText({
 
   return (
     <span className={`inline-block ${className}`}>
-      <span className="break-words">{currentText}</span>
+      <span className="break-words">{displayText || "\u00A0"}</span>
       <span className="animate-pulse text-primary ml-0.5">|</span>
     </span>
   );

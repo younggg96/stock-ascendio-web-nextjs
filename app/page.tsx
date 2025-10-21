@@ -30,7 +30,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <div className="relative z-10 flex-1 flex items-start justify-center text-center px-4 sm:px-6 md:px-8 pt-12 sm:pt-16 md:pt-20">
+      <div className="relative z-10 flex-1 flex items-center justify-center text-center px-4 sm:px-6 md:px-8">
         <div className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl">
           <div className="flex flex-col gap-8 sm:gap-12 items-center justify-center">
             <div className="flex flex-col gap-1 sm:gap-2">
