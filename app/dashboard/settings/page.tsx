@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
@@ -27,6 +27,9 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import SectionHeader from "@/components/SectionHeader";
+import SectionCard from "@/components/SectionCard";
+import PricingCard from "@/components/PricingCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -56,7 +59,53 @@ const settingsTabs = [
   { value: "preferences", icon: Settings, label: "Preferences" },
 ];
 
-export default function SettingsPage() {
+const pricingPlans = [
+  {
+    name: "Free",
+    price: 0,
+    features: [
+      { text: "Basic market data", included: true },
+      { text: "5 watchlist stocks", included: true },
+      { text: "Daily market news", included: true },
+      { text: "Real-time data", included: false },
+      { text: "AI analysis", included: false },
+    ],
+    buttonText: "Current Plan",
+    buttonVariant: "outline" as const,
+  },
+  {
+    name: "Pro",
+    price: 29,
+    features: [
+      { text: "Real-time market data", included: true, highlighted: true },
+      { text: "Unlimited watchlist", included: true, highlighted: true },
+      { text: "AI-powered analysis", included: true, highlighted: true },
+      { text: "Advanced charts", included: true, highlighted: true },
+      { text: "Priority support", included: true, highlighted: true },
+    ],
+    buttonText: "Current Plan",
+    buttonVariant: "default" as const,
+    buttonDisabled: true,
+    badge: { icon: Sparkles, text: "Current Plan" },
+    highlight: true,
+    popularLabel: "POPULAR",
+  },
+  {
+    name: "Enterprise",
+    price: 99,
+    features: [
+      { text: "Everything in Pro", included: true },
+      { text: "Custom AI models", included: true },
+      { text: "API access", included: true },
+      { text: "Team collaboration", included: true },
+      { text: "24/7 dedicated support", included: true },
+    ],
+    buttonText: "Upgrade",
+    buttonVariant: "default" as const,
+  },
+];
+
+function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
@@ -156,11 +205,11 @@ export default function SettingsPage() {
           <div className="p-3 sm:p-4 lg:p-5 min-w-0">
             {/* Settings Tabs */}
             <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-                {/* Vertical Tab List (Desktop) / Horizontal Tab List (Mobile) */}
-                <div className="w-full lg:w-64 flex-shrink-0">
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Vertical Tab List (Tablet/Desktop) / Horizontal Tab List (Mobile) */}
+                <div className="w-full md:w-56 flex-shrink-0">
                   {/* Mobile: Horizontal scrolling tabs */}
-                  <TabsList className="h-auto flex lg:hidden flex-row items-center gap-2 bg-white dark:bg-card-dark border border-border-light dark:border-border-dark rounded-lg p-2 overflow-x-auto scrollbar-hide">
+                  <TabsList className="h-auto rounded-lg flex md:hidden flex-row items-center gap-2 bg-white dark:bg-card-dark border border-border-light dark:border-border-dark p-2 overflow-x-auto scrollbar-hide">
                     {settingsTabs.map((tab) => {
                       const isActive = activeTab === tab.value;
                       const Icon = tab.icon;
@@ -181,8 +230,8 @@ export default function SettingsPage() {
                     })}
                   </TabsList>
 
-                  {/* Desktop: Vertical tabs */}
-                  <TabsList className="hidden lg:flex h-auto flex-col items-stretch gap-1.5 bg-white dark:bg-card-dark border border-border-light dark:border-border-dark rounded-lg p-3 sticky top-0">
+                  {/* Tablet/Desktop: Vertical tabs */}
+                  <TabsList className="hidden md:flex h-auto flex-col items-stretch gap-1.5 bg-white dark:bg-card-dark border border-border-light dark:border-border-dark rounded-lg p-3 sticky top-0">
                     {settingsTabs.map((tab) => {
                       const isActive = activeTab === tab.value;
                       const Icon = tab.icon;
@@ -212,35 +261,29 @@ export default function SettingsPage() {
                     className="mt-0 space-y-4 sm:space-y-6"
                   >
                     {/* Personal Information */}
-                    <div className="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
-                            <User className="w-5 h-5 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                              Personal Information
-                            </h3>
-                            <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60">
-                              {isEditing
-                                ? "Update your personal details"
-                                : "View your personal details"}
-                            </p>
-                          </div>
-                        </div>
-                        {!isEditing && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleEditToggle}
-                            className="gap-2 w-full sm:w-auto"
-                          >
-                            <Edit className="w-4 h-4" />
-                            Edit
-                          </Button>
-                        )}
-                      </div>
+                    <SectionCard>
+                      <SectionHeader
+                        icon={User}
+                        title="Personal Information"
+                        subtitle={
+                          isEditing
+                            ? "Update your personal details"
+                            : "View your personal details"
+                        }
+                        action={
+                          !isEditing ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleEditToggle}
+                              className="gap-2"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Edit
+                            </Button>
+                          ) : undefined
+                        }
+                      />
 
                       <div className="space-y-5">
                         {/* Profile Avatar Section */}
@@ -434,212 +477,25 @@ export default function SettingsPage() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </SectionCard>
                   </TabsContent>
 
                   {/* Billing Tab */}
                   <TabsContent value="billing" className="mt-0">
-                    <div className="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                      {/* Header */}
-                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <CreditCard className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-                            Choose Your Plan
-                          </h2>
-                          <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60">
-                            Select the perfect plan for your investment needs
-                          </p>
-                        </div>
-                      </div>
+                    <SectionCard>
+                      <SectionHeader
+                        icon={CreditCard}
+                        title="Choose Your Plan"
+                        subtitle="Select the perfect plan for your investment needs"
+                      />
 
                       {/* Pricing Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                        {/* Free Plan */}
-                        <div className="group relative flex flex-col p-5 sm:p-6 lg:p-8 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-white/10 rounded-2xl hover:border-gray-300 dark:hover:border-white/20 hover:shadow-xl transition-all duration-300">
-                          <div className="mb-5 sm:mb-6">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
-                              Free
-                            </h3>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-                                $0
-                              </span>
-                              <span className="text-gray-500 dark:text-white/50 text-sm sm:text-base">
-                                /month
-                              </span>
-                            </div>
-                          </div>
-                          <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8 flex-1">
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span>Basic market data</span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span>5 watchlist stocks</span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span>Daily market news</span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-400 dark:text-white/30">
-                              <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <X className="w-3 h-3" />
-                              </div>
-                              <span>Real-time data</span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-400 dark:text-white/30">
-                              <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <X className="w-3 h-3" />
-                              </div>
-                              <span>AI analysis</span>
-                            </li>
-                          </ul>
-                          <Button
-                            variant="outline"
-                            className="w-full h-10 sm:h-11 text-sm"
-                          >
-                            Current Plan
-                          </Button>
-                        </div>
-
-                        {/* Pro Plan - Current */}
-                        <div className="relative flex flex-col p-5 sm:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent dark:from-primary/10 dark:via-primary/5 dark:to-transparent border-2 border-primary rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 md:scale-105 mt-4 sm:mt-0">
-                          {/* Popular Badge */}
-                          <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 z-10">
-                            <div className="px-3 py-1 sm:px-4 sm:py-1.5 bg-gradient-to-r from-primary to-primary/80 text-white text-[10px] sm:text-xs font-semibold rounded-full shadow-lg flex items-center gap-1 sm:gap-1.5">
-                              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                              Current Plan
-                            </div>
-                          </div>
-                          <div className="mb-5 sm:mb-6">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 flex flex-wrap items-center gap-2">
-                              Pro
-                              <span className="px-2 py-0.5 bg-primary/10 dark:bg-primary/20 text-primary text-[10px] sm:text-xs font-semibold rounded">
-                                POPULAR
-                              </span>
-                            </h3>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                                $29
-                              </span>
-                              <span className="text-gray-500 dark:text-white/50 text-sm sm:text-base">
-                                /month
-                              </span>
-                            </div>
-                          </div>
-                          <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8 flex-1">
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span className="font-medium">
-                                Real-time market data
-                              </span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span className="font-medium">
-                                Unlimited watchlist
-                              </span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span className="font-medium">
-                                AI-powered analysis
-                              </span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span className="font-medium">
-                                Advanced charts
-                              </span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span className="font-medium">
-                                Priority support
-                              </span>
-                            </li>
-                          </ul>
-                          <Button
-                            disabled
-                            className="w-full h-10 sm:h-11 opacity-70 text-sm"
-                          >
-                            Current Plan
-                          </Button>
-                        </div>
-
-                        {/* Enterprise Plan */}
-                        <div className="group relative flex flex-col p-5 sm:p-6 lg:p-8 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-white/10 rounded-2xl hover:border-primary dark:hover:border-primary hover:shadow-xl transition-all duration-300">
-                          <div className="mb-5 sm:mb-6">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
-                              Enterprise
-                            </h3>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-                                $99
-                              </span>
-                              <span className="text-gray-500 dark:text-white/50 text-sm sm:text-base">
-                                /month
-                              </span>
-                            </div>
-                          </div>
-                          <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8 flex-1">
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span>Everything in Pro</span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span>Custom AI models</span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span>API access</span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span>Team collaboration</span>
-                            </li>
-                            <li className="flex items-start gap-3 text-sm text-gray-700 dark:text-white/70">
-                              <div className="w-5 h-5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-primary" />
-                              </div>
-                              <span>24/7 dedicated support</span>
-                            </li>
-                          </ul>
-                          <Button className="w-full h-10 sm:h-11 group-hover:shadow-lg transition-shadow text-sm">
-                            Upgrade to Enterprise
-                          </Button>
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
+                        {pricingPlans.map((plan) => (
+                          <PricingCard key={plan.name} {...plan} />
+                        ))}
                       </div>
-                    </div>
+                    </SectionCard>
                   </TabsContent>
 
                   {/* Notifications Tab */}
@@ -647,20 +503,12 @@ export default function SettingsPage() {
                     value="notifications"
                     className="mt-0 space-y-4 sm:space-y-6"
                   >
-                    <div className="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <Bell className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-                            Notification Preferences
-                          </h2>
-                          <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60">
-                            Manage how you receive notifications
-                          </p>
-                        </div>
-                      </div>
+                    <SectionCard>
+                      <SectionHeader
+                        icon={Bell}
+                        title="Notification Preferences"
+                        subtitle="Manage how you receive notifications"
+                      />
 
                       <div className="space-y-6 sm:space-y-8">
                         {/* Email Notifications */}
@@ -759,7 +607,7 @@ export default function SettingsPage() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </SectionCard>
                   </TabsContent>
 
                   {/* Preferences Tab */}
@@ -767,20 +615,12 @@ export default function SettingsPage() {
                     value="preferences"
                     className="mt-0 space-y-4 sm:space-y-6"
                   >
-                    <div className="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark p-4 sm:p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
-                          <Settings className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-                            Display Preferences
-                          </h2>
-                          <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60">
-                            Customize your experience
-                          </p>
-                        </div>
-                      </div>
+                    <SectionCard>
+                      <SectionHeader
+                        icon={Settings}
+                        title="Display Preferences"
+                        subtitle="Customize your experience"
+                      />
 
                       <div className="space-y-4 sm:space-y-6">
                         {/* Language */}
@@ -917,7 +757,7 @@ export default function SettingsPage() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </SectionCard>
                   </TabsContent>
                 </div>
               </div>
@@ -926,5 +766,13 @@ export default function SettingsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SettingsContent />
+    </Suspense>
   );
 }
