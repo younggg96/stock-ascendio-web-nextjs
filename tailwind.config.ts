@@ -12,11 +12,13 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        primary: "#53d22d",
-        "background-light": "#f6f8f6",
-        "background-dark": "#0D110D",
-        "card-dark": "#161A16",
-        "border-dark": "#262C26",
+        primary: "#00C805",
+        "background-light": "#f7f8fa",
+        "background-dark": "#0a0e0f",
+        "card-light": "#ffffff",
+        "card-dark": "#1a1d1f",
+        "border-light": "#e5e7eb",
+        "border-dark": "#2a2d2f",
       },
       fontFamily: {
         sans: ["var(--font-manrope)", "Manrope", "sans-serif"],

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { KeyRound, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function ForgotPasswordForm() {
@@ -41,9 +42,7 @@ export default function ForgotPasswordForm() {
           {/* Icon */}
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary text-3xl">
-                lock_reset
-              </span>
+              <KeyRound className="text-primary w-8 h-8" />
             </div>
           </div>
 
@@ -125,9 +124,7 @@ export default function ForgotPasswordForm() {
               href="/auth"
               className="inline-flex items-center gap-2 text-white/60 hover:text-primary text-sm transition-all duration-200 group"
             >
-              <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">
-                arrow_back
-              </span>
+              <ArrowLeft className="w-[18px] h-[18px] group-hover:-translate-x-1 transition-transform" />
               Back to Login
             </Link>
           </div>

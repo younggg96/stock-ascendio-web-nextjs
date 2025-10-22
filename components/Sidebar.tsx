@@ -1,54 +1,162 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Newspaper,
+  Users,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from "lucide-react";
+import UserMenu from "./UserMenu";
 
 const navItems = [
-  { icon: "dashboard", title: "Dashboard", href: "/dashboard", active: true },
-  { icon: "analytics", title: "Portfolio", href: "#" },
-  { icon: "swap_horiz", title: "Trade", href: "#" },
-  { icon: "notifications", title: "Alerts", href: "#" },
-  { icon: "settings", title: "Settings", href: "#" },
+  {
+    icon: LayoutDashboard,
+    title: "Overview",
+    href: "/dashboard",
+  },
+  { icon: Newspaper, title: "News", href: "#" },
+  { icon: Users, title: "KOL Tracker", href: "#" },
+  { icon: Settings, title: "Settings", href: "/dashboard/settings" },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   return (
-    <aside className="w-[72px] bg-card-dark/40 flex flex-col p-3.5 border-r border-border-dark/50 items-center">
-      <div className="flex items-center justify-center mb-7">
-        <Link href="/">
-          <span className="material-symbols-outlined text-primary text-[28px] cursor-pointer">
-            candlestick_chart
-          </span>
-        </Link>
-      </div>
+    <>
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
 
-      <nav className="flex flex-col gap-1.5">
-        {navItems.map((item) => (
-          <Link
-            key={item.title}
-            href={item.href}
-            title={item.title}
-            className={`flex items-center justify-center h-11 w-11 rounded-lg transition-all duration-200 ${
-              item.active
-                ? "bg-primary/15 text-primary"
-                : "text-white/50 hover:bg-white/5 hover:text-white/70"
-            }`}
-          >
-            <span className="material-symbols-outlined text-[20px]">
-              {item.icon}
-            </span>
-          </Link>
-        ))}
-      </nav>
-
-      <div className="mt-auto">
-        <Link
-          href="#"
-          title="Logout"
-          className="flex items-center justify-center h-11 w-11 text-white/50 hover:bg-white/5 hover:text-white/70 rounded-lg transition-all duration-200"
+      {/* Sidebar */}
+      <aside
+        className={`bg-white dark:bg-card-dark flex flex-col p-3 border-r border-border-light dark:border-border-dark transition-all duration-300 
+        ${isCollapsed ? "w-[72px]" : "w-[240px]"}
+        lg:relative lg:translate-x-0
+        fixed inset-y-0 left-0 z-50 lg:z-auto
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        {/* Logo and Toggle */}
+        <div
+          className={`flex items-center mb-7 mt-3 ${
+            isCollapsed ? "justify-center" : "justify-between px-2"
+          }`}
         >
-          <span className="material-symbols-outlined text-[20px]">logout</span>
-        </Link>
-      </div>
-    </aside>
+          <Link href="/" className="flex items-center justify-center gap-1">
+            <Image
+              src="/logo.svg"
+              alt="Ascendio AI Logo"
+              width={24}
+              height={24}
+              className="cursor-pointer"
+            />
+            {!isCollapsed && (
+              <span className="text-gray-900 dark:text-white text-lg font-bold">
+                Ascendio
+              </span>
+            )}
+          </Link>
+
+          {/* Close button for mobile */}
+          <button
+            onClick={onClose}
+            className="lg:hidden flex items-center justify-center text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 transition-colors"
+            title="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* Collapse button for desktop */}
+          {!isCollapsed && (
+            <button
+              onClick={() => setIsCollapsed(true)}
+              className="hidden lg:flex items-center justify-center text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 transition-colors"
+              title="Collapse sidebar"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Collapse button when collapsed (desktop only) */}
+        {isCollapsed && (
+          <button
+            onClick={() => setIsCollapsed(false)}
+            className="hidden lg:flex items-center justify-center h-11 w-11 mx-auto mb-4 text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 hover:bg-gray-200 dark:hover:bg-white/5 rounded-lg transition-all duration-200"
+            title="Expand sidebar"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        )}
+
+        {/* Navigation */}
+        <nav className="flex flex-col gap-1.5">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            // Check if current path matches this nav item
+            const isActive =
+              item.href === "/dashboard"
+                ? pathname === "/dashboard"
+                : pathname.startsWith(item.href) && item.href !== "#";
+
+            return (
+              <Link
+                key={item.title}
+                href={item.href}
+                title={item.title}
+                onClick={onClose}
+                className={`flex items-center gap-3 h-11 rounded-lg transition-all duration-200 ${
+                  isCollapsed ? "justify-center w-11 mx-auto lg:flex" : "px-3"
+                } ${
+                  isActive
+                    ? "bg-primary/15 text-primary"
+                    : "text-gray-600 dark:text-white/50 hover:bg-gray-200 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white/70"
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                {!isCollapsed && (
+                  <span className="text-sm font-medium">{item.title}</span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User Profile Menu */}
+        <div className="mt-auto">
+          <UserMenu isCollapsed={isCollapsed} />
+        </div>
+      </aside>
+    </>
   );
 }

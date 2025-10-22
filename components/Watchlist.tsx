@@ -5,6 +5,7 @@ import {
   WatchlistItemSkeleton,
   SkeletonGrid,
 } from "@/components/LoadingSkeleton";
+import { useRouter } from "next/navigation";
 
 const WATCHLIST_SYMBOLS = ["TSLA", "AMZN", "MSFT", "GOOGL"];
 
@@ -16,18 +17,26 @@ const colorMap: Record<string, string> = {
 };
 
 export default function Watchlist() {
+  const router = useRouter();
   // Fetch real stock data with 30 second refresh
   const {
     data: watchlistItems,
     loading,
     error,
   } = useMultipleQuotes(WATCHLIST_SYMBOLS, 30000);
+
+  const handleStockClick = (symbol: string) => {
+    router.push(`/dashboard/stock/${symbol}`);
+  };
+
   return (
-    <div className="bg-card-dark p-3.5 rounded-xl border border-border-dark/50">
-      <h2 className="text-[15px] font-semibold mb-3">
+    <div className="bg-white dark:bg-card-dark p-4 rounded-lg border border-border-light dark:border-border-dark transition-colors duration-300">
+      <h2 className="text-[16px] font-bold mb-4 text-gray-900 dark:text-white">
         My Watchlist
         {loading && (
-          <span className="text-[10px] text-white/40 ml-2">Updating...</span>
+          <span className="text-[10px] text-gray-500 dark:text-white/40 ml-2">
+            Updating...
+          </span>
         )}
       </h2>
       <div className="space-y-2.5">
@@ -41,7 +50,8 @@ export default function Watchlist() {
             return (
               <div
                 key={item.symbol}
-                className="flex justify-between items-center py-0.5"
+                onClick={() => handleStockClick(item.symbol)}
+                className="flex justify-between items-center py-0.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded-md px-2 -mx-2 transition-colors duration-200 cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <div
@@ -52,16 +62,16 @@ export default function Watchlist() {
                     {item.symbol.slice(0, 4)}
                   </div>
                   <div>
-                    <p className="font-medium text-[12px] text-white">
+                    <p className="font-medium text-[12px] text-gray-900 dark:text-white">
                       {item.symbol}
                     </p>
-                    <p className="text-[10px] text-white/40 mt-0.5">
+                    <p className="text-[10px] text-gray-500 dark:text-white/40 mt-0.5">
                       {item.name}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-[12px] text-white">
+                  <p className="font-medium text-[12px] text-gray-900 dark:text-white">
                     ${item.price.toFixed(2)}
                   </p>
                   <p

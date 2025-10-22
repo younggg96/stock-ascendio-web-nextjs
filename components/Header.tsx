@@ -1,52 +1,54 @@
-"use client";
+import Image from "next/image";
+import { Menu } from "lucide-react";
 
-import { Search, TrendingUp } from "lucide-react";
+interface HeaderProps {
+  title?: string;
+  subtitle?: string;
+  currentTime: Date | null;
+  isLoading?: boolean;
+  hasError?: boolean;
+  onMenuClick?: () => void;
+}
 
-export default function Header() {
+export default function Header({
+  title = "Market Overview",
+  subtitle,
+  currentTime,
+  isLoading,
+  hasError,
+  onMenuClick,
+}: HeaderProps) {
   return (
-    <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-2 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              Stock Ascendio
-            </h1>
-          </div>
+    <header className="flex justify-between items-center mb-3 lg:mb-5 px-4 lg:px-6 pt-3 lg:pt-6 h-[60px] lg:h-[76px]">
+      <div className="flex items-center gap-3 lg:gap-4">
+        {/* Mobile menu button */}
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-gray-600 dark:text-white/50 hover:bg-gray-200 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white/70 transition-all"
+          title="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
 
-          <div className="flex items-center space-x-4">
-            <div className="relative hidden md:block">
-              <input
-                type="text"
-                placeholder="Search stocks..."
-                className="pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-100 w-64"
-              />
-              <Search className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
-            </div>
-
-            <nav className="flex space-x-6">
-              <a
-                href="#"
-                className="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
-              >
-                Markets
-              </a>
-              <a
-                href="#"
-                className="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
-              >
-                Portfolio
-              </a>
-              <a
-                href="#"
-                className="text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
-              >
-                Watchlist
-              </a>
-            </nav>
-          </div>
+        <div>
+          <h1 className="text-[18px] lg:text-[22px] font-semibold text-gray-900 dark:text-white">
+            {title}
+          </h1>
+          <p className="text-[10px] lg:text-[12px] text-gray-500 dark:text-white/40 mt-0.5 lg:mt-1">
+            {subtitle ? (
+              subtitle
+            ) : currentTime ? (
+              <>
+                Last updated:{" "}
+                {currentTime.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                  hour12: false,
+                })}
+              </>
+            ) : null}
+          </p>
         </div>
       </div>
     </header>

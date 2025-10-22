@@ -1,3 +1,5 @@
+import { TrendingUp, TrendingDown } from "lucide-react";
+
 interface MarketIndexProps {
   name: string;
   value: string;
@@ -14,19 +16,23 @@ export default function MarketIndex({
   const isPositive = change >= 0;
 
   return (
-    <div className="bg-card-dark p-3.5 rounded-xl border border-border-dark/50">
-      <h3 className="text-white/50 text-[10px] font-normal mb-1.5 tracking-wide uppercase">
+    <div className="bg-white dark:bg-card-dark p-4 rounded-lg border border-border-light dark:border-border-dark transition-colors duration-300 hover:shadow-sm dark:hover:bg-card-dark/80">
+      <h3 className="text-gray-500 dark:text-gray-400 text-[11px] font-medium mb-2 tracking-wide uppercase">
         {name}
       </h3>
-      <p className="text-[19px] font-semibold mb-1">{value}</p>
+      <p className="text-gray-900 dark:text-white text-[20px] font-bold mb-1.5">
+        {value}
+      </p>
       <p
-        className={`text-[11px] font-medium flex items-center gap-0.5 ${
-          isPositive ? "text-green-500" : "text-red-500"
+        className={`text-[11px] font-semibold flex items-center gap-0.5 ${
+          isPositive ? "text-primary" : "text-red-500"
         }`}
       >
-        <span className="material-symbols-outlined text-[14px]">
-          {isPositive ? "arrow_upward" : "arrow_downward"}
-        </span>
+        {isPositive ? (
+          <TrendingUp className="w-3.5 h-3.5" />
+        ) : (
+          <TrendingDown className="w-3.5 h-3.5" />
+        )}
         {isPositive ? "+" : ""}
         {change.toFixed(2)} ({isPositive ? "+" : ""}
         {changePercent.toFixed(2)}%)

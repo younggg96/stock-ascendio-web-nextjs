@@ -66,22 +66,46 @@ const INDEX_SYMBOLS: Record<string, string> = {
  */
 async function fetchYahooQuote(symbol: string): Promise<StockQuote | null> {
   try {
-    const response = await fetch(`${YAHOO_BASE_URL}/${symbol}`);
-    if (!response.ok) return null;
+    const url = `${YAHOO_BASE_URL}/${symbol}?interval=1d&range=1d`;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.warn(`Yahoo API returned ${response.status} for ${symbol}`);
+      return null;
+    }
 
     const data = await response.json();
+
+    if (!data.chart?.result?.[0]?.meta) {
+      console.warn(`Invalid Yahoo API response for ${symbol}`);
+      return null;
+    }
+
     const quote = data.chart.result[0].meta;
-    const price = quote.regularMarketPrice;
-    const previousClose = quote.previousClose;
+    const price = quote.regularMarketPrice || quote.chartPreviousClose;
+    const previousClose = quote.previousClose || quote.chartPreviousClose;
+
+    if (!price || !previousClose) {
+      console.warn(`Missing price data from Yahoo for ${symbol}`);
+      return null;
+    }
+
     const change = price - previousClose;
     const changePercent = (change / previousClose) * 100;
 
     return {
       symbol: symbol,
       name: STOCK_NAMES[symbol] || quote.longName || symbol,
-      price,
-      change,
-      changePercent,
+      price: parseFloat(price.toFixed(2)),
+      change: parseFloat(change.toFixed(2)),
+      changePercent: parseFloat(changePercent.toFixed(2)),
       volume: quote.regularMarketVolume,
       high: quote.regularMarketDayHigh,
       low: quote.regularMarketDayLow,
@@ -230,24 +254,41 @@ function getMockQuote(symbol: string): StockQuote {
  * Main function to fetch stock quote with fallbacks
  */
 export async function fetchStockQuote(symbol: string): Promise<StockQuote> {
+  console.log(`📊 Fetching data for ${symbol}...`);
+
   // Try Yahoo Finance first (no API key required)
   let quote = await fetchYahooQuote(symbol);
+  if (quote) {
+    console.log(`✅ Successfully fetched ${symbol} from Yahoo Finance`);
+    return quote;
+  }
 
   // Fallback to Alpha Vantage if Yahoo fails
-  if (!quote && ALPHA_VANTAGE_API_KEY !== "demo") {
+  if (ALPHA_VANTAGE_API_KEY && ALPHA_VANTAGE_API_KEY !== "demo") {
+    console.log(`🔄 Trying Alpha Vantage for ${symbol}...`);
     quote = await fetchAlphaVantageQuote(symbol);
+    if (quote) {
+      console.log(`✅ Successfully fetched ${symbol} from Alpha Vantage`);
+      return quote;
+    }
   }
 
   // Fallback to Finnhub if both fail
-  if (!quote && FINNHUB_API_KEY) {
+  if (FINNHUB_API_KEY) {
+    console.log(`🔄 Trying Finnhub for ${symbol}...`);
     quote = await fetchFinnhubQuote(symbol);
+    if (quote) {
+      console.log(`✅ Successfully fetched ${symbol} from Finnhub`);
+      return quote;
+    }
   }
 
   // Use mock data as last resort
-  if (!quote) {
-    console.warn(`Using mock data for ${symbol}`);
-    quote = getMockQuote(symbol);
-  }
+  console.warn(
+    `⚠️ Using mock data for ${symbol} - Configure API keys for real data`
+  );
+  console.warn(`📝 See STOCK_API_SETUP.md for instructions`);
+  quote = getMockQuote(symbol);
 
   return quote;
 }

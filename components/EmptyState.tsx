@@ -3,8 +3,10 @@
  * 用于显示空状态和错误状态的组件
  */
 
+import { LucideIcon, Inbox, AlertCircle } from "lucide-react";
+
 interface EmptyStateProps {
-  icon?: string;
+  icon?: LucideIcon;
   title: string;
   description?: string;
   action?: {
@@ -14,16 +16,14 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon = "inbox",
+  icon: Icon = Inbox,
   title,
   description,
   action,
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <span className="material-symbols-outlined text-white/20 text-6xl mb-4">
-        {icon}
-      </span>
+      <Icon className="text-white/20 w-16 h-16 mb-4" />
       <h3 className="text-white/80 text-base font-semibold mb-2">{title}</h3>
       {description && (
         <p className="text-white/50 text-sm mb-4 max-w-md">{description}</p>
@@ -53,9 +53,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <span className="material-symbols-outlined text-red-500/80 text-6xl mb-4">
-        error
-      </span>
+      <AlertCircle className="text-red-500/80 w-16 h-16 mb-4" />
       <h3 className="text-white/80 text-base font-semibold mb-2">{title}</h3>
       <p className="text-white/50 text-sm mb-4 max-w-md">{message}</p>
       {retry && (

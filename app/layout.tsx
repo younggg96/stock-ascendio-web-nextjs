@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/ThemeProvider";
+
+import { Analytics } from "@vercel/analytics/next";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -11,20 +14,20 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Ascendio - Investment Platform",
+  title: "Ascendio AI - Investment Platform",
   description:
     "The Future of Investing is Here. Sign up for early access or updates.",
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
   openGraph: {
-    title: "Ascendio - Investment Platform",
+    title: "Ascendio AI - Investment Platform",
     description: "The Future of Investing is Here",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Ascendio - Investment Platform",
+    title: "Ascendio AI - Investment Platform",
     description: "The Future of Investing is Here",
   },
 };
@@ -35,16 +38,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${manrope.variable} font-sans`}>
-        {children}
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import AuthForm from "@/components/AuthForm";
+import LandingHeader from "@/components/LandingHeader";
 import Link from "next/link";
 
 export default function AuthPage() {
@@ -15,25 +16,7 @@ export default function AuthPage() {
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse delay-1000"></div>
 
       {/* Header */}
-      <header className="relative z-10 px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 flex justify-between items-center">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 sm:gap-2 group transition-all"
-        >
-          <span className="material-symbols-outlined text-primary text-2xl sm:text-3xl group-hover:scale-110 transition-transform">
-            candlestick_chart
-          </span>
-          <span className="text-white text-lg sm:text-xl font-bold group-hover:text-primary transition-colors">
-            Ascendio
-          </span>
-        </Link>
-        <Link
-          href="/dashboard"
-          className="text-white/80 hover:text-white transition-all duration-200 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/10 hover:border-primary hover:bg-primary/10 hover:shadow-lg hover:shadow-primary/20"
-        >
-          Dashboard
-        </Link>
-      </header>
+      <LandingHeader variant="dark" />
 
       {/* Main Content */}
       <div className="relative z-10 flex-1 flex items-start justify-center text-center px-4 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16">
@@ -56,7 +39,7 @@ export default function AuthPage() {
       <footer className="relative z-10 w-full px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 text-xs sm:text-sm text-white/50">
           <p className="order-2 md:order-1">
-            © 2025 Ascendio. All rights reserved.
+            © 2025 Ascendio AI. All rights reserved.
           </p>
           <div className="flex items-center gap-4 sm:gap-6 order-1 md:order-2">
             <Link

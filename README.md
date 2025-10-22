@@ -1,4 +1,4 @@
-# Stock Ascendio Web
+# Stock Ascendio AI Web
 
 A modern stock market analysis and tracking platform built with Next.js 14, TypeScript, and Tailwind CSS.
 
@@ -16,6 +16,12 @@ A modern stock market analysis and tracking platform built with Next.js 14, Type
 ### 📊 Dashboard (/dashboard)
 
 - 🎯 Professional trading interface with sidebar navigation
+- 📱 **Mobile-responsive sidebar** - Slide-out drawer menu on mobile devices
+  - Menu button in header (mobile only)
+  - Smooth slide-in/out animation
+  - Overlay backdrop with click-to-close
+  - Auto-collapse on navigation
+  - Desktop collapsible sidebar preserved
 - 📈 Market indices cards (Dow Jones, NASDAQ, S&P 500)
 - 📊 Interactive Chart.js charts with multiple timeframes (1D, 1W, 1M, 1Y, ALL)
 - 👀 "My Watchlist" with real-time price updates
@@ -33,6 +39,35 @@ A modern stock market analysis and tracking platform built with Next.js 14, Type
 - **Charts:** Chart.js
 - **Icons:** Material Symbols Outlined
 - **Fonts:** Manrope (Google Fonts)
+
+## 📊 获取真实股票数据
+
+**当前状态**: 如果没有配置 API keys，系统会使用模拟数据。
+
+### 快速配置（5 分钟）
+
+1. **注册免费 API Key**
+
+   - 访问：https://www.alphavantage.co/support/#api-key
+   - 输入邮箱，立即获得免费 key
+
+2. **创建环境变量文件**
+
+   ```bash
+   # 在项目根目录创建 .env.local 文件
+   echo "NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=你的API_KEY" > .env.local
+   ```
+
+3. **重启开发服务器**
+   ```bash
+   npm run dev
+   ```
+
+✅ **完成！** 现在你会看到真实的股票数据了。
+
+📖 详细配置说明请查看：[STOCK_API_SETUP.md](./STOCK_API_SETUP.md)
+
+---
 
 ## Getting Started
 
