@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { CardSkeleton } from "./LoadingSkeleton";
-import { EmptyState } from "./EmptyState";
+import { EmptyState, ErrorState } from "./EmptyState";
 import SectionCard from "./SectionCard";
 import { Separator } from "@/components/ui/separator";
-import { Selector } from "@/components/ui/selector";
+import { SwitchTab } from "@/components/ui/switch-tab";
 import TweetHeader from "./TweetHeader";
 import TweetContent from "./TweetContent";
 import Image from "next/image";
@@ -20,6 +20,11 @@ interface Tweet {
   tweet_url: string;
   full_text: string;
   tweet_id: string;
+  profile_image_url: string;
+  ai_summary: string;
+  ai_reasoning: string;
+  ai_analysis: string;
+  is_market_related: boolean;
 }
 
 interface TweetsResponse {
@@ -47,6 +52,28 @@ export default function PostList() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+
+  // Memoize platform options to prevent image re-rendering
+  const platformOptions = useMemo(
+    () =>
+      platforms.map((p) => ({
+        value: p.id,
+        label: p.label,
+        icon: (
+          <Image
+            src={p.icon}
+            alt={p.label}
+            width={16}
+            height={16}
+            className="w-4 h-4"
+            priority={false}
+            loading="eager" // Use eager for small icons that are immediately visible
+          />
+        ),
+        disabled: false,
+      })),
+    []
+  );
 
   useEffect(() => {
     fetchTweets();
@@ -148,93 +175,10 @@ export default function PostList() {
     });
   };
 
-  // Platform Selector Component
-  const PlatformSelector = () => (
-    <Selector
-      options={platforms.map((p) => ({
-        value: p.id,
-        label: p.label,
-        icon: (
-          <Image
-            src={p.icon}
-            alt={p.label}
-            width={16}
-            height={16}
-            className="w-4 h-4"
-          />
-        ),
-      }))}
-      value={selectedPlatform}
-      onValueChange={(val) => setSelectedPlatform(val as Platform)}
-      size="sm"
-      variant="pills"
-    />
-  );
-
-  if (loading) {
-    return (
-      <SectionCard
-        showLiveIndicator
-        headerBorder
-        padding="md"
-        scrollable
-        scrollbarColor="#53d22d #161A16"
-        contentClassName="space-y-0 px-4 pb-4 mt-2"
-        maxHeight="calc(100vh - 58.5px - 56px - 42px)"
-        headerExtra={<PlatformSelector />}
-      >
-        {[...Array(10)].map((_, i) => (
-          <CardSkeleton key={i} lines={10} />
-        ))}
-      </SectionCard>
-    );
-  }
-
-  if (error) {
-    return (
-      <SectionCard
-        showLiveIndicator
-        headerBorder
-        padding="md"
-        scrollable
-        scrollbarColor="#53d22d #161A16"
-        contentClassName="space-y-0 px-4 pb-4 mt-2"
-        maxHeight="calc(100vh - 58.5px - 56px - 42px)"
-        headerExtra={<PlatformSelector />}
-      >
-        <EmptyState title="Failed to load posts" description={error} />
-      </SectionCard>
-    );
-  }
-
-  if (tweets.length === 0) {
-    const currentPlatform = platforms.find((p) => p.id === selectedPlatform);
-    return (
-      <SectionCard
-        showLiveIndicator
-        headerBorder
-        padding="md"
-        scrollable
-        scrollbarColor="#53d22d #161A16"
-        contentClassName="space-y-0 px-4 pb-4 mt-2"
-        maxHeight="calc(100vh - 58.5px - 56px - 42px)"
-        headerExtra={<PlatformSelector />}
-      >
-        <EmptyState
-          title={
-            selectedPlatform === "x"
-              ? "No posts available"
-              : `${currentPlatform?.label} Coming Soon`
-          }
-          description={
-            selectedPlatform === "x"
-              ? "There are no posts to display at the moment."
-              : `${currentPlatform?.label} integration is under development and will be available soon.`
-          }
-        />
-      </SectionCard>
-    );
-  }
+  // Memoize platform change handler to prevent recreating function on each render
+  const handlePlatformChange = useCallback((val: string) => {
+    setSelectedPlatform(val as Platform);
+  }, []);
 
   return (
     <SectionCard
@@ -242,17 +186,42 @@ export default function PostList() {
       headerBorder
       padding="md"
       scrollable
-      scrollbarColor="#53d22d #161A16"
       contentClassName="space-y-0 px-4 pb-4 mt-2"
       maxHeight="calc(100vh - 58.5px - 56px - 42px)"
       onScroll={handleScroll}
-      headerExtra={<PlatformSelector />}
+      headerExtra={
+        <SwitchTab
+          options={platformOptions}
+          value={selectedPlatform}
+          onValueChange={handlePlatformChange}
+          size="sm"
+        />
+      }
     >
+      {loading &&
+        [...Array(10)].map((_, i) => <CardSkeleton key={i} lines={10} />)}
+
+      {tweets.length === 0 && !loading && !error && (
+        <EmptyState
+          title="No posts available"
+          description="There are no posts to display at the moment."
+        />
+      )}
+
+      {error && !loading && (
+        <ErrorState
+          title="Failed to load posts"
+          message={error as string}
+          retry={fetchTweets}
+        />
+      )}
+
       {tweets.map((tweet, index) => (
         <div key={tweet.tweet_id}>
           <TweetHeader
             screenName={tweet.screen_name}
             createdAt={tweet.created_at}
+            profileImageUrl={tweet.profile_image_url}
             onFormatDate={formatDate}
           />
 
@@ -261,6 +230,8 @@ export default function PostList() {
             tweetUrl={tweet.tweet_url}
             tweetId={tweet.tweet_id}
             mediaUrls={tweet.media_urls}
+            aiSummary={tweet.ai_summary}
+            aiAnalysis={tweet.ai_analysis}
             onFormatText={formatTweetText}
           />
 

@@ -13,6 +13,11 @@ export interface Tweet {
   tweet_url: string;
   full_text: string;
   tweet_id: string;
+  profile_image_url: string;
+  ai_summary: string;
+  ai_reasoning: string;
+  ai_analysis: string;
+  is_market_related: boolean;
 }
 
 export interface TweetsResponse {

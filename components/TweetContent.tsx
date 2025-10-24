@@ -5,6 +5,7 @@ import { ExternalLink, Sparkles, Languages } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -15,6 +16,8 @@ interface TweetContentProps {
   tweetUrl: string;
   tweetId: string;
   mediaUrls: string[];
+  aiSummary?: string;
+  aiAnalysis?: string;
   onFormatText: (text: string) => React.ReactNode;
 }
 
@@ -23,6 +26,8 @@ export default function TweetContent({
   tweetUrl,
   tweetId,
   mediaUrls,
+  aiSummary,
+  aiAnalysis,
   onFormatText,
 }: TweetContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -113,8 +118,11 @@ export default function TweetContent({
     };
   };
 
-  const summary = generateSummary(fullText);
-  const analysisResult = generateAnalysis(fullText);
+  // Use AI summary/analysis from API if available, otherwise generate fallback
+  const summary = aiSummary || generateSummary(fullText);
+  const analysisResult = aiAnalysis
+    ? { sentiment: "neutral", text: aiAnalysis }
+    : generateAnalysis(fullText);
   const truncatedText =
     fullText.length > 80 ? fullText.substring(0, 80) + "..." : fullText;
   const needsTruncation = fullText.length > 80;
@@ -275,7 +283,7 @@ export default function TweetContent({
               Tweet Details
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-y-auto max-h-[calc(90vh-80px)] px-6 py-4 bg-white dark:bg-card-dark rounded-2xl">
+          <div className="overflow-y-auto p-2 max-h-[calc(90vh-80px)] bg-white dark:bg-card-dark rounded-2xl">
             {/* Twitter iframe 嵌入 - 带主题支持 */}
             <iframe
               key={theme}
@@ -290,18 +298,18 @@ export default function TweetContent({
             />
 
             {/* 外部链接 */}
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <a
-                href={tweetUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 transition-colors text-sm font-medium"
-              >
-                <ExternalLink className="w-4 h-4" />
-                View on X
-              </a>
-            </div>
           </div>
+          <DialogFooter className="px-6 pt-4 pb-4 border-t border-gray-200 dark:border-gray-700">
+            <a
+              href={tweetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 transition-colors text-sm font-medium"
+            >
+              <ExternalLink className="w-4 h-4" />
+              View on X
+            </a>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

@@ -19,7 +19,6 @@ interface SectionCardProps {
   // Content props
   children: ReactNode;
   scrollable?: boolean;
-  scrollbarColor?: string;
   contentClassName?: string;
   maxHeight?: string;
   onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
@@ -42,7 +41,6 @@ export default function SectionCard({
   sectionHeaderAction,
   children,
   scrollable = false,
-  scrollbarColor = "#00C805 #f5f5f5",
   contentClassName = "",
   maxHeight,
   onScroll,
@@ -139,8 +137,6 @@ export default function SectionCard({
           className={`flex-1 overflow-y-auto ${contentClassName}`}
           onScroll={onScroll}
           style={{
-            scrollbarWidth: "thin",
-            scrollbarColor: scrollbarColor,
             maxHeight,
           }}
         >
