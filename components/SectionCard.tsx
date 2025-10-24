@@ -8,6 +8,7 @@ interface SectionCardProps {
   icon?: ReactNode;
   showLiveIndicator?: boolean;
   headerExtra?: ReactNode;
+  headerRightExtra?: ReactNode;
   headerBorder?: boolean;
 
   // SectionHeader props (optional, 使用这些会替换默认的简单 header)
@@ -34,6 +35,7 @@ export default function SectionCard({
   icon,
   showLiveIndicator = false,
   headerExtra,
+  headerRightExtra,
   headerBorder = false,
   useSectionHeader = false,
   sectionHeaderIcon,
@@ -119,15 +121,20 @@ export default function SectionCard({
               <div className="w-full sm:w-auto">{headerExtra}</div>
             )}
           </div>
-          {showLiveIndicator && (
-            <span className="text-primary text-xs font-bold flex items-center gap-1">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          <div className="flex items-center gap-4">
+            {headerRightExtra && (
+              <div className="w-full sm:w-auto">{headerRightExtra}</div>
+            )}
+            {showLiveIndicator && (
+              <span className="text-primary text-xs font-bold flex items-center gap-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                LIVE
               </span>
-              LIVE
-            </span>
-          )}
+            )}
+          </div>
         </div>
       )}
 

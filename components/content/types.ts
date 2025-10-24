@@ -1,0 +1,42 @@
+// Common types for all platform content components
+
+export interface RedditComment {
+  score: number;
+  comment_id: string;
+  body: string;
+  created_utc: number;
+  author: string;
+}
+
+export interface BaseContentProps {
+  title?: string;
+  fullText: string;
+  url: string;
+  id: string;
+  mediaUrls: string[];
+  aiSummary?: string;
+  aiAnalysis?: string;
+  onFormatText: (text: string) => React.ReactNode;
+}
+
+export interface TwitterContentProps extends BaseContentProps {
+  // Twitter-specific props can be added here
+}
+
+export interface RedditContentProps extends BaseContentProps {
+  subreddit?: string;
+  score?: number;
+  permalink?: string;
+  topComments?: RedditComment[];
+}
+
+export interface YouTubeContentProps extends BaseContentProps {
+  viewCount?: number;
+  duration?: string;
+  thumbnailUrl?: string;
+  channelName?: string;
+}
+
+export interface XiaohongshuContentProps extends BaseContentProps {
+  // Xiaohongshu-specific props can be added here
+}

@@ -7,7 +7,7 @@ import StockChartWithControls from "@/components/StockChartWithControls";
 import MarketNews from "@/components/MarketNews";
 import HotStocksList from "@/components/HotStocksList";
 import Watchlist from "@/components/Watchlist";
-import PostList from "@/components/TwitterFeed";
+import PostList from "@/components/PostList";
 import {
   MarketIndexSkeleton,
   SkeletonGrid,

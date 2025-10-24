@@ -35,17 +35,17 @@ export const SwitchTab = React.memo(function SwitchTab({
   // Size configurations
   const sizeConfig = {
     sm: {
-      button: "h-7 w-[80px] px-2 text-[10px]",
+      button: "h-7 w-auto px-2 text-[10px]",
       gap: "gap-0.5",
       padding: "p-0.5",
     },
     md: {
-      button: "h-8 w-[100px] px-3 text-xs",
+      button: "h-8 w-auto px-3 text-xs",
       gap: "gap-1",
       padding: "p-1",
     },
     lg: {
-      button: "h-9 w-[120px] px-4 text-sm",
+      button: "h-9 w-auto px-4 text-sm",
       gap: "gap-1",
       padding: "p-1",
     },
@@ -62,7 +62,7 @@ export const SwitchTab = React.memo(function SwitchTab({
     },
     tabs: {
       container: "bg-transparent border-b border-gray-200 dark:border-gray-700",
-      indicator: "bg-primary rounded-t-md",
+      indicator: "bg-primary/40 dark:bg-primary/40 rounded-t-md",
       active: "text-primary dark:text-primary",
       inactive:
         "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200",
@@ -123,8 +123,13 @@ export const SwitchTab = React.memo(function SwitchTab({
       {variant !== "underline" && (
         <div
           className={cn(
-            "absolute top-[2px] left-0 pointer-events-none",
-            config.variant.indicator
+            "absolute top-[1.5px] left-0 pointer-events-none",
+            config.variant.indicator,
+            size === "sm"
+              ? "top-[1.5px]"
+              : size === "md"
+              ? "top-[3.5px]"
+              : "top-[6px]"
           )}
           style={indicatorStyle}
         />
