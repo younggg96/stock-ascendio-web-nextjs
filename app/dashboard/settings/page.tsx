@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import SectionHeader from "@/components/SectionHeader";
 import SectionCard from "@/components/SectionCard";
 import PricingCard from "@/components/PricingCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -109,7 +108,6 @@ function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState("account");
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -125,18 +123,12 @@ function SettingsContent() {
 
   useEffect(() => {
     setMounted(true);
-    setCurrentTime(new Date());
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
 
     // Get tab from URL
     const tab = searchParams.get("tab");
     if (tab) {
       setActiveTab(tab);
     }
-
-    return () => clearInterval(timer);
   }, [searchParams]);
 
   const handleTabChange = (value: string) => {
@@ -196,20 +188,18 @@ function SettingsContent() {
       <main className="flex-1 flex flex-col min-w-0">
         <Header
           title="Settings"
-          subtitle="Manage your account settings and preferences"
-          currentTime={currentTime}
           onMenuClick={() => setIsMobileMenuOpen(true)}
         />
 
-        <div className="flex-1 overflow-y-auto border-t border-border-light dark:border-border-dark">
-          <div className="p-3 sm:p-4 lg:p-5 min-w-0">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-2 min-w-0">
             {/* Settings Tabs */}
             <Tabs value={activeTab} onValueChange={handleTabChange}>
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col md:flex-row gap-2">
                 {/* Vertical Tab List (Tablet/Desktop) / Horizontal Tab List (Mobile) */}
-                <div className="w-full md:w-56 flex-shrink-0">
+                <div className="w-full md:w-48 flex-shrink-0">
                   {/* Mobile: Horizontal scrolling tabs */}
-                  <TabsList className="h-auto rounded-lg flex md:hidden flex-row items-center gap-2 bg-white dark:bg-card-dark border border-border-light dark:border-border-dark p-2 overflow-x-auto scrollbar-hide">
+                  <TabsList className="h-auto rounded-lg flex md:hidden flex-row items-center gap-1.5 bg-white dark:bg-card-dark border border-border-light dark:border-border-dark p-1.5 overflow-x-auto scrollbar-hide">
                     {settingsTabs.map((tab) => {
                       const isActive = activeTab === tab.value;
                       const Icon = tab.icon;
@@ -217,13 +207,13 @@ function SettingsContent() {
                         <TabsTrigger
                           key={tab.value}
                           value={tab.value}
-                          className={`flex-shrink-0 flex items-center gap-2 px-4 h-10 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                          className={`flex-shrink-0 flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                             isActive
                               ? "bg-primary/15 text-primary"
                               : "text-gray-600 dark:text-white/50 hover:bg-gray-200 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white/70"
                           }`}
                         >
-                          <Icon className="w-4 h-4" />
+                          <Icon className="w-3.5 h-3.5" />
                           <span>{tab.label}</span>
                         </TabsTrigger>
                       );
@@ -231,7 +221,7 @@ function SettingsContent() {
                   </TabsList>
 
                   {/* Tablet/Desktop: Vertical tabs */}
-                  <TabsList className="hidden md:flex h-auto flex-col items-stretch gap-1.5 bg-white dark:bg-card-dark border border-border-light dark:border-border-dark rounded-lg p-3 sticky top-0">
+                  <TabsList className="hidden md:flex h-auto flex-col items-stretch gap-1 bg-white dark:bg-card-dark border border-border-light dark:border-border-dark rounded-lg p-2 sticky top-0">
                     {settingsTabs.map((tab) => {
                       const isActive = activeTab === tab.value;
                       const Icon = tab.icon;
@@ -239,13 +229,13 @@ function SettingsContent() {
                         <TabsTrigger
                           key={tab.value}
                           value={tab.value}
-                          className={`w-full flex items-center justify-start gap-3 px-3 h-11 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          className={`w-full flex items-center justify-start gap-2 px-2.5 h-9 rounded-lg text-xs font-medium transition-all duration-200 ${
                             isActive
                               ? "bg-primary/15 text-primary"
                               : "text-gray-600 dark:text-white/50 hover:bg-gray-200 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white/70"
                           }`}
                         >
-                          <Icon className="w-5 h-5" />
+                          <Icon className="w-4 h-4" />
                           <span className="flex-1 text-left">{tab.label}</span>
                         </TabsTrigger>
                       );
@@ -261,44 +251,43 @@ function SettingsContent() {
                     className="mt-0 space-y-4 sm:space-y-6"
                   >
                     {/* Personal Information */}
-                    <SectionCard>
-                      <SectionHeader
-                        icon={User}
-                        title="Personal Information"
-                        subtitle={
-                          isEditing
-                            ? "Update your personal details"
-                            : "View your personal details"
-                        }
-                        action={
-                          !isEditing ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleEditToggle}
-                              className="gap-2"
-                            >
-                              <Edit className="w-4 h-4" />
-                              Edit
-                            </Button>
-                          ) : undefined
-                        }
-                      />
-
-                      <div className="space-y-5">
+                    <SectionCard
+                      title="Personal Information"
+                      useSectionHeader
+                      sectionHeaderIcon={User}
+                      sectionHeaderSubtitle={
+                        isEditing
+                          ? "Update your personal details"
+                          : "View your personal details"
+                      }
+                      sectionHeaderAction={
+                        !isEditing ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleEditToggle}
+                            className="gap-1.5 h-8 text-xs"
+                          >
+                            <Edit className="w-3 h-3" />
+                            Edit
+                          </Button>
+                        ) : undefined
+                      }
+                    >
+                      <div className="space-y-4 px-4 pb-4">
                         {/* Profile Avatar Section */}
                         <Dialog
                           open={avatarDialogOpen}
                           onOpenChange={setAvatarDialogOpen}
                         >
-                          <div className="flex items-center gap-4 sm:gap-6 p-3 sm:p-4">
+                          <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3">
                             <div className="relative">
-                              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg">
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-lg">
                                 JD
                               </div>
                               <DialogTrigger asChild>
-                                <button className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 bg-white dark:bg-card-dark rounded-full flex items-center justify-center shadow-md border-2 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:scale-110 transition-all duration-200 cursor-pointer">
-                                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 dark:text-white/70" />
+                                <button className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-white dark:bg-card-dark rounded-full flex items-center justify-center shadow-md border-2 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:scale-110 transition-all duration-200 cursor-pointer">
+                                  <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-600 dark:text-white/70" />
                                 </button>
                               </DialogTrigger>
                             </div>
@@ -356,31 +345,34 @@ function SettingsContent() {
                               <Button
                                 type="button"
                                 variant="outline"
+                                size="sm"
                                 onClick={() => {
                                   setAvatarDialogOpen(false);
                                   setSelectedFile(null);
                                   setPreviewUrl(null);
                                 }}
-                                className="w-full sm:w-auto"
+                                className="w-full sm:w-auto h-8 text-xs"
                               >
                                 Cancel
                               </Button>
                               <Button
                                 type="button"
+                                size="sm"
                                 onClick={handleUploadAvatar}
                                 disabled={!selectedFile}
-                                className="gap-2 w-full sm:w-auto"
+                                className="gap-1.5 w-full sm:w-auto h-8 text-xs"
                               >
-                                <Upload className="w-4 h-4" />
+                                <Upload className="w-3 h-3" />
                                 Upload
                               </Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
+
                         {/* Full Name */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-white/70 flex items-center gap-2">
-                            <User className="w-4 h-4" />
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-white/70 flex items-center gap-1.5">
+                            <User className="w-3 h-3" />
                             Full Name
                           </Label>
                           {isEditing ? (
@@ -394,19 +386,19 @@ function SettingsContent() {
                                   fullName: e.target.value,
                                 })
                               }
-                              className="h-10 sm:h-11"
+                              className="h-8 sm:h-9 text-xs sm:text-sm"
                             />
                           ) : (
-                            <p className="text-sm sm:text-base text-gray-900 dark:text-white py-2 sm:py-2.5 px-3 sm:px-4 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
+                            <p className="text-xs sm:text-sm text-gray-900 dark:text-white py-1.5 sm:py-2 px-2.5 sm:px-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
                               {formData.fullName}
                             </p>
                           )}
                         </div>
 
                         {/* Email */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-white/70 flex items-center gap-2">
-                            <Mail className="w-4 h-4" />
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-white/70 flex items-center gap-1.5">
+                            <Mail className="w-3 h-3" />
                             Email Address
                           </Label>
                           {isEditing ? (
@@ -420,19 +412,19 @@ function SettingsContent() {
                                   email: e.target.value,
                                 })
                               }
-                              className="h-10 sm:h-11"
+                              className="h-8 sm:h-9 text-xs sm:text-sm"
                             />
                           ) : (
-                            <p className="text-sm sm:text-base text-gray-900 dark:text-white py-2 sm:py-2.5 px-3 sm:px-4 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10 break-all">
+                            <p className="text-xs sm:text-sm text-gray-900 dark:text-white py-1.5 sm:py-2 px-2.5 sm:px-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10 break-all">
                               {formData.email}
                             </p>
                           )}
                         </div>
 
                         {/* Phone */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-white/70 flex items-center gap-2">
-                            <Phone className="w-4 h-4" />
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-white/70 flex items-center gap-1.5">
+                            <Phone className="w-3 h-3" />
                             Phone Number
                           </Label>
                           {isEditing ? (
@@ -446,10 +438,10 @@ function SettingsContent() {
                                   phone: e.target.value,
                                 })
                               }
-                              className="h-10 sm:h-11"
+                              className="h-8 sm:h-9 text-xs sm:text-sm"
                             />
                           ) : (
-                            <p className="text-sm sm:text-base text-gray-900 dark:text-white py-2 sm:py-2.5 px-3 sm:px-4 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
+                            <p className="text-xs sm:text-sm text-gray-900 dark:text-white py-1.5 sm:py-2 px-2.5 sm:px-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
                               {formData.phone}
                             </p>
                           )}
@@ -457,21 +449,21 @@ function SettingsContent() {
 
                         {/* Action Buttons */}
                         {isEditing && (
-                          <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-gray-200 dark:border-white/10">
+                          <div className="flex flex-col sm:flex-row items-center gap-2 pt-3 border-t border-gray-200 dark:border-white/10">
                             <Button
                               variant="outline"
-                              size="default"
+                              size="sm"
                               onClick={handleCancelEdit}
-                              className="w-full sm:w-auto"
+                              className="w-full sm:w-auto h-8 text-xs"
                             >
                               Cancel
                             </Button>
                             <Button
-                              size="default"
-                              className="gap-2 w-full sm:w-auto sm:ml-auto"
+                              size="sm"
+                              className="gap-1.5 w-full sm:w-auto sm:ml-auto h-8 text-xs"
                               onClick={handleSaveChanges}
                             >
-                              <Check className="w-4 h-4" />
+                              <Check className="w-3 h-3" />
                               Save Changes
                             </Button>
                           </div>
@@ -482,15 +474,14 @@ function SettingsContent() {
 
                   {/* Billing Tab */}
                   <TabsContent value="billing" className="mt-0">
-                    <SectionCard>
-                      <SectionHeader
-                        icon={CreditCard}
-                        title="Choose Your Plan"
-                        subtitle="Select the perfect plan for your investment needs"
-                      />
-
+                    <SectionCard
+                      title="Choose Your Plan"
+                      useSectionHeader
+                      sectionHeaderIcon={CreditCard}
+                      sectionHeaderSubtitle="Select the perfect plan for your investment needs"
+                    >
                       {/* Pricing Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
+                      <div className="p-4 mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
                         {pricingPlans.map((plan) => (
                           <PricingCard key={plan.name} {...plan} />
                         ))}
@@ -503,20 +494,19 @@ function SettingsContent() {
                     value="notifications"
                     className="mt-0 space-y-4 sm:space-y-6"
                   >
-                    <SectionCard>
-                      <SectionHeader
-                        icon={Bell}
-                        title="Notification Preferences"
-                        subtitle="Manage how you receive notifications"
-                      />
-
-                      <div className="space-y-6 sm:space-y-8">
+                    <SectionCard
+                      title="Notification Preferences"
+                      useSectionHeader
+                      sectionHeaderIcon={Bell}
+                      sectionHeaderSubtitle="Manage how you receive notifications"
+                    >
+                      <div className="px-4 pb-4 space-y-4 sm:space-y-5">
                         {/* Email Notifications */}
                         <div>
-                          <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-white/70">
+                          <h3 className="text-xs font-medium mb-2 text-gray-700 dark:text-white/70">
                             Email Notifications
                           </h3>
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {[
                               {
                                 id: "price-alerts",
@@ -539,23 +529,23 @@ function SettingsContent() {
                             ].map((item) => (
                               <div
                                 key={item.id}
-                                className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors duration-200"
+                                className="flex items-center justify-between p-2 sm:p-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors duration-200"
                               >
-                                <div className="flex-1 space-y-0.5 pr-3">
+                                <div className="flex-1 space-y-0.5 pr-2">
                                   <Label
                                     htmlFor={item.id}
-                                    className="text-sm sm:text-base font-medium text-gray-900 dark:text-white cursor-pointer"
+                                    className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white cursor-pointer"
                                   >
                                     {item.label}
                                   </Label>
-                                  <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60">
+                                  <p className="text-[10px] sm:text-xs text-gray-600 dark:text-white/60">
                                     {item.description}
                                   </p>
                                 </div>
                                 <Switch
                                   id={item.id}
                                   defaultChecked
-                                  className="ml-2 sm:ml-4 flex-shrink-0"
+                                  className="ml-2 flex-shrink-0"
                                 />
                               </div>
                             ))}
@@ -564,10 +554,10 @@ function SettingsContent() {
 
                         {/* Push Notifications */}
                         <div>
-                          <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-white/70">
+                          <h3 className="text-xs font-medium mb-2 text-gray-700 dark:text-white/70">
                             Push Notifications
                           </h3>
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {[
                               {
                                 id: "breaking-news",
@@ -584,23 +574,23 @@ function SettingsContent() {
                             ].map((item) => (
                               <div
                                 key={item.id}
-                                className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors duration-200"
+                                className="flex items-center justify-between p-2 sm:p-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors duration-200"
                               >
-                                <div className="flex-1 space-y-0.5 pr-3">
+                                <div className="flex-1 space-y-0.5 pr-2">
                                   <Label
                                     htmlFor={item.id}
-                                    className="text-sm sm:text-base font-medium text-gray-900 dark:text-white cursor-pointer"
+                                    className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white cursor-pointer"
                                   >
                                     {item.label}
                                   </Label>
-                                  <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60">
+                                  <p className="text-[10px] sm:text-xs text-gray-600 dark:text-white/60">
                                     {item.description}
                                   </p>
                                 </div>
                                 <Switch
                                   id={item.id}
                                   defaultChecked
-                                  className="ml-2 sm:ml-4 flex-shrink-0"
+                                  className="ml-2 flex-shrink-0"
                                 />
                               </div>
                             ))}
@@ -615,22 +605,21 @@ function SettingsContent() {
                     value="preferences"
                     className="mt-0 space-y-4 sm:space-y-6"
                   >
-                    <SectionCard>
-                      <SectionHeader
-                        icon={Settings}
-                        title="Display Preferences"
-                        subtitle="Customize your experience"
-                      />
-
-                      <div className="space-y-4 sm:space-y-6">
+                    <SectionCard
+                      title="Display Preferences"
+                      useSectionHeader
+                      sectionHeaderIcon={Settings}
+                      sectionHeaderSubtitle="Customize your experience"
+                    >
+                      <div className="px-4 pb-4 space-y-3 sm:space-y-4">
                         {/* Language */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-white/70 flex items-center gap-2">
-                            <Globe className="w-4 h-4" />
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-white/70 flex items-center gap-1.5">
+                            <Globe className="w-3 h-3" />
                             Language
                           </Label>
                           <Select defaultValue="english">
-                            <SelectTrigger>
+                            <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm">
                               <SelectValue placeholder="Select language" />
                             </SelectTrigger>
                             <SelectContent>
@@ -642,13 +631,13 @@ function SettingsContent() {
                           </Select>
                         </div>
                         {/* Theme Selection */}
-                        <div className="space-y-3">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-white/70 flex items-center gap-2">
-                            <SunMoon className="w-4 h-4" />
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-white/70 flex items-center gap-1.5">
+                            <SunMoon className="w-3 h-3" />
                             Theme Mode
                           </Label>
                           {mounted && (
-                            <div className="flex flex-wrap gap-2 sm:gap-3">
+                            <div className="flex flex-wrap gap-2">
                               {[
                                 {
                                   value: "light",
@@ -675,24 +664,24 @@ function SettingsContent() {
                                   <button
                                     key={mode.value}
                                     onClick={() => setTheme(mode.value)}
-                                    className={`w-[120px] flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 ${
+                                    className={`w-[100px] flex flex-col items-center gap-1.5 sm:gap-2 p-2 sm:p-3 rounded-lg border-2 transition-all duration-200 ${
                                       isActive
                                         ? "border-primary bg-primary/5 dark:bg-primary/10"
                                         : "border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-100 dark:hover:bg-white/10"
                                     }`}
                                   >
                                     <div
-                                      className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center transition-colors ${
+                                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-colors ${
                                         isActive
                                           ? "bg-primary text-white"
                                           : "dark:bg-card-dark text-gray-600 dark:text-white/70"
                                       }`}
                                     >
-                                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                                      <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                                     </div>
                                     <div className="text-center">
                                       <p
-                                        className={`font-medium text-xs sm:text-sm ${
+                                        className={`font-medium text-[10px] sm:text-xs ${
                                           isActive
                                             ? "text-primary"
                                             : "text-gray-900 dark:text-white"
@@ -709,10 +698,10 @@ function SettingsContent() {
                         </div>
                         {/* Data Display */}
                         <div>
-                          <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-white/70">
+                          <h3 className="text-xs font-medium mb-2 text-gray-700 dark:text-white/70">
                             Data Display
                           </h3>
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {[
                               {
                                 id: "percentage-change",
@@ -734,23 +723,23 @@ function SettingsContent() {
                             ].map((item) => (
                               <div
                                 key={item.id}
-                                className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors duration-200"
+                                className="flex items-center justify-between p-2 sm:p-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors duration-200"
                               >
-                                <div className="flex-1 space-y-0.5 pr-3">
+                                <div className="flex-1 space-y-0.5 pr-2">
                                   <Label
                                     htmlFor={item.id}
-                                    className="text-sm sm:text-base font-medium text-gray-900 dark:text-white cursor-pointer"
+                                    className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white cursor-pointer"
                                   >
                                     {item.label}
                                   </Label>
-                                  <p className="text-xs sm:text-sm text-gray-600 dark:text-white/60">
+                                  <p className="text-[10px] sm:text-xs text-gray-600 dark:text-white/60">
                                     {item.description}
                                   </p>
                                 </div>
                                 <Switch
                                   id={item.id}
                                   defaultChecked
-                                  className="ml-2 sm:ml-4 flex-shrink-0"
+                                  className="ml-2 flex-shrink-0"
                                 />
                               </div>
                             ))}

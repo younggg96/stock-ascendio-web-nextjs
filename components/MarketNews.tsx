@@ -1,3 +1,5 @@
+import SectionCard from "@/components/SectionCard";
+
 interface NewsItem {
   time: string;
   title: string;
@@ -59,51 +61,39 @@ const newsItems: NewsItem[] = [
 
 export default function MarketNews() {
   return (
-    <div className="bg-white dark:bg-card-dark border border-border-light dark:border-border-dark rounded-lg p-5 flex flex-col transition-colors duration-300">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-gray-900 dark:text-white text-[17px] font-bold">
-          Stock Market News
-        </h2>
-        <span className="text-primary text-xs font-bold flex items-center gap-1">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-          </span>
-          LIVE
-        </span>
-      </div>
-      <div
-        className="flex-1 overflow-y-auto space-y-4 pr-2 -mr-2"
-        style={{
-          scrollbarWidth: "thin",
-          scrollbarColor: "#00C805 #f5f5f5",
-        }}
-      >
-        {newsItems.map((item, index) => (
-          <div key={index} className="flex items-start gap-3">
-            <div className="text-gray-500 dark:text-white/50 text-xs min-w-[50px]">
-              {item.time}
-            </div>
-            <div
-              className={`${
-                item.isHighlighted
-                  ? "border-l-2 border-primary"
-                  : "border-l-2 border-gray-300 dark:border-border-dark"
-              } pl-3`}
-            >
-              <a
-                className="text-gray-900 dark:text-white font-semibold text-sm hover:text-primary transition-colors"
-                href="#"
-              >
-                {item.title}
-              </a>
-              <p className="text-xs text-gray-600 dark:text-white/60 mt-1">
-                {item.description}
-              </p>
-            </div>
+    <SectionCard
+      title="Stock Market News"
+      titleSize="md"
+      showLiveIndicator
+      padding="lg"
+      scrollable
+      maxHeight="500px"
+      contentClassName="space-y-4 pr-2 -mr-2 px-4 pb-4"
+    >
+      {newsItems.map((item, index) => (
+        <div key={index} className="flex items-start gap-3">
+          <div className="text-gray-500 dark:text-white/50 text-xs min-w-[50px]">
+            {item.time}
           </div>
-        ))}
-      </div>
-    </div>
+          <div
+            className={`${
+              item.isHighlighted
+                ? "border-l-2 border-primary"
+                : "border-l-2 border-gray-300 dark:border-border-dark"
+            } pl-3`}
+          >
+            <a
+              className="text-gray-900 dark:text-white font-semibold text-sm hover:text-primary transition-colors"
+              href="#"
+            >
+              {item.title}
+            </a>
+            <p className="text-xs text-gray-600 dark:text-white/60 mt-1">
+              {item.description}
+            </p>
+          </div>
+        </div>
+      ))}
+    </SectionCard>
   );
 }

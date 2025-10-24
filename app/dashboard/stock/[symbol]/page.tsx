@@ -48,13 +48,11 @@ export default function StockPage({ params }: StockPageProps) {
 
       <main className="flex-1 flex flex-col">
         <Header
-          title={symbol}
-          subtitle={stockQuote?.name || "Loading..."}
-          currentTime={currentTime}
+          title={`${symbol} - ${stockQuote?.name || "Loading..."}`}
           onMenuClick={() => setIsMobileMenuOpen(true)}
         />
 
-        <div className="flex-1 overflow-y-auto border-t border-border-light dark:border-border-dark">
+        <div className="flex-1 overflow-y-auto">
           <div className="p-4 lg:p-5">
             {/* Back button */}
             <div className="mb-4 lg:mb-6">

@@ -18,7 +18,7 @@ import UserMenu from "./UserMenu";
 const navItems = [
   {
     icon: LayoutDashboard,
-    title: "Overview",
+    title: "Home",
     href: "/dashboard",
   },
   { icon: Newspaper, title: "News", href: "#" },
@@ -59,8 +59,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`bg-white dark:bg-card-dark flex flex-col p-3 border-r border-border-light dark:border-border-dark transition-all duration-300 
-        ${isCollapsed ? "w-[72px]" : "w-[240px]"}
+        className={`bg-white dark:bg-card-dark flex flex-col p-2.5 border-r border-border-light dark:border-border-dark transition-all duration-300 
+        ${isCollapsed ? "w-[60px]" : "w-[200px]"}
         lg:relative lg:translate-x-0
         fixed inset-y-0 left-0 z-50 lg:z-auto
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -68,20 +68,20 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       >
         {/* Logo and Toggle */}
         <div
-          className={`flex items-center mb-7 mt-3 ${
-            isCollapsed ? "justify-center" : "justify-between px-2"
+          className={`flex items-center mb-5 mt-2 ${
+            isCollapsed ? "justify-center" : "justify-between px-1.5"
           }`}
         >
           <Link href="/" className="flex items-center justify-center gap-1">
             <Image
               src="/logo.svg"
               alt="Ascendio AI Logo"
-              width={24}
-              height={24}
+              width={20}
+              height={20}
               className="cursor-pointer"
             />
             {!isCollapsed && (
-              <span className="text-gray-900 dark:text-white text-lg font-bold">
+              <span className="text-gray-900 dark:text-white text-base font-bold">
                 Ascendio
               </span>
             )}
@@ -93,7 +93,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             className="lg:hidden flex items-center justify-center text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 transition-colors"
             title="Close menu"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
 
           {/* Collapse button for desktop */}
@@ -103,7 +103,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               className="hidden lg:flex items-center justify-center text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 transition-colors"
               title="Collapse sidebar"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -112,15 +112,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         {isCollapsed && (
           <button
             onClick={() => setIsCollapsed(false)}
-            className="hidden lg:flex items-center justify-center h-11 w-11 mx-auto mb-4 text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 hover:bg-gray-200 dark:hover:bg-white/5 rounded-lg transition-all duration-200"
+            className="hidden lg:flex items-center justify-center h-9 w-9 mx-auto mb-3 text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 hover:bg-gray-200 dark:hover:bg-white/5 rounded-lg transition-all duration-200"
             title="Expand sidebar"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         )}
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-1.5">
+        <nav className="flex flex-col gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             // Check if current path matches this nav item
@@ -135,17 +135,17 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 href={item.href}
                 title={item.title}
                 onClick={onClose}
-                className={`flex items-center gap-3 h-11 rounded-lg transition-all duration-200 ${
-                  isCollapsed ? "justify-center w-11 mx-auto lg:flex" : "px-3"
+                className={`flex items-center gap-2 h-9 rounded-lg transition-all duration-200 ${
+                  isCollapsed ? "justify-center w-9 mx-auto lg:flex" : "px-2.5"
                 } ${
                   isActive
                     ? "bg-primary/15 text-primary"
                     : "text-gray-600 dark:text-white/50 hover:bg-gray-200 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white/70"
                 }`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4" />
                 {!isCollapsed && (
-                  <span className="text-sm font-medium">{item.title}</span>
+                  <span className="text-xs font-medium">{item.title}</span>
                 )}
               </Link>
             );

@@ -36,12 +36,12 @@ export default function PricingCard({
   popularLabel,
 }: PricingCardProps) {
   const cardClasses = highlight
-    ? "relative flex flex-col p-4 sm:p-5 md:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent dark:from-primary/10 dark:via-primary/5 dark:to-transparent border-2 border-primary rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 md:scale-105 mt-5 sm:mt-0"
-    : "group relative flex flex-col p-4 sm:p-5 md:p-6 lg:p-8 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-white/10 rounded-2xl hover:border-gray-300 dark:hover:border-white/20 hover:shadow-xl transition-all duration-300";
+    ? "relative flex flex-col p-3 sm:p-4 md:p-5 bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent dark:from-primary/10 dark:via-primary/5 dark:to-transparent border-2 border-primary rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 md:scale-105 mt-4 sm:mt-0"
+    : "group relative flex flex-col p-3 sm:p-4 md:p-5 bg-white dark:bg-card-dark border-2 border-gray-200 dark:border-white/10 rounded-xl hover:border-gray-300 dark:hover:border-white/20 hover:shadow-xl transition-all duration-300";
 
   const priceClasses = highlight
-    ? "text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent"
-    : "text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white";
+    ? "text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent"
+    : "text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white";
 
   const featureIconBg = highlight
     ? "bg-primary/20 dark:bg-primary/30"
@@ -51,10 +51,10 @@ export default function PricingCard({
     <div className={cardClasses}>
       {/* Badge */}
       {badge && (
-        <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2 z-10">
-          <div className="px-2.5 py-1 sm:px-3 sm:py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-primary to-primary text-white text-[9px] sm:text-[10px] md:text-xs font-semibold rounded-full shadow-lg flex items-center gap-1 sm:gap-1.5">
+        <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 z-10">
+          <div className="px-2 py-0.5 sm:px-2.5 sm:py-0.5 md:px-3 md:py-1 bg-gradient-to-r from-primary to-primary text-white text-[8px] sm:text-[9px] md:text-[10px] font-semibold rounded-full shadow-lg flex items-center gap-0.5 sm:gap-1">
             {badge.icon && (
-              <badge.icon className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3" />
+              <badge.icon className="w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-2.5 md:h-2.5" />
             )}
             {badge.text}
           </div>
@@ -62,43 +62,43 @@ export default function PricingCard({
       )}
 
       {/* Header */}
-      <div className="mb-4 sm:mb-5 md:mb-6">
-        <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1.5 sm:mb-2 flex flex-wrap items-center gap-1.5 sm:gap-2">
+      <div className="mb-3 sm:mb-4 md:mb-5">
+        <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white mb-1 sm:mb-1.5 flex flex-wrap items-center gap-1 sm:gap-1.5">
           {name}
           {popularLabel && (
-            <span className="px-1.5 py-0.5 sm:px-2 sm:py-0.5 bg-primary/10 dark:bg-primary/20 text-primary text-[9px] sm:text-[10px] md:text-xs font-semibold rounded">
+            <span className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 bg-primary/10 dark:bg-primary/20 text-primary text-[8px] sm:text-[9px] md:text-[10px] font-semibold rounded">
               {popularLabel}
             </span>
           )}
         </h3>
-        <div className="flex items-baseline gap-1">
+        <div className="flex items-baseline gap-0.5 sm:gap-1">
           <span className={priceClasses}>${price}</span>
-          <span className="text-gray-500 dark:text-white/50 text-sm sm:text-base">
+          <span className="text-gray-500 dark:text-white/50 text-xs sm:text-sm">
             {period}
           </span>
         </div>
       </div>
 
       {/* Features */}
-      <ul className="space-y-2.5 sm:space-y-3 md:space-y-4 mb-5 sm:mb-6 md:mb-8 flex-1">
+      <ul className="space-y-1.5 sm:space-y-2 md:space-y-2.5 mb-4 sm:mb-5 md:mb-6 flex-1">
         {features.map((feature, index) => (
           <li
             key={index}
-            className={`flex items-start gap-2 sm:gap-3 text-xs sm:text-sm ${
+            className={`flex items-start gap-1.5 sm:gap-2 text-[11px] sm:text-xs ${
               feature.included
                 ? "text-gray-700 dark:text-white/70"
                 : "text-gray-400 dark:text-white/30"
             }`}
           >
             <div
-              className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full ${
+              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full ${
                 feature.included ? featureIconBg : "bg-gray-100 dark:bg-white/5"
               } flex items-center justify-center flex-shrink-0 mt-0.5`}
             >
               {feature.included ? (
-                <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary" />
+                <Check className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-primary" />
               ) : (
-                <X className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <X className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
               )}
             </div>
             <span className={feature.highlighted ? "font-medium" : ""}>
@@ -112,7 +112,7 @@ export default function PricingCard({
       <Button
         variant={buttonVariant}
         disabled={buttonDisabled}
-        className={`w-full h-9 sm:h-10 md:h-11 text-xs sm:text-sm ${
+        className={`w-full h-8 sm:h-9 md:h-10 text-[11px] sm:text-xs ${
           buttonDisabled ? "opacity-70" : ""
         } ${
           !highlight && !buttonDisabled ? "group-hover:shadow-lg" : ""

@@ -2,6 +2,7 @@
 
 import { useMultipleQuotes } from "@/hooks/useStockData";
 import { SkeletonGrid } from "@/components/LoadingSkeleton";
+import SectionCard from "@/components/SectionCard";
 import { useRouter } from "next/navigation";
 
 // Hot stocks to track - typically high volume/volatility stocks
@@ -31,22 +32,22 @@ function HotStockItem({
   return (
     <div
       onClick={onClick}
-      className="flex justify-between items-center px-3 py-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-md transition-colors duration-200 cursor-pointer"
+      className="flex justify-between items-center px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded-md transition-colors duration-200 cursor-pointer"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <div>
-          <p className="font-semibold text-sm text-gray-900 dark:text-white">
+          <p className="font-semibold text-xs text-gray-900 dark:text-white">
             {symbol}
           </p>
-          <p className="text-xs text-gray-600 dark:text-white/50">{name}</p>
+          <p className="text-[10px] text-gray-600 dark:text-white/50">{name}</p>
         </div>
       </div>
       <div className="text-right">
-        <p className="font-semibold text-sm text-gray-900 dark:text-white">
+        <p className="font-semibold text-xs text-gray-900 dark:text-white">
           ${price.toFixed(2)}
         </p>
         <p
-          className={`text-xs font-semibold ${
+          className={`text-[10px] font-semibold ${
             isPositive ? "text-green-500" : "text-red-500"
           }`}
         >
@@ -60,16 +61,16 @@ function HotStockItem({
 
 function HotStockSkeleton() {
   return (
-    <div className="flex justify-between items-center px-2 py-1">
-      <div className="flex items-center gap-3">
+    <div className="flex justify-between items-center px-2 py-1.5">
+      <div className="flex items-center gap-2">
         <div>
-          <div className="w-12 h-3 bg-gray-300 dark:bg-white/10 rounded animate-pulse mb-1" />
-          <div className="w-24 h-2 bg-gray-300 dark:bg-white/10 rounded animate-pulse" />
+          <div className="w-10 h-2.5 bg-gray-300 dark:bg-white/10 rounded animate-pulse mb-1" />
+          <div className="w-20 h-2 bg-gray-300 dark:bg-white/10 rounded animate-pulse" />
         </div>
       </div>
       <div className="text-right">
-        <div className="w-16 h-3 bg-gray-300 dark:bg-white/10 rounded animate-pulse mb-1 ml-auto" />
-        <div className="w-20 h-2 bg-gray-300 dark:bg-white/10 rounded animate-pulse ml-auto" />
+        <div className="w-14 h-2.5 bg-gray-300 dark:bg-white/10 rounded animate-pulse mb-1 ml-auto" />
+        <div className="w-16 h-2 bg-gray-300 dark:bg-white/10 rounded animate-pulse ml-auto" />
       </div>
     </div>
   );
@@ -97,41 +98,47 @@ export default function HotStocksList() {
   };
 
   return (
-    <div className="bg-white dark:bg-card-dark p-4 rounded-lg border border-border-light dark:border-border-dark transition-colors duration-300">
-      <h2 className="text-[17px] font-bold mb-4 text-gray-900 dark:text-white">
-        Hot Stocks List
-        {loading && (
-          <span className="text-xs text-gray-600 dark:text-white/40 ml-2 font-normal">
-            Updating...
-          </span>
-        )}
-      </h2>
-      <div className="scroll-container">
-        <div className="scroll-content">
-          {loading && hotStocks.length === 0 ? (
-            <div className="space-y-4">
-              <SkeletonGrid count={6}>
-                <HotStockSkeleton />
-              </SkeletonGrid>
-            </div>
-          ) : (
-            <div className="flex flex-col space-y-4">
-              {duplicatedStocks.map((stock, index) => (
-                <HotStockItem
-                  key={`${stock.symbol}-${index}`}
-                  {...stock}
-                  onClick={() => handleStockClick(stock.symbol)}
-                />
-              ))}
-            </div>
-          )}
+    <>
+      <SectionCard
+        title="Hot Stocks List"
+        titleSize="md"
+        padding="none"
+        headerExtra={
+          loading && hotStocks.length > 0 ? (
+            <span className="text-xs text-gray-600 dark:text-white/40">
+              Updating...
+            </span>
+          ) : null
+        }
+      >
+        <div className="scroll-container px-4">
+          <div className="scroll-content">
+            {loading && hotStocks.length === 0 ? (
+              <div className="space-y-2">
+                <SkeletonGrid count={6}>
+                  <HotStockSkeleton />
+                </SkeletonGrid>
+              </div>
+            ) : (
+              <div className="flex flex-col space-y-2">
+                {duplicatedStocks.map((stock, index) => (
+                  <HotStockItem
+                    key={`${stock.symbol}-${index}`}
+                    {...stock}
+                    onClick={() => handleStockClick(stock.symbol)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </SectionCard>
       <style jsx>{`
         .scroll-container {
           overflow: hidden;
           position: relative;
-          height: 18.5rem;
+          height: 16rem;
+          padding-bottom: 1rem;
         }
         .scroll-content {
           display: flex;
@@ -150,6 +157,6 @@ export default function HotStocksList() {
           animation-play-state: paused;
         }
       `}</style>
-    </div>
+    </>
   );
 }
