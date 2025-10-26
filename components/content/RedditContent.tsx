@@ -19,6 +19,7 @@ import {
 import ContentWithModal from "../ContentWithModal";
 import ExpandableText from "../ExpandableText";
 import AIAnalysis from "../AIAnalysis";
+import Tags from "../Tags";
 import TranslateButton, { useTranslation } from "../TranslateButton";
 import { RedditContentProps } from "./types";
 
@@ -30,6 +31,8 @@ export default function RedditContent({
   mediaUrls,
   aiSummary,
   aiAnalysis,
+  aiTags,
+  sentiment,
   onFormatText,
   subreddit,
   score,
@@ -133,6 +136,9 @@ export default function RedditContent({
         >
           {summary}
         </ContentWithModal>
+
+        {/* Tags */}
+        <Tags tags={aiTags || []} />
 
         {/* Post Text - Accordion */}
         <Accordion type="single" collapsible className="w-full">
@@ -288,7 +294,7 @@ export default function RedditContent({
         )}
 
         {/* AI Analysis */}
-        <AIAnalysis aiAnalysis={aiAnalysis} />
+        <AIAnalysis aiAnalysis={aiAnalysis} sentiment={sentiment} />
       </div>
 
       {/* Reddit Embed Modal */}

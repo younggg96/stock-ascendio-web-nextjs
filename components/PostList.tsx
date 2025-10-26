@@ -501,6 +501,8 @@ export default function PostList() {
                   mediaUrls={post.mediaUrls}
                   aiSummary={post.aiSummary}
                   aiAnalysis={post.aiAnalysis}
+                  aiTags={post.aiTags}
+                  sentiment={post.sentiment}
                   onFormatText={formatTweetText}
                 />
               );
@@ -514,6 +516,8 @@ export default function PostList() {
                   mediaUrls={post.mediaUrls}
                   aiSummary={post.aiSummary}
                   aiAnalysis={post.aiAnalysis}
+                  aiTags={post.aiTags}
+                  sentiment={post.sentiment}
                   onFormatText={formatTweetText}
                   subreddit={post.platformData?.subreddit}
                   score={post.platformData?.score}
@@ -531,6 +535,8 @@ export default function PostList() {
                   mediaUrls={post.mediaUrls}
                   aiSummary={post.aiSummary}
                   aiAnalysis={post.aiAnalysis}
+                  aiTags={post.aiTags}
+                  sentiment={post.sentiment}
                   onFormatText={formatTweetText}
                   viewCount={post.platformData?.viewCount}
                   duration={post.platformData?.duration}
@@ -548,6 +554,8 @@ export default function PostList() {
                   mediaUrls={post.mediaUrls}
                   aiSummary={post.aiSummary}
                   aiAnalysis={post.aiAnalysis}
+                  aiTags={post.aiTags}
+                  sentiment={post.sentiment}
                   onFormatText={formatTweetText}
                 />
               );

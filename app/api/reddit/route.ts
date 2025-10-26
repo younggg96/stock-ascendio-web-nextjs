@@ -26,6 +26,8 @@ export interface RedditPost {
   post_id: string;
   username: string;
   ai_analysis: string;
+  ai_tags: string[];
+  ai_sentiment: 'negative' | 'neutral' | 'positive' | '' | string;
   is_market_related: boolean;
   title: string;
   user_avatar_url: string;

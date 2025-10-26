@@ -16,6 +16,8 @@ export interface BaseContentProps {
   mediaUrls: string[];
   aiSummary?: string;
   aiAnalysis?: string;
+  aiTags?: string[];
+  sentiment?: "bullish" | "bearish" | "neutral";
   onFormatText: (text: string) => React.ReactNode;
 }
 

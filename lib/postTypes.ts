@@ -17,6 +17,8 @@ export interface UnifiedPost {
   aiSummary: string;
   aiReasoning: string;
   aiAnalysis: string;
+  aiTags: string[];
+  sentiment: "bullish" | "bearish" | "neutral";
   isMarketRelated: boolean;
   // Platform-specific data
   platformData?: {
@@ -39,6 +41,18 @@ export interface UnifiedPost {
   };
 }
 
+// Helper function to map API sentiment to UI sentiment
+function mapSentiment(apiSentiment: string): "bullish" | "bearish" | "neutral" {
+  switch (apiSentiment) {
+    case "positive":
+      return "bullish";
+    case "negative":
+      return "bearish";
+    default:
+      return "neutral";
+  }
+}
+
 // Conversion functions
 export function tweetToUnifiedPost(tweet: any): UnifiedPost {
   return {
@@ -51,11 +65,13 @@ export function tweetToUnifiedPost(tweet: any): UnifiedPost {
     url: tweet.tweet_url,
     createdAt: tweet.created_at,
     likes: tweet.num_likes,
-    comments: 0, // Twitter API doesn't provide comment count directly
+    comments: 0,
     mediaUrls: tweet.media_urls || [],
     aiSummary: tweet.ai_summary,
     aiReasoning: tweet.ai_reasoning,
     aiAnalysis: tweet.ai_analysis,
+    aiTags: tweet.ai_tags || [],
+    sentiment: mapSentiment(tweet.ai_sentiment),
     isMarketRelated: tweet.is_market_related,
   };
 }
@@ -77,6 +93,8 @@ export function redditPostToUnifiedPost(post: any): UnifiedPost {
     aiSummary: post.ai_summary,
     aiReasoning: post.ai_reasoning,
     aiAnalysis: post.ai_analysis,
+    aiTags: post.ai_tags || [],
+    sentiment: mapSentiment(post.ai_sentiment),
     isMarketRelated: post.is_market_related,
     platformData: {
       subreddit: post.subreddit,
@@ -105,6 +123,8 @@ export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
     aiSummary: video.ai_summary,
     aiReasoning: video.ai_reasoning,
     aiAnalysis: video.ai_analysis,
+    aiTags: video.ai_tags || [],
+    sentiment: mapSentiment(video.ai_sentiment),
     isMarketRelated: video.is_market_related,
     platformData: {
       viewCount: video.view_count,
@@ -134,6 +154,8 @@ export function xiaohongshuNoteToUnifiedPost(note: any): UnifiedPost {
     aiSummary: note.ai_summary,
     aiReasoning: note.ai_reasoning,
     aiAnalysis: note.ai_analysis,
+    aiTags: note.ai_tags || [],
+    sentiment: mapSentiment(note.ai_sentiment),
     isMarketRelated: note.is_market_related,
   };
 }

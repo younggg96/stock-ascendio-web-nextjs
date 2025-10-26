@@ -20,6 +20,8 @@ export interface YouTubeVideo {
   ai_summary: string;
   ai_reasoning: string;
   ai_analysis: string;
+  ai_tags: string[];
+  ai_sentiment: 'negative' | 'neutral' | 'positive' | '' | string;
   is_market_related: boolean;
 }
 

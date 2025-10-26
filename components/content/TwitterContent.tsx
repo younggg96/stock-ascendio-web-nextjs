@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import ContentWithModal from "../ContentWithModal";
 import AIAnalysis from "../AIAnalysis";
+import Tags from "../Tags";
 import { TwitterContentProps } from "./types";
 
 export default function TwitterContent({
@@ -21,6 +22,8 @@ export default function TwitterContent({
   mediaUrls,
   aiSummary,
   aiAnalysis,
+  aiTags,
+  sentiment,
   onFormatText,
 }: TwitterContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -59,8 +62,11 @@ export default function TwitterContent({
           {summary}
         </ContentWithModal>
 
+        {/* Tags */}
+        <Tags tags={aiTags || []} />
+
         {/* AI Analysis */}
-        <AIAnalysis aiAnalysis={aiAnalysis} />
+        <AIAnalysis aiAnalysis={aiAnalysis} sentiment={sentiment} />
       </div>
 
       {/* Twitter Embed Modal */}

@@ -12,6 +12,7 @@ import {
 import ContentWithModal from "../ContentWithModal";
 import ExpandableText from "../ExpandableText";
 import AIAnalysis from "../AIAnalysis";
+import Tags from "../Tags";
 import { XiaohongshuContentProps } from "./types";
 
 export default function XiaohongshuContent({
@@ -22,6 +23,8 @@ export default function XiaohongshuContent({
   mediaUrls,
   aiSummary,
   aiAnalysis,
+  aiTags,
+  sentiment,
   onFormatText,
 }: XiaohongshuContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,8 +51,11 @@ export default function XiaohongshuContent({
           />
         </ContentWithModal>
 
+        {/* Tags */}
+        <Tags tags={aiTags || []} />
+
         {/* AI Analysis */}
-        <AIAnalysis aiAnalysis={aiAnalysis} />
+        <AIAnalysis aiAnalysis={aiAnalysis} sentiment={sentiment} />
       </div>
 
       {/* Xiaohongshu Modal */}

@@ -12,6 +12,7 @@ import {
 import ContentWithModal from "../ContentWithModal";
 import ExpandableText from "../ExpandableText";
 import AIAnalysis from "../AIAnalysis";
+import Tags from "../Tags";
 import { YouTubeContentProps } from "./types";
 
 export default function YouTubeContent({
@@ -22,6 +23,8 @@ export default function YouTubeContent({
   mediaUrls,
   aiSummary,
   aiAnalysis,
+  aiTags,
+  sentiment,
   onFormatText,
   viewCount,
   duration,
@@ -52,8 +55,11 @@ export default function YouTubeContent({
           />
         </ContentWithModal>
 
+        {/* Tags */}
+        <Tags tags={aiTags || []} />
+
         {/* AI Analysis */}
-        <AIAnalysis aiAnalysis={aiAnalysis} />
+        <AIAnalysis aiAnalysis={aiAnalysis} sentiment={sentiment} />
       </div>
 
       {/* YouTube Embed Modal */}
