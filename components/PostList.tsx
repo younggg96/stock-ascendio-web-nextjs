@@ -5,13 +5,6 @@ import { CardSkeleton } from "./LoadingSkeleton";
 import { EmptyState, ErrorState } from "./EmptyState";
 import SectionCard from "./SectionCard";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import TweetHeader from "./TweetHeader";
 import {
   TwitterContent,
@@ -28,6 +21,10 @@ import {
   xiaohongshuNoteToUnifiedPost,
 } from "@/lib/postTypes";
 import { SwitchTab } from "./ui/switch-tab";
+import { Button } from "./ui/button";
+import { RotateCcw } from "lucide-react";
+import { MultiSelectOption } from "./ui/multi-select";
+import { FilterSheet, DateRange } from "./FilterSheet";
 
 type Platform = "x" | "reddit" | "youtube" | "xiaohongshu";
 
@@ -58,6 +55,10 @@ const PostTabOption = [
 export default function PostList() {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("x");
   const [selectedTab, setSelectedTab] = useState<string>("all");
+  const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
+  const [timeRange, setTimeRange] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  
   // Cache posts data for each platform
   const [platformPosts, setPlatformPosts] = useState<
     Record<Platform, UnifiedPost[]>
@@ -117,6 +118,130 @@ export default function PostList() {
     [selectedPlatform]
   );
 
+  // Extract unique authors from current platform posts
+  const availableAuthors = useMemo(() => {
+    const uniqueAuthorsMap = new Map<string, { author: string; authorId: string; avatarUrl: string }>();
+    
+    currentPosts.forEach((post) => {
+      if (post.isMarketRelated && !uniqueAuthorsMap.has(post.authorId)) {
+        uniqueAuthorsMap.set(post.authorId, {
+          author: post.author,
+          authorId: post.authorId,
+          avatarUrl: post.avatarUrl,
+        });
+      }
+    });
+
+    return Array.from(uniqueAuthorsMap.values()).sort((a, b) => 
+      a.author.localeCompare(b.author)
+    );
+  }, [currentPosts]);
+
+  // Convert authors to MultiSelect options
+  const authorOptions: MultiSelectOption[] = useMemo(() => {
+    return availableAuthors.map((author) => ({
+      label: author.author,
+      value: author.authorId,
+      icon: (
+        <Image
+          src={author.avatarUrl}
+          alt={author.author}
+          width={16}
+          height={16}
+          className="w-4 h-4 rounded-full"
+        />
+      ),
+    }));
+  }, [availableAuthors]);
+
+  // Helper function to filter by time range
+  const isWithinTimeRange = useCallback((postDate: string, range: string): boolean => {
+    if (range === "all") return true;
+    
+    const now = new Date();
+    const postTime = new Date(postDate);
+    
+    // Custom date range filter
+    if (range === "custom" && dateRange) {
+      const hasFrom = dateRange.from !== undefined;
+      const hasTo = dateRange.to !== undefined;
+      
+      if (hasFrom && hasTo) {
+        return postTime >= dateRange.from! && postTime <= dateRange.to!;
+      } else if (hasFrom) {
+        return postTime >= dateRange.from!;
+      } else if (hasTo) {
+        return postTime <= dateRange.to!;
+      }
+      return true;
+    }
+    
+    // Preset time range filters
+    const diffInMs = now.getTime() - postTime.getTime();
+    const diffInHours = diffInMs / (1000 * 60 * 60);
+    
+    switch (range) {
+      case "1h":
+        return diffInHours <= 1;
+      case "24h":
+        return diffInHours <= 24;
+      case "7d":
+        return diffInHours <= 24 * 7;
+      case "30d":
+        return diffInHours <= 24 * 30;
+      case "3m":
+        return diffInHours <= 24 * 90;
+      default:
+        return true;
+    }
+  }, [dateRange]);
+
+  // Filter posts based on selected authors and time range
+  const filteredPosts = useMemo(() => {
+    let filtered = currentPosts;
+    
+    // Filter by authors
+    if (selectedAuthors.length > 0) {
+      filtered = filtered.filter((post) =>
+        selectedAuthors.includes(post.authorId)
+      );
+    }
+    
+    // Filter by time range or custom date range
+    // When dateRange is set, use it regardless of timeRange value
+    if (dateRange?.from || dateRange?.to) {
+      filtered = filtered.filter((post) => {
+        const postTime = new Date(post.createdAt);
+        const hasFrom = dateRange.from !== undefined;
+        const hasTo = dateRange.to !== undefined;
+        
+        if (hasFrom && hasTo) {
+          return postTime >= dateRange.from! && postTime <= dateRange.to!;
+        } else if (hasFrom) {
+          return postTime >= dateRange.from!;
+        } else if (hasTo) {
+          return postTime <= dateRange.to!;
+        }
+        return true;
+      });
+    } else if (timeRange !== "all" && timeRange !== "") {
+      // Only use preset time range if no custom date range is set
+      filtered = filtered.filter((post) => 
+        isWithinTimeRange(post.createdAt, timeRange)
+      );
+    }
+    
+    return filtered;
+  }, [currentPosts, selectedAuthors, timeRange, dateRange, isWithinTimeRange]);
+
+  // Calculate active filter count
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (selectedAuthors.length > 0) count++;
+    if (timeRange !== "all" || (dateRange?.from || dateRange?.to)) count++;
+    return count;
+  }, [selectedAuthors, timeRange, dateRange]);
+
   useEffect(() => {
     // Only fetch if this platform hasn't been loaded yet
     if (!loadedPlatforms.has(selectedPlatform)) {
@@ -124,6 +249,13 @@ export default function PostList() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlatform, loadedPlatforms.size]);
+
+  // Reset filters when switching platforms
+  useEffect(() => {
+    setSelectedAuthors([]);
+    setTimeRange("all");
+    setDateRange(undefined);
+  }, [selectedPlatform]);
 
   const getApiEndpoint = (platform: Platform): string => {
     const endpoints = {
@@ -310,49 +442,39 @@ export default function PostList() {
         />
       }
       headerRightExtra={
-        <Select value={selectedPlatform} onValueChange={handlePlatformChange}>
-          <SelectTrigger className="w-[130px] h-8 text-xs">
-            <SelectValue>
-              {currentPlatformInfo && (
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={currentPlatformInfo.icon}
-                    alt={currentPlatformInfo.label}
-                    width={16}
-                    height={16}
-                    className="w-4 h-4"
-                  />
-                  <span>{currentPlatformInfo.label}</span>
-                </div>
-              )}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {platforms.map((platform) => (
-              <SelectItem key={platform.id} value={platform.id}>
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={platform.icon}
-                    alt={platform.label}
-                    width={16}
-                    height={16}
-                    className="w-4 h-4"
-                  />
-                  <span>{platform.label}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={refreshCurrentPlatform}
+            aria-label="Refresh"
+          >
+            <RotateCcw className="w-3 h-3" />
+          </Button>
+          
+          <FilterSheet
+            availablePlatforms={platforms}
+            selectedPlatform={selectedPlatform}
+            onPlatformChange={handlePlatformChange}
+            authorOptions={authorOptions}
+            selectedAuthors={selectedAuthors}
+            onAuthorsChange={setSelectedAuthors}
+            timeRange={timeRange}
+            onTimeRangeChange={setTimeRange}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            activeFilterCount={activeFilterCount}
+          />
+        </div>
       }
     >
       {isLoading &&
         [...Array(10)].map((_, i) => <CardSkeleton key={i} lines={10} />)}
 
-      {currentPosts.length === 0 && !isLoading && !currentError && (
+      {filteredPosts.length === 0 && !isLoading && !currentError && (
         <EmptyState
-          title="No posts available"
-          description="There are no posts to display at the moment."
+          title={selectedAuthors.length > 0 ? "No posts from selected authors" : "No posts available"}
+          description={selectedAuthors.length > 0 ? "Try selecting different authors or clear the filter." : "There are no posts to display at the moment."}
         />
       )}
 
@@ -364,7 +486,7 @@ export default function PostList() {
         />
       )}
 
-      {currentPosts.map((post, index) => {
+      {filteredPosts.map((post, index) => {
         if (!!!post.isMarketRelated) return null;
 
         const renderContent = () => {
@@ -445,7 +567,7 @@ export default function PostList() {
 
             {renderContent()}
 
-            {index < currentPosts.length - 1 && <Separator className="my-2" />}
+            {index < filteredPosts.length - 1 && <Separator className="my-2" />}
           </div>
         );
       })}
@@ -461,7 +583,7 @@ export default function PostList() {
       )}
 
       {/* No More Data Indicator */}
-      {!hasMore && currentPosts.length > 0 && (
+      {!hasMore && filteredPosts.length > 0 && (
         <div className="py-4 text-center text-xs text-gray-400 dark:text-white/30">
           No more posts to load
         </div>

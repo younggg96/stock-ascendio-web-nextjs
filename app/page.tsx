@@ -24,10 +24,12 @@ export default function Home() {
                 <TypewriterText
                   phrases={[
                     "Welcome to Ascendio AI",
-                    "The Future of Investing",
-                    "Smart Stock Analysis",
-                    "Real-Time Market Data",
-                    "Your Investment Partner",
+                    "Track Social Media KOLs",
+                    "AI-Powered Investment Analysis",
+                    "Monitor Retail Sentiment",
+                    "Follow the Smart Money",
+                    "AI-Ranked Stock Ideas",
+                    "Multi-Platform Intelligence",
                   ]}
                   typingSpeed={80}
                   deletingSpeed={40}
