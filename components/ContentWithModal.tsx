@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface ContentWithModalProps {
   children: React.ReactNode;
@@ -28,16 +29,18 @@ export default function ContentWithModal({
     <div className={`text-sm ${className}`}>
       <div className="flex items-start gap-2 group">
         <div className="flex-1">{children}</div>
-        <button
+        <Button
+          variant="link"
+          size="xs"
           onClick={(e) => {
             e.stopPropagation();
             onOpenModal();
           }}
-          className="flex-shrink-0 p-1 text-gray-400 hover:text-sky-400 transition-colors mt-0.5"
           aria-label={ariaLabel}
+          className="flex items-center gap-1 text-[8px]"
         >
-          <ExternalLink className="w-3 h-3" />
-        </button>
+          Details <ExternalLink className="w-3 h-3" />
+        </Button>
       </div>
     </div>
   );

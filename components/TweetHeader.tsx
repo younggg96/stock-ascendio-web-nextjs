@@ -1,10 +1,16 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
+import { Button } from "./ui/button";
 
 interface TweetHeaderProps {
   screenName: string;
   createdAt: string;
   profileImageUrl?: string;
   onFormatDate: (dateString: string) => string;
+  initialTracked?: boolean;
+  onTrackChange?: (tracked: boolean) => void;
 }
 
 export default function TweetHeader({
@@ -12,7 +18,17 @@ export default function TweetHeader({
   createdAt,
   profileImageUrl,
   onFormatDate,
+  initialTracked = false,
+  onTrackChange,
 }: TweetHeaderProps) {
+  const [isTracked, setIsTracked] = useState(initialTracked);
+
+  const handleTrackToggle = () => {
+    const newTrackedState = !isTracked;
+    setIsTracked(newTrackedState);
+    onTrackChange?.(newTrackedState);
+  };
+
   return (
     <div className="flex items-center gap-3 mb-3">
       {profileImageUrl ? (
@@ -28,7 +44,7 @@ export default function TweetHeader({
           {screenName.substring(0, 2).toUpperCase()}
         </div>
       )}
-      <div className="min-w-0">
+      <div className="flex-1 min-w-0">
         <p className="font-bold text-sm text-gray-900 dark:text-white">
           {screenName}{" "}
           <span className="text-white/50 font-normal">
@@ -36,6 +52,17 @@ export default function TweetHeader({
           </span>
         </p>
       </div>
+      <Button
+        variant={isTracked ? "default" : "outline"}
+        size="xs"
+        onClick={handleTrackToggle}
+        className={isTracked ? 
+          "bg-primary/40 hover:bg-primary/30 text-gray-300" : 
+          "border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/10"
+        }
+      >
+        {isTracked ? "Tracked" : "Track"}
+      </Button>
     </div>
   );
 }

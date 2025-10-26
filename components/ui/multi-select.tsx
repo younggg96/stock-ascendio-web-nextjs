@@ -143,46 +143,50 @@ export const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
             </TriggerButton>
           </PopoverTrigger>
           <PopoverContent 
-            className="p-1 min-h-0 max-h-[168px] flex flex-col gap-1 overflow-y-auto" 
+            className="p-0" 
             style={{ width: triggerWidth ? `${triggerWidth}px` : undefined }}
             align="start"
             sideOffset={4}
           >
-            {options.length === 0 ? (
-              <div className="py-6 text-center text-sm text-gray-500 dark:text-white/50">
-                No options available
-              </div>
-            ) : (
-              options.map((option) => {
-                const isSelected = value.includes(option.value);
-                return (
-                  <div
-                    key={option.value}
-                    onClick={() => handleSelect(option.value)}
-                    className={cn(
-                      "relative flex w-full cursor-pointer select-none items-center rounded-md py-2 pl-8 pr-2 text-sm outline-none transition-colors duration-150",
-                      isSelected
-                        ? "bg-primary/10 text-primary dark:bg-primary/20"
-                        : "hover:bg-gray-100 dark:hover:bg-white/10 text-gray-900 dark:text-white"
-                    )}
-                    role="option"
-                    aria-selected={isSelected}
-                  >
-                    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                      {isSelected && (
-                        <Check className="h-4 w-4 text-primary" />
-                      )}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {option.icon && (
-                        <span className="flex items-center">{option.icon}</span>
-                      )}
-                      <span>{option.label}</span>
-                    </div>
+            <div className="max-h-[168px] overflow-y-auto">
+              <div className="p-1 flex flex-col gap-1">
+                {options.length === 0 ? (
+                  <div className="py-6 text-center text-sm text-gray-500 dark:text-white/50">
+                    No options available
                   </div>
-                );
-              })
-            )}
+                ) : (
+                  options.map((option) => {
+                    const isSelected = value.includes(option.value);
+                    return (
+                      <div
+                        key={option.value}
+                        onClick={() => handleSelect(option.value)}
+                        className={cn(
+                          "flex w-full cursor-pointer select-none items-center rounded-md py-2 pl-8 pr-2 text-sm outline-none transition-colors duration-150",
+                          isSelected
+                            ? "bg-primary/10 text-primary dark:bg-primary/20"
+                            : "hover:bg-gray-100 dark:hover:bg-white/10 text-gray-900 dark:text-white"
+                        )}
+                        role="option"
+                        aria-selected={isSelected}
+                      >
+                        <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                          {isSelected && (
+                            <Check className="h-4 w-4 text-primary" />
+                          )}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {option.icon && (
+                            <span className="flex items-center">{option.icon}</span>
+                          )}
+                          <span>{option.label}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
           </PopoverContent>
         </Popover>
       </div>
