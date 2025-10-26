@@ -56,6 +56,7 @@ export default function PostList() {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("x");
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [timeRange, setTimeRange] = useState<string>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
@@ -154,6 +155,30 @@ export default function PostList() {
     }));
   }, [availableAuthors]);
 
+  // Extract unique tags from current platform posts
+  const availableTags = useMemo(() => {
+    const uniqueTagsSet = new Set<string>();
+    
+    currentPosts.forEach((post) => {
+      if (post.aiTags) {
+        post.aiTags.forEach((tag) => {
+          console.log(tag);
+          uniqueTagsSet.add(tag);
+        });
+      }
+    });
+
+    return Array.from(uniqueTagsSet).sort();
+  }, [currentPosts]);
+
+  // Convert tags to MultiSelect options
+  const tagOptions: MultiSelectOption[] = useMemo(() => {
+    return availableTags.map((tag) => ({
+      label: tag,
+      value: tag,
+    }));
+  }, [availableTags]);
+
   // Helper function to filter by time range
   const isWithinTimeRange = useCallback((postDate: string, range: string): boolean => {
     if (range === "all") return true;
@@ -196,7 +221,7 @@ export default function PostList() {
     }
   }, [dateRange]);
 
-  // Filter posts based on selected authors and time range
+  // Filter posts based on selected authors, tags, and time range
   const filteredPosts = useMemo(() => {
     let filtered = currentPosts;
     
@@ -204,6 +229,13 @@ export default function PostList() {
     if (selectedAuthors.length > 0) {
       filtered = filtered.filter((post) =>
         selectedAuthors.includes(post.authorId)
+      );
+    }
+    
+    // Filter by tags
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter((post) =>
+        post.aiTags && post.aiTags.some((tag) => selectedTags.includes(tag))
       );
     }
     
@@ -232,15 +264,16 @@ export default function PostList() {
     }
     
     return filtered;
-  }, [currentPosts, selectedAuthors, timeRange, dateRange, isWithinTimeRange]);
+  }, [currentPosts, selectedAuthors, selectedTags, timeRange, dateRange, isWithinTimeRange]);
 
   // Calculate active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (selectedAuthors.length > 0) count++;
+    if (selectedTags.length > 0) count++;
     if (timeRange !== "all" || (dateRange?.from || dateRange?.to)) count++;
     return count;
-  }, [selectedAuthors, timeRange, dateRange]);
+  }, [selectedAuthors, selectedTags, timeRange, dateRange]);
 
   useEffect(() => {
     // Only fetch if this platform hasn't been loaded yet
@@ -253,6 +286,7 @@ export default function PostList() {
   // Reset filters when switching platforms
   useEffect(() => {
     setSelectedAuthors([]);
+    setSelectedTags([]);
     setTimeRange("all");
     setDateRange(undefined);
   }, [selectedPlatform]);
@@ -459,6 +493,9 @@ export default function PostList() {
             authorOptions={authorOptions}
             selectedAuthors={selectedAuthors}
             onAuthorsChange={setSelectedAuthors}
+            tagOptions={tagOptions}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
             dateRange={dateRange}
@@ -473,8 +510,16 @@ export default function PostList() {
 
       {filteredPosts.length === 0 && !isLoading && !currentError && (
         <EmptyState
-          title={selectedAuthors.length > 0 ? "No posts from selected authors" : "No posts available"}
-          description={selectedAuthors.length > 0 ? "Try selecting different authors or clear the filter." : "There are no posts to display at the moment."}
+          title={
+            selectedAuthors.length > 0 || selectedTags.length > 0
+              ? "No posts match your filters"
+              : "No posts available"
+          }
+          description={
+            selectedAuthors.length > 0 || selectedTags.length > 0
+              ? "Try adjusting your filters or clear them to see more posts."
+              : "There are no posts to display at the moment."
+          }
         />
       )}
 

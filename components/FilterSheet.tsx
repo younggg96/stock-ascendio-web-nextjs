@@ -38,6 +38,11 @@ interface FilterSheetProps {
   selectedAuthors: string[];
   onAuthorsChange: (authors: string[]) => void;
 
+  // Tag filters
+  tagOptions: MultiSelectOption[];
+  selectedTags: string[];
+  onTagsChange: (tags: string[]) => void;
+
   // Time range filters
   timeRange: string;
   onTimeRangeChange: (range: string) => void;
@@ -64,6 +69,9 @@ export function FilterSheet({
   authorOptions,
   selectedAuthors,
   onAuthorsChange,
+  tagOptions,
+  selectedTags,
+  onTagsChange,
   timeRange,
   onTimeRangeChange,
   dateRange,
@@ -169,6 +177,39 @@ export function FilterSheet({
             ) : (
               <p className="text-sm text-gray-500 dark:text-white/50">
                 No authors available for this platform
+              </p>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Tag Filter */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between h-6">
+              <Label className="text-base font-semibold">Tags</Label>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {selectedTags.length > 0 && (
+                  <span className="text-xs text-gray-500 dark:text-white/50">
+                    {selectedTags.length} selected
+                  </span>
+                )}
+                {selectedTags.length > 0 && <Button variant="ghost" size="sm" className="!p-0 !w-6 !h-6" onClick={() => onTagsChange([])} aria-label="Clear tags">
+                  <RotateCcw className="w-3 h-3" />
+                </Button>}
+              </div>
+            </div>
+            {tagOptions.length > 0 ? (
+              <MultiSelect
+                options={tagOptions}
+                value={selectedTags}
+                onChange={onTagsChange}
+                placeholder="All Tags"
+                className="w-full"
+                size="sm"
+              />
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-white/50">
+                No tags available for this platform
               </p>
             )}
           </div>
