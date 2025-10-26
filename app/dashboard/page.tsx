@@ -49,8 +49,6 @@ export default function Dashboard() {
                 ))
               )}
             </div> */}
-            {/* <StockChartWithControls symbol="AAPL" /> */}
-            {/* <MarketNews /> */}
             <PostList />
           </div>
 

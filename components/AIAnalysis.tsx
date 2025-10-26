@@ -31,19 +31,19 @@ export default function AIAnalysis({
     switch (sentiment) {
       case "bullish":
         return (
-          <div className="ml-3 rounded px-2 py-0.5 text-xs font-medium bg-green-500/20 text-green-500 flex items-center gap-1">
+          <div className="ml-3 rounded px-2 py-0.5 text-xs font-medium bg-green-500/20 text-green-500 border border-green-500/40 flex items-center gap-1">
             Bullish <div className="w-1 h-1 bg-green-500 rounded-full"></div>
           </div>
         );
       case "bearish":
         return (
-          <div className="ml-3 rounded px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-500 flex items-center gap-1">
+          <div className="ml-3 rounded px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-500 border border-red-500/40 flex items-center gap-1">
             Bearish <div className="w-1 h-1 bg-red-500 rounded-full"></div>
           </div>
         );
       default:
         return (
-          <div className="ml-3 rounded px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-500 flex items-center gap-1">
+          <div className="ml-3 rounded px-2 py-0.5 text-xs font-medium bg-gray-500/20 text-gray-500 border border-gray-500/40 flex items-center gap-1">
             Neutral <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
           </div>
         );

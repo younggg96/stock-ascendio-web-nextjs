@@ -25,6 +25,11 @@ const nextConfig = {
       "sns-img-hw.xhscdn.com",
       "ci.xiaohongshu.com",
       "sns-avatar-qc.xhscdn.com",
+      // Finnhub (Company Logos)
+      "static.finnhub.io",
+      "static2.finnhub.io",
+      // Clearbit (Alternative Logo Source)
+      "logo.clearbit.com",
     ],
   },
 };

@@ -1,5 +1,3 @@
-import SectionCard from "@/components/SectionCard";
-
 interface NewsItem {
   time: string;
   title: string;
@@ -61,39 +59,35 @@ const newsItems: NewsItem[] = [
 
 export default function MarketNews() {
   return (
-    <SectionCard
-      title="Stock Market News"
-      titleSize="md"
-      showLiveIndicator
-      padding="lg"
-      scrollable
-      maxHeight="500px"
-      contentClassName="space-y-4 pr-2 -mr-2 px-4 pb-4"
-    >
+    <>
       {newsItems.map((item, index) => (
-        <div key={index} className="flex items-start gap-3">
-          <div className="text-gray-500 dark:text-white/50 text-xs min-w-[50px]">
-            {item.time}
-          </div>
-          <div
-            className={`${
-              item.isHighlighted
-                ? "border-l-2 border-primary"
-                : "border-l-2 border-gray-300 dark:border-border-dark"
-            } pl-3`}
-          >
-            <a
-              className="text-gray-900 dark:text-white font-semibold text-sm hover:text-primary transition-colors"
-              href="#"
-            >
-              {item.title}
-            </a>
-            <p className="text-xs text-gray-600 dark:text-white/60 mt-1">
-              {item.description}
-            </p>
+        <div key={index}>
+          <div className="flex items-start gap-3 py-3">
+            <div className="text-gray-500 dark:text-white/50 text-xs min-w-[60px]">
+              {item.time}
+            </div>
+            <div className="flex-1">
+              <div
+                className={`${
+                  item.isHighlighted
+                    ? "border-l-2 border-primary"
+                    : "border-l-2 border-gray-300 dark:border-border-dark"
+                } pl-3`}
+              >
+                <a
+                  className="text-gray-900 dark:text-white font-semibold text-sm hover:text-primary transition-colors cursor-pointer"
+                  href="#"
+                >
+                  {item.title}
+                </a>
+                <p className="text-xs text-gray-600 dark:text-white/60 mt-1">
+                  {item.description}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       ))}
-    </SectionCard>
+    </>
   );
 }

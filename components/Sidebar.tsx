@@ -21,7 +21,7 @@ const navItems = [
     title: "Home",
     href: "/dashboard",
   },
-  { icon: Newspaper, title: "News", href: "#" },
+  { icon: Newspaper, title: "News", href: "/dashboard/news" },
   { icon: Users, title: "KOL Tracker", href: "#" },
   { icon: Settings, title: "Settings", href: "/dashboard/settings" },
 ];

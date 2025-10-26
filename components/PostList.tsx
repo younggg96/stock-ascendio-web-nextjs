@@ -24,7 +24,7 @@ import { SwitchTab } from "./ui/switch-tab";
 import { Button } from "./ui/button";
 import { RotateCcw } from "lucide-react";
 import { MultiSelectOption } from "./ui/multi-select";
-import { FilterSheet, DateRange } from "./FilterSheet";
+import { FilterSheet, DateRange, Sentiment } from "./FilterSheet";
 
 type Platform = "x" | "reddit" | "youtube" | "xiaohongshu";
 
@@ -57,6 +57,7 @@ export default function PostList() {
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedSentiments, setSelectedSentiments] = useState<Sentiment[]>([]);
   const [timeRange, setTimeRange] = useState<string>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
@@ -221,7 +222,7 @@ export default function PostList() {
     }
   }, [dateRange]);
 
-  // Filter posts based on selected authors, tags, and time range
+  // Filter posts based on selected authors, tags, sentiments, and time range
   const filteredPosts = useMemo(() => {
     let filtered = currentPosts;
     
@@ -236,6 +237,13 @@ export default function PostList() {
     if (selectedTags.length > 0) {
       filtered = filtered.filter((post) =>
         post.aiTags && post.aiTags.some((tag) => selectedTags.includes(tag))
+      );
+    }
+    
+    // Filter by sentiments
+    if (selectedSentiments.length > 0) {
+      filtered = filtered.filter((post) =>
+        selectedSentiments.includes(post.sentiment)
       );
     }
     
@@ -264,16 +272,17 @@ export default function PostList() {
     }
     
     return filtered;
-  }, [currentPosts, selectedAuthors, selectedTags, timeRange, dateRange, isWithinTimeRange]);
+  }, [currentPosts, selectedAuthors, selectedTags, selectedSentiments, timeRange, dateRange, isWithinTimeRange]);
 
   // Calculate active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (selectedAuthors.length > 0) count++;
     if (selectedTags.length > 0) count++;
+    if (selectedSentiments.length > 0) count++;
     if (timeRange !== "all" || (dateRange?.from || dateRange?.to)) count++;
     return count;
-  }, [selectedAuthors, selectedTags, timeRange, dateRange]);
+  }, [selectedAuthors, selectedTags, selectedSentiments, timeRange, dateRange]);
 
   useEffect(() => {
     // Only fetch if this platform hasn't been loaded yet
@@ -287,6 +296,7 @@ export default function PostList() {
   useEffect(() => {
     setSelectedAuthors([]);
     setSelectedTags([]);
+    setSelectedSentiments([]);
     setTimeRange("all");
     setDateRange(undefined);
   }, [selectedPlatform]);
@@ -496,6 +506,8 @@ export default function PostList() {
             tagOptions={tagOptions}
             selectedTags={selectedTags}
             onTagsChange={setSelectedTags}
+            selectedSentiments={selectedSentiments}
+            onSentimentsChange={setSelectedSentiments}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
             dateRange={dateRange}
@@ -511,12 +523,12 @@ export default function PostList() {
       {filteredPosts.length === 0 && !isLoading && !currentError && (
         <EmptyState
           title={
-            selectedAuthors.length > 0 || selectedTags.length > 0
+            selectedAuthors.length > 0 || selectedTags.length > 0 || selectedSentiments.length > 0
               ? "No posts match your filters"
               : "No posts available"
           }
           description={
-            selectedAuthors.length > 0 || selectedTags.length > 0
+            selectedAuthors.length > 0 || selectedTags.length > 0 || selectedSentiments.length > 0
               ? "Try adjusting your filters or clear them to see more posts."
               : "There are no posts to display at the moment."
           }
