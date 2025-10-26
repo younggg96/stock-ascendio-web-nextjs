@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { TriggerButton } from "@/components/ui/trigger-button";
-import { Filter, RotateCcw, X } from "lucide-react";
-import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
+import { Filter, RotateCcw } from "lucide-react";
+import { MultiSelectOption } from "@/components/ui/multi-select";
+import { ExpandableOptions } from "@/components/ui/expandable-options";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
@@ -166,13 +167,12 @@ export function FilterSheet({
               </div>
             </div>
             {authorOptions.length > 0 ? (
-              <MultiSelect
+              <ExpandableOptions
                 options={authorOptions}
-                value={selectedAuthors}
-                onChange={onAuthorsChange}
-                placeholder="All Authors"
-                className="w-full"
-                size="sm"
+                selectedValues={selectedAuthors}
+                onSelectionChange={onAuthorsChange}
+                defaultVisibleCount={6}
+                columns={2}
               />
             ) : (
               <p className="text-sm text-gray-500 dark:text-white/50">
@@ -199,13 +199,14 @@ export function FilterSheet({
               </div>
             </div>
             {tagOptions.length > 0 ? (
-              <MultiSelect
+              <ExpandableOptions
                 options={tagOptions}
-                value={selectedTags}
-                onChange={onTagsChange}
-                placeholder="All Tags"
-                className="w-full"
-                size="sm"
+                selectedValues={selectedTags}
+                onSelectionChange={onTagsChange}
+                defaultVisibleCount={6}
+                columns={3}
+                expandButtonHeight="h-[40px]"
+                blurOpacity={80}
               />
             ) : (
               <p className="text-sm text-gray-500 dark:text-white/50">
