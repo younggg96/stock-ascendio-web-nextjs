@@ -22,6 +22,8 @@ export default function StockPage({ params }: StockPageProps) {
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [backLabel, setBackLabel] = useState("Back");
 
   // Fetch stock quote data
   const { data: stockQuote, loading, error } = useStockQuote(symbol, 30000);
@@ -29,6 +31,31 @@ export default function StockPage({ params }: StockPageProps) {
   useEffect(() => {
     setMounted(true);
     setCurrentTime(new Date());
+
+    // 检查是否有历史记录可以返回，并根据来源设置返回按钮文本
+    const hasHistory = window.history.length > 1;
+    setCanGoBack(hasHistory);
+
+    if (hasHistory && document.referrer) {
+      try {
+        const referrerUrl = new URL(document.referrer);
+        const pathname = referrerUrl.pathname;
+        
+        if (pathname.includes('/dashboard/news')) {
+          setBackLabel("Back to News");
+        } else if (pathname === '/dashboard' || pathname === '/dashboard/') {
+          setBackLabel("Back to Dashboard");
+        } else if (pathname.includes('/dashboard')) {
+          setBackLabel("Back");
+        } else {
+          setBackLabel("Back");
+        }
+      } catch {
+        setBackLabel("Back");
+      }
+    } else {
+      setBackLabel("Back to Dashboard");
+    }
 
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -57,11 +84,17 @@ export default function StockPage({ params }: StockPageProps) {
             {/* Back button */}
             <div className="mb-4 lg:mb-6">
               <button
-                onClick={() => router.push("/dashboard")}
+                onClick={() => {
+                  if (canGoBack) {
+                    router.back();
+                  } else {
+                    router.push("/dashboard");
+                  }
+                }}
                 className="flex items-center gap-2 text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
               >
                 <ArrowLeft className="w-5 h-5" />
-                <span className="text-sm font-medium">Back to Dashboard</span>
+                <span className="text-sm font-medium">{backLabel}</span>
               </button>
             </div>
 

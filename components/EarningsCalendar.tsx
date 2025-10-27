@@ -3,12 +3,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Calendar, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Building2, RefreshCw } from "lucide-react";
 import { 
   EarningsEvent, 
-  groupEarningsByDate, 
+  groupEarningsByDate,
   formatEarningsDate,
-  getEarningsTimeLabel 
+  getEarningsTimeLabel
 } from "@/lib/earningsApi";
 import {
   Dialog,
@@ -36,10 +36,90 @@ export default function EarningsCalendar({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isFromCache, setIsFromCache] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchEarnings = useCallback(async () => {
+  // 缓存配置
+  const CACHE_PREFIX = 'earnings_cache_';
+  const CACHE_DURATION = 10 * 60 * 1000; // 10分钟缓存
+
+  // 生成缓存key
+  const getCacheKey = (fromDate: string, toDate: string) => {
+    return `${CACHE_PREFIX}${fromDate}_${toDate}`;
+  };
+
+  // 从缓存读取数据
+  const getFromCache = (key: string) => {
+    try {
+      const cached = localStorage.getItem(key);
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached);
+      const now = Date.now();
+
+      // 检查缓存是否过期
+      if (now - timestamp > CACHE_DURATION) {
+        localStorage.removeItem(key);
+        return null;
+      }
+
+      return data;
+    } catch (err) {
+      console.error('Error reading from cache:', err);
+      return null;
+    }
+  };
+
+  // 保存到缓存
+  const saveToCache = (key: string, data: any) => {
+    try {
+      const cacheData = {
+        data,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(key, JSON.stringify(cacheData));
+    } catch (err) {
+      console.error('Error saving to cache:', err);
+    }
+  };
+
+  // 清理过期的缓存
+  const cleanExpiredCache = () => {
+    try {
+      const keys = Object.keys(localStorage);
+      const now = Date.now();
+      let cleanedCount = 0;
+
+      keys.forEach(key => {
+        if (key.startsWith(CACHE_PREFIX)) {
+          try {
+            const cached = localStorage.getItem(key);
+            if (cached) {
+              const { timestamp } = JSON.parse(cached);
+              if (now - timestamp > CACHE_DURATION) {
+                localStorage.removeItem(key);
+                cleanedCount++;
+              }
+            }
+          } catch {
+            // 如果解析失败，删除该缓存
+            localStorage.removeItem(key);
+            cleanedCount++;
+          }
+        }
+      });
+
+      if (cleanedCount > 0) {
+        console.log(`🧹 Cleaned ${cleanedCount} expired cache entries`);
+      }
+    } catch (err) {
+      console.error('Error cleaning cache:', err);
+    }
+  };
+
+  const fetchEarnings = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -61,6 +141,21 @@ export default function EarningsCalendar({
         toDate = lastDay.toISOString().split('T')[0];
       }
 
+      const cacheKey = getCacheKey(fromDate!, toDate!);
+
+      // 尝试从缓存读取（除非强制刷新）
+      if (!forceRefresh) {
+        const cachedData = getFromCache(cacheKey);
+        if (cachedData) {
+          console.log('✅ Loading earnings from cache');
+          setEarnings(maxEvents ? cachedData.slice(0, maxEvents) : cachedData);
+          setIsFromCache(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 从API获取数据
       let url = "/api/earnings";
       const params = new URLSearchParams();
       if (fromDate) params.append("from", fromDate);
@@ -71,6 +166,11 @@ export default function EarningsCalendar({
       if (!response.ok) throw new Error("Failed to fetch earnings");
 
       const data = await response.json();
+      
+      // 保存到缓存
+      saveToCache(cacheKey, data);
+      setIsFromCache(false);
+      
       setEarnings(maxEvents ? data.slice(0, maxEvents) : data);
     } catch (err) {
       console.error("Error fetching earnings:", err);
@@ -81,64 +181,96 @@ export default function EarningsCalendar({
   }, [from, to, currentDate, maxEvents]);
 
   useEffect(() => {
+    // 清理过期缓存
+    cleanExpiredCache();
+    // 获取数据
     fetchEarnings();
   }, [fetchEarnings]);
 
-  // 生成日历网格数据
-  const calendarDays = useMemo(() => {
+  const groupedEarnings = useMemo(() => groupEarningsByDate(earnings), [earnings]);
+
+  // 获取有财报事件的日期集合
+  const datesWithEarnings = useMemo(() => {
+    return new Set(Object.keys(groupedEarnings));
+  }, [groupedEarnings]);
+
+  // 生成周视图日历（只显示工作日和有财报的周）
+  const weeksWithEarnings = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     
-    // 本月第一天
+    // 本月第一天和最后一天
     const firstDayOfMonth = new Date(year, month, 1);
-    // 本月最后一天
     const lastDayOfMonth = new Date(year, month + 1, 0);
     
-    // 第一天是星期几（0=周日，1=周一...）
+    // 计算第一周的起始日期（从周日开始，但我们只会使用周一到周五）
     const firstDayWeekday = firstDayOfMonth.getDay();
-    // 本月有多少天
-    const daysInMonth = lastDayOfMonth.getDate();
+    const firstWeekStart = new Date(firstDayOfMonth);
+    firstWeekStart.setDate(firstDayOfMonth.getDate() - firstDayWeekday);
     
-    const days = [];
+    const weeks = [];
+    let currentWeekStart = new Date(firstWeekStart);
     
-    // 填充上个月的日期
-    const prevMonthLastDay = new Date(year, month, 0).getDate();
-    for (let i = firstDayWeekday - 1; i >= 0; i--) {
-      days.push({
-        day: prevMonthLastDay - i,
-        date: new Date(year, month - 1, prevMonthLastDay - i),
-        isCurrentMonth: false,
-      });
+    // 生成所有可能的周
+    while (currentWeekStart <= lastDayOfMonth || currentWeekStart.getMonth() === month) {
+      const week = [];
+      let hasEarnings = false;
+      
+      // 只生成工作日（周一到周五，即 weekday 1-5）
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(currentWeekStart);
+        date.setDate(currentWeekStart.getDate() + i);
+        const weekday = date.getDay();
+        
+        // 跳过周末（0=周日, 6=周六）
+        if (weekday === 0 || weekday === 6) {
+          continue;
+        }
+        
+        const dateStr = date.toISOString().split('T')[0];
+        const isCurrentMonth = date.getMonth() === month;
+        
+        week.push({
+          date,
+          dateStr,
+          isCurrentMonth,
+          hasEarnings: datesWithEarnings.has(dateStr),
+        });
+        
+        // 如果这一周有任何财报事件，标记这一周
+        if (datesWithEarnings.has(dateStr)) {
+          hasEarnings = true;
+        }
+      }
+      
+      // 只添加有财报的周
+      if (hasEarnings && week.length > 0) {
+        weeks.push(week);
+      }
+      
+      // 移动到下一周
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      
+      // 如果已经超出本月很多，停止
+      if (currentWeekStart.getMonth() > month && currentWeekStart.getDate() > 7) {
+        break;
+      }
     }
     
-    // 填充本月的日期
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push({
-        day,
-        date: new Date(year, month, day),
-        isCurrentMonth: true,
-      });
-    }
-    
-    // 填充下个月的日期，补齐到42天（6周）
-    const remainingDays = 42 - days.length;
-    for (let day = 1; day <= remainingDays; day++) {
-      days.push({
-        day,
-        date: new Date(year, month + 1, day),
-        isCurrentMonth: false,
-      });
-    }
-    
-    return days;
-  }, [currentDate]);
-
-  const groupedEarnings = useMemo(() => groupEarningsByDate(earnings), [earnings]);
+    return weeks;
+  }, [currentDate, datesWithEarnings]);
 
   // 获取指定日期的财报事件
-  const getEventsForDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+  const getEventsForDate = (dateStr: string) => {
     return groupedEarnings[dateStr] || [];
+  };
+
+  // 按盘前/盘后分组财报事件
+  const groupEventsByTime = (events: any[]) => {
+    const bmo = events.filter(e => e.time === 'bmo');
+    const amc = events.filter(e => e.time === 'amc');
+    const other = events.filter(e => !e.time || (e.time !== 'bmo' && e.time !== 'amc'));
+    return { bmo, amc, other };
   };
 
   // 判断是否是今天
@@ -160,13 +292,20 @@ export default function EarningsCalendar({
     setCurrentDate(new Date());
   };
 
+  // 手动刷新数据
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchEarnings(true); // 强制刷新
+    setTimeout(() => setIsRefreshing(false), 500); // 延迟一下让动画更明显
+  };
+
   if (loading) {
     return (
       <div className="space-y-3">
         <div className="animate-pulse space-y-3">
           <div className="h-12 bg-gray-100 dark:bg-white/5 rounded-lg"></div>
           <div className="grid grid-cols-7 gap-2">
-            {[...Array(35)].map((_, i) => (
+            {[...Array(14)].map((_, i) => (
               <div key={i} className="h-24 bg-gray-100 dark:bg-white/5 rounded-lg"></div>
             ))}
           </div>
@@ -188,63 +327,94 @@ export default function EarningsCalendar({
   if (compact) {
     return (
       <div className="space-y-3">
-        {earnings.slice(0, maxEvents).map((event, index) => (
-          <div
-            key={`${event.symbol}-${index}`}
-            className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-white/10 last:border-0"
-          >
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                    {event.symbol}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-white/50 truncate">
-                    {event.companyName}
-                  </span>
+        {earnings.slice(0, maxEvents).map((event, index) => {
+          const isBMO = event.time === 'bmo';
+          const isAMC = event.time === 'amc';
+          
+          return (
+            <div
+              key={`${event.symbol}-${index}`}
+              className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-white/10 last:border-0"
+            >
+              <div className="flex items-center gap-3 flex-1">
+                <div className={`
+                  w-10 h-10 rounded-lg flex items-center justify-center
+                  ${isBMO ? 'bg-blue-100 dark:bg-blue-900/30' : isAMC ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-primary/10'}
+                `}>
+                  <Building2 className={`
+                    w-5 h-5
+                    ${isBMO ? 'text-blue-600 dark:text-blue-400' : isAMC ? 'text-orange-600 dark:text-orange-400' : 'text-primary'}
+                  `} />
                 </div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[10px] text-gray-500 dark:text-white/50">
-                    {formatEarningsDate(event.date)}
-                  </span>
-                  {event.time && (
-                    <span className="text-[10px] text-gray-400 dark:text-white/40">
-                      • {getEarningsTimeLabel(event.time)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm text-gray-900 dark:text-white">
+                      {event.symbol}
                     </span>
-                  )}
+                    {event.time && (
+                      <span className={`
+                        text-[10px] px-1.5 py-0.5 rounded-full font-semibold
+                        ${isBMO ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700' : 
+                          isAMC ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700' : 
+                          'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}
+                      `}>
+                        {isBMO ? '盘前' : isAMC ? '盘后' : getEarningsTimeLabel(event.time)}
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-500 dark:text-white/50 truncate">
+                      {event.companyName}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-gray-500 dark:text-white/50">
+                      {formatEarningsDate(event.date)}
+                    </span>
+                  </div>
                 </div>
               </div>
+              {event.epsEstimate !== null && event.epsEstimate !== undefined && (
+                <div className="text-right">
+                  <div className="text-xs text-gray-500 dark:text-white/50">EPS Est.</div>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                    ${event.epsEstimate.toFixed(2)}
+                  </div>
+                </div>
+              )}
             </div>
-            {event.epsEstimate !== null && event.epsEstimate !== undefined && (
-              <div className="text-right">
-                <div className="text-xs text-gray-500 dark:text-white/50">EPS Est.</div>
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                  ${event.epsEstimate.toFixed(2)}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']; // 只显示工作日
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                       'July', 'August', 'September', 'October', 'November', 'December'];
 
-  // 日历视图
+  // 周日历视图（只显示工作日和有财报的周）
   return (
     <div className="space-y-4">
       {/* 月份导航 */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </h2>
         <div className="flex items-center gap-2">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </h2>
+          {isFromCache && !loading && (
+            <span className="text-[10px] px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full font-medium">
+              Cached
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-md transition-colors disabled:opacity-50"
+            title="Refresh data"
+          >
+            <RefreshCw className={`w-5 h-5 text-gray-600 dark:text-white/70 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
           <button
             onClick={goToToday}
             className="px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-md text-gray-700 dark:text-white transition-colors"
@@ -266,8 +436,8 @@ export default function EarningsCalendar({
         </div>
       </div>
 
-      {/* 星期标题 */}
-      <div className="grid grid-cols-7 gap-1">
+      {/* 星期标题（只显示工作日） */}
+      <div className="grid grid-cols-5 gap-1">
         {weekDays.map(day => (
           <div
             key={day}
@@ -278,108 +448,166 @@ export default function EarningsCalendar({
         ))}
       </div>
 
-      {/* 日历网格 */}
-      <div className="grid grid-cols-7 gap-1">
-        {calendarDays.map((dayInfo, index) => {
-          const events = getEventsForDate(dayInfo.date);
-          const hasEvents = events.length > 0;
-          const isTodayDate = isToday(dayInfo.date);
-          const dateStr = dayInfo.date.toISOString().split('T')[0];
-          const isSelected = selectedDate === dateStr;
+      {/* 只显示有财报的周（只显示工作日） */}
+      {weeksWithEarnings.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 dark:text-white/50">
+          <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p className="text-sm">No earnings reports this month</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {weeksWithEarnings.map((week, weekIndex) => (
+            <div key={weekIndex} className="grid grid-cols-5 gap-1">
+              {week.map((dayInfo, dayIndex) => {
+                const events = getEventsForDate(dayInfo.dateStr);
+                const hasEvents = dayInfo.hasEarnings;
+                const isTodayDate = isToday(dayInfo.date);
+                const { bmo, amc, other } = groupEventsByTime(events);
 
-          return (
-            <div
-              key={index}
-              className={`
-                min-h-[100px] p-2 rounded-lg border transition-all cursor-pointer
-                ${dayInfo.isCurrentMonth 
-                  ? 'bg-white dark:bg-gray-800/50 border-gray-200 dark:border-white/10' 
-                  : 'bg-gray-50 dark:bg-gray-900/30 border-gray-100 dark:border-white/5'
-                }
-                ${hasEvents ? 'hover:border-primary dark:hover:border-primary hover:shadow-md' : 'hover:border-gray-300 dark:hover:border-white/20'}
-                ${isTodayDate ? 'ring-2 ring-primary' : ''}
-                ${isSelected ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10' : ''}
-              `}
-              onClick={() => {
-                if (hasEvents) {
-                  if (isSelected) {
-                    setSelectedDate(null);
-                    setIsModalOpen(false);
-                  } else {
-                    setSelectedDate(dateStr);
-                    setIsModalOpen(true);
-                  }
-                }
-              }}
-            >
-              {/* 日期数字 */}
-              <div className="flex items-center justify-between mb-1">
-                <span className={`
-                  text-sm font-semibold
-                  ${dayInfo.isCurrentMonth 
-                    ? 'text-gray-900 dark:text-white' 
-                    : 'text-gray-400 dark:text-white/30'
-                  }
-                  ${isTodayDate ? 'text-primary' : ''}
-                `}>
-                  {dayInfo.day}
-                </span>
-                {hasEvents && (
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 bg-primary/20 text-primary rounded">
-                    {events.length}
-                  </span>
-                )}
-              </div>
-
-              {/* 财报事件列表 */}
-              {hasEvents && (
-                <div className="space-y-1">
-                  {events.slice(0, 3).map((event, eventIndex) => (
-                    <div
-                      key={eventIndex}
-                      className="flex items-center gap-1 px-1.5 py-1 bg-primary/10 rounded"
-                      title={`${event.symbol} - ${event.companyName}`}
-                    >
-                      {event.logo && (
-                        <div className="w-4 h-4 bg-white rounded-sm flex-shrink-0 overflow-hidden">
-                          <Image
-                            src={event.logo}
-                            alt={event.symbol}
-                            width={16}
-                            height={16}
-                            className="object-contain"
-                          />
-                        </div>
+                return (
+                  <div
+                    key={dayIndex}
+                    className={`
+                      min-h-[160px] p-2 rounded-lg border transition-all
+                      ${dayInfo.isCurrentMonth 
+                        ? 'bg-white dark:bg-gray-800/50 border-gray-200 dark:border-white/10' 
+                        : 'bg-gray-50 dark:bg-gray-900/30 border-gray-100 dark:border-white/5'
+                      }
+                      ${hasEvents ? 'hover:border-primary dark:hover:border-primary hover:shadow-md cursor-pointer' : ''}
+                      ${isTodayDate ? 'ring-2 ring-primary' : ''}
+                    `}
+                    onClick={() => {
+                      if (hasEvents) {
+                        setSelectedDate(dayInfo.dateStr);
+                        setIsModalOpen(true);
+                      }
+                    }}
+                  >
+                    {/* 日期数字 */}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`
+                        text-sm font-semibold
+                        ${dayInfo.isCurrentMonth 
+                          ? 'text-gray-900 dark:text-white' 
+                          : 'text-gray-400 dark:text-white/30'
+                        }
+                        ${isTodayDate ? 'text-primary' : ''}
+                      `}>
+                        {dayInfo.date.getDate()}
+                      </span>
+                      {hasEvents && (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 bg-primary/20 text-primary rounded">
+                          {events.length}
+                        </span>
                       )}
-                      <div className="text-[10px] font-semibold text-primary truncate">
-                        {event.symbol}
+                    </div>
+
+                    {/* 盘前财报 (BMO) */}
+                    {bmo.length > 0 && (
+                      <div className="mb-2">
+                        <div className="text-[8px] font-semibold text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                          Before Market Open ({bmo.length})
+                        </div>
+                        <div className="space-y-1">
+                          {bmo.slice(0, 2).map((event, eventIndex) => (
+                            <div
+                              key={eventIndex}
+                              className="flex items-center gap-1 px-1.5 py-1 bg-blue-50 dark:bg-blue-900/20 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors cursor-pointer border border-blue-200 dark:border-blue-800"
+                              title={`${event.symbol} - ${event.companyName} (Pre-market)`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/dashboard/stock/${event.symbol}`);
+                              }}
+                            >
+                              {event.logo && (
+                                <div className="w-4 h-4 bg-white rounded-sm flex-shrink-0 overflow-hidden">
+                                  <Image
+                                    src={event.logo}
+                                    alt={event.symbol}
+                                    width={16}
+                                    height={16}
+                                    className="object-contain"
+                                  />
+                                </div>
+                              )}
+                              <div className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 truncate">
+                                {event.symbol}
+                              </div>
+                            </div>
+                          ))}
+                          {bmo.length > 2 && (
+                            <div className="text-[9px] text-blue-600 dark:text-blue-400 text-center">
+                              +{bmo.length - 2}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {events.length > 3 && (
-                    <div className="text-[9px] text-gray-500 dark:text-white/50 text-center">
-                      +{events.length - 3} more
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+
+                    {/* 盘后财报 (AMC) */}
+                    {amc.length > 0 && (
+                      <div className="mb-1">
+                        <div className="text-[8px] font-semibold text-orange-600 dark:text-orange-400 mb-1 flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-600 dark:bg-orange-400"></div>
+                          After hours ({amc.length})
+                        </div>
+                        <div className="space-y-1">
+                          {amc.slice(0, 2).map((event, eventIndex) => (
+                            <div
+                              key={eventIndex}
+                              className="flex items-center gap-1 px-1.5 py-1 bg-orange-50 dark:bg-orange-900/20 rounded hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors cursor-pointer border border-orange-200 dark:border-orange-800"
+                              title={`${event.symbol} - ${event.companyName} (After-hours)`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/dashboard/stock/${event.symbol}`);
+                              }}
+                            >
+                              {event.logo && (
+                                <div className="w-4 h-4 bg-white rounded-sm flex-shrink-0 overflow-hidden">
+                                  <Image
+                                    src={event.logo}
+                                    alt={event.symbol}
+                                    width={16}
+                                    height={16}
+                                    className="object-contain"
+                                  />
+                                </div>
+                              )}
+                              <div className="text-[10px] font-semibold text-orange-700 dark:text-orange-300 truncate">
+                                {event.symbol}
+                              </div>
+                            </div>
+                          ))}
+                          {amc.length > 2 && (
+                            <div className="text-[9px] text-orange-600 dark:text-orange-400 text-center">
+                              +{amc.length - 2}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
-      {/* Shadcn Dialog Modal */}
+          ))}
+        </div>
+      )}
+
+      {/* Modal 显示选中日期的所有财报 */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] !p-0 !gap-0">
-          <DialogHeader className="px-6 py-4 border-b border-gray-200 dark:border-white/10">
+        <DialogContent className="max-w-4xl max-h-[85vh] !p-0 !gap-0">
+          <DialogHeader className="px-6 py-4 border-b border-gray-200 dark:border-white/10 sticky top-0 bg-white dark:bg-gray-900 z-10">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-primary" />
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-sm font-bold">
+                <DialogTitle className="text-base font-bold">
                   {selectedDate && formatEarningsDate(selectedDate)}
                 </DialogTitle>
-                <DialogDescription className="text-xs">
+                <DialogDescription className="text-sm">
                   {selectedDate && groupedEarnings[selectedDate] && (
                     <>
                       {groupedEarnings[selectedDate].length} {groupedEarnings[selectedDate].length === 1 ? 'Company' : 'Companies'} Reporting Earnings
@@ -390,119 +618,471 @@ export default function EarningsCalendar({
             </div>
           </DialogHeader>
 
-          <div className="overflow-y-auto max-h-[calc(85vh-120px)] px-6 py-4">
-            <div className="space-y-2">
-              {selectedDate && groupedEarnings[selectedDate]?.map((event, index) => (
-                <div
-                  key={index}
-                  className="group bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-white/10 hover:border-primary dark:hover:border-primary hover:shadow-md transition-all cursor-pointer"
-                  onClick={() => {
-                    router.push(`/dashboard/stock/${event.symbol}`);
-                    setIsModalOpen(false);
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    {/* 左侧：公司信息 */}
-                    <div className="flex items-start gap-2 flex-1">
-                      {event.logo &&
-                        <div className="w-10 h-10 bg-white dark:bg-gray-900 rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-white/10 overflow-hidden">
-                          <Image
-                            src={event.logo}
-                            alt={event.companyName}
-                            width={40}
-                            height={40}
-                            className="object-contain"
-                            onError={(e) => {
-                              // Fallback to icon if image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = '<div class="w-full h-full bg-primary/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg></div>';
-                              }
+          <div className="overflow-y-auto max-h-[calc(85vh-100px)] px-6 py-4">
+            {selectedDate && groupedEarnings[selectedDate] && (
+              <div className="space-y-4">
+                {/* 盘前财报 */}
+                {(() => {
+                  const bmoEvents = groupedEarnings[selectedDate].filter(e => e.time === 'bmo');
+                  if (bmoEvents.length === 0) return null;
+                  return (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+                        <h3 className="text-sm font-bold text-blue-700 dark:text-blue-300">
+                          盘前财报 ({bmoEvents.length})
+                        </h3>
+                      </div>
+                      <div className="space-y-2">
+                        {bmoEvents.map((event, index) => (
+                          <div
+                            key={index}
+                            className="group bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md transition-all cursor-pointer"
+                            onClick={() => {
+                              router.push(`/dashboard/stock/${event.symbol}`);
+                              setIsModalOpen(false);
                             }}
-                          />
-                        </div>
-                      }
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-primary transition-colors">
-                            {event.symbol}
-                          </span>
-                          {event.time && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-gray-200 dark:bg-white/10 rounded-full text-gray-600 dark:text-white/70 font-medium">
-                              {event.time === 'bmo' ? 'Pre-market' : event.time === 'amc' ? 'After-hours' : 'During Market'}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-white/60 mb-1">
-                          {event.companyName}
-                        </p>
-                        {(event.quarter || event.year) && (
-                          <span className="inline-block text-[10px] px-1.5 py-0.5 bg-primary/10 rounded text-primary font-semibold">
-                            Q{event.quarter} {event.year}
-                          </span>
-                        )}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              {/* 左侧：公司信息 */}
+                              <div className="flex items-start gap-3 flex-1">
+                                {event.logo && (
+                                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0 border border-blue-200 dark:border-blue-700 overflow-hidden">
+                                    <Image
+                                      src={event.logo}
+                                      alt={event.companyName}
+                                      width={48}
+                                      height={48}
+                                      className="object-contain"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-base font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                      {event.symbol}
+                                    </span>
+                                    <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 rounded-full text-blue-700 dark:text-blue-300 font-semibold">
+                                      盘前
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 dark:text-white/80 mb-1">
+                                    {event.companyName}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-white/50">
+                                    {event.sector && (
+                                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-white/10 rounded">
+                                        {event.sector}
+                                      </span>
+                                    )}
+                                    {(event.quarter && event.year) && (
+                                      <span className="px-2 py-0.5 bg-primary/10 rounded text-primary font-semibold">
+                                        Q{event.quarter} {event.year}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 右侧：财务数据 */}
+                              <div className="flex gap-3 flex-shrink-0">
+                                {event.epsEstimate !== null && event.epsEstimate !== undefined && (
+                                  <div className="text-right bg-white dark:bg-gray-800 rounded-lg p-3 min-w-[90px] border border-blue-200 dark:border-blue-700">
+                                    <div className="text-[10px] text-gray-500 dark:text-white/50 mb-1">
+                                      EPS Est.
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                      ${event.epsEstimate.toFixed(2)}
+                                    </div>
+                                    {event.epsActual !== null && event.epsActual !== undefined && (
+                                      <div className={`text-xs font-semibold mt-1 ${
+                                        event.epsActual >= event.epsEstimate 
+                                          ? 'text-green-600 dark:text-green-400' 
+                                          : 'text-red-600 dark:text-red-400'
+                                      }`}>
+                                        Act: ${event.epsActual.toFixed(2)}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {event.revenueEstimate && (
+                                  <div className="text-right bg-white dark:bg-gray-800 rounded-lg p-3 min-w-[90px] border border-blue-200 dark:border-blue-700">
+                                    <div className="text-[10px] text-gray-500 dark:text-white/50 mb-1">
+                                      Revenue Est.
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                      ${(event.revenueEstimate / 1e9).toFixed(1)}B
+                                    </div>
+                                    {event.revenueActual && (
+                                      <div className={`text-xs font-semibold mt-1 ${
+                                        event.revenueActual >= event.revenueEstimate 
+                                          ? 'text-green-600 dark:text-green-400' 
+                                          : 'text-red-600 dark:text-red-400'
+                                      }`}>
+                                        Act: ${(event.revenueActual / 1e9).toFixed(1)}B
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
+                  );
+                })()}
 
-                    {/* 右侧：财务数据 */}
-                    <div className="flex gap-2 flex-shrink-0">
-                      {/* EPS */}
-                      {event.epsEstimate !== null && event.epsEstimate !== undefined && (
-                        <div className="text-right bg-primary/10 dark:bg-gray-900/50 rounded p-2 min-w-[90px]">
-                          <div className="text-[9px] text-gray-500 dark:text-white/50 mb-0.5">
-                            EPS
-                          </div>
-                          <div className="text-xs font-bold text-gray-900 dark:text-white">
-                            ${event.epsEstimate.toFixed(2)}
-                          </div>
-                          {event.epsActual !== null && event.epsActual !== undefined && (
-                            <div className={`text-[9px] font-semibold mt-0.5 ${
-                              event.epsActual >= event.epsEstimate 
-                                ? 'text-green-600 dark:text-green-400' 
-                                : 'text-red-600 dark:text-red-400'
-                            }`}>
-                              ${event.epsActual.toFixed(2)}
+                {/* 盘后财报 */}
+                {(() => {
+                  const amcEvents = groupedEarnings[selectedDate].filter(e => e.time === 'amc');
+                  if (amcEvents.length === 0) return null;
+                  return (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-2 h-2 rounded-full bg-orange-600 dark:bg-orange-400"></div>
+                        <h3 className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                          盘后财报 ({amcEvents.length})
+                        </h3>
+                      </div>
+                      <div className="space-y-2">
+                        {amcEvents.map((event, index) => (
+                          <div
+                            key={index}
+                            className="group bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 border border-orange-200 dark:border-orange-800 hover:border-orange-400 dark:hover:border-orange-600 hover:shadow-md transition-all cursor-pointer"
+                            onClick={() => {
+                              router.push(`/dashboard/stock/${event.symbol}`);
+                              setIsModalOpen(false);
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              {/* 左侧：公司信息 */}
+                              <div className="flex items-start gap-3 flex-1">
+                                {event.logo && (
+                                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0 border border-orange-200 dark:border-orange-700 overflow-hidden">
+                                    <Image
+                                      src={event.logo}
+                                      alt={event.companyName}
+                                      width={48}
+                                      height={48}
+                                      className="object-contain"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-base font-bold text-gray-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                                      {event.symbol}
+                                    </span>
+                                    <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/40 rounded-full text-orange-700 dark:text-orange-300 font-semibold">
+                                      盘后
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 dark:text-white/80 mb-1">
+                                    {event.companyName}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-white/50">
+                                    {event.sector && (
+                                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-white/10 rounded">
+                                        {event.sector}
+                                      </span>
+                                    )}
+                                    {(event.quarter && event.year) && (
+                                      <span className="px-2 py-0.5 bg-primary/10 rounded text-primary font-semibold">
+                                        Q{event.quarter} {event.year}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 右侧：财务数据 */}
+                              <div className="flex gap-3 flex-shrink-0">
+                                {event.epsEstimate !== null && event.epsEstimate !== undefined && (
+                                  <div className="text-right bg-white dark:bg-gray-800 rounded-lg p-3 min-w-[90px] border border-orange-200 dark:border-orange-700">
+                                    <div className="text-[10px] text-gray-500 dark:text-white/50 mb-1">
+                                      EPS Est.
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                      ${event.epsEstimate.toFixed(2)}
+                                    </div>
+                                    {event.epsActual !== null && event.epsActual !== undefined && (
+                                      <div className={`text-xs font-semibold mt-1 ${
+                                        event.epsActual >= event.epsEstimate 
+                                          ? 'text-green-600 dark:text-green-400' 
+                                          : 'text-red-600 dark:text-red-400'
+                                      }`}>
+                                        Act: ${event.epsActual.toFixed(2)}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {event.revenueEstimate && (
+                                  <div className="text-right bg-white dark:bg-gray-800 rounded-lg p-3 min-w-[90px] border border-orange-200 dark:border-orange-700">
+                                    <div className="text-[10px] text-gray-500 dark:text-white/50 mb-1">
+                                      Revenue Est.
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                      ${(event.revenueEstimate / 1e9).toFixed(1)}B
+                                    </div>
+                                    {event.revenueActual && (
+                                      <div className={`text-xs font-semibold mt-1 ${
+                                        event.revenueActual >= event.revenueEstimate 
+                                          ? 'text-green-600 dark:text-green-400' 
+                                          : 'text-red-600 dark:text-red-400'
+                                      }`}>
+                                        Act: ${(event.revenueActual / 1e9).toFixed(1)}B
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
-                      {/* Revenue */}
-                      {event.revenueEstimate && (
-                        <div className="text-right bg-primary/10 dark:bg-gray-900/50 rounded p-2 min-w-[90px]">
-                          <div className="text-[9px] text-gray-500 dark:text-white/50 mb-0.5">
-                            Revenue
-                          </div>
-                          <div className="text-xs font-bold text-gray-900 dark:text-white">
-                            ${(event.revenueEstimate / 1e9).toFixed(1)}B
-                          </div>
-                          {event.revenueActual && (
-                            <div className={`text-[9px] font-semibold mt-0.5 ${
-                              event.revenueActual >= event.revenueEstimate 
-                                ? 'text-green-600 dark:text-green-400' 
-                                : 'text-red-600 dark:text-red-400'
-                            }`}>
-                              ${(event.revenueActual / 1e9).toFixed(1)}B
+                {/* 盘后财报 */}
+                {(() => {
+                  const amcEvents = groupedEarnings[selectedDate].filter(e => e.time === 'amc');
+                  if (amcEvents.length === 0) return null;
+                  return (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-2 h-2 rounded-full bg-orange-600 dark:bg-orange-400"></div>
+                        <h3 className="text-sm font-bold text-orange-700 dark:text-orange-300">
+                          盘后财报 ({amcEvents.length})
+                        </h3>
+                      </div>
+                      <div className="space-y-2">
+                        {amcEvents.map((event, index) => (
+                          <div
+                            key={index}
+                            className="group bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 border border-orange-200 dark:border-orange-800 hover:border-orange-400 dark:hover:border-orange-600 hover:shadow-md transition-all cursor-pointer"
+                            onClick={() => {
+                              router.push(`/dashboard/stock/${event.symbol}`);
+                              setIsModalOpen(false);
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              {/* 左侧：公司信息 */}
+                              <div className="flex items-start gap-3 flex-1">
+                                {event.logo && (
+                                  <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0 border border-orange-200 dark:border-orange-700 overflow-hidden">
+                                    <Image
+                                      src={event.logo}
+                                      alt={event.companyName}
+                                      width={48}
+                                      height={48}
+                                      className="object-contain"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-base font-bold text-gray-900 dark:text-white group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                                      {event.symbol}
+                                    </span>
+                                    <span className="text-xs px-2 py-0.5 bg-orange-100 dark:bg-orange-900/40 rounded-full text-orange-700 dark:text-orange-300 font-semibold">
+                                      盘后
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 dark:text-white/80 mb-1">
+                                    {event.companyName}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-white/50">
+                                    {event.sector && (
+                                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-white/10 rounded">
+                                        {event.sector}
+                                      </span>
+                                    )}
+                                    {(event.quarter && event.year) && (
+                                      <span className="px-2 py-0.5 bg-primary/10 rounded text-primary font-semibold">
+                                        Q{event.quarter} {event.year}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 右侧：财务数据 */}
+                              <div className="flex gap-3 flex-shrink-0">
+                                {event.epsEstimate !== null && event.epsEstimate !== undefined && (
+                                  <div className="text-right bg-white dark:bg-gray-800 rounded-lg p-3 min-w-[90px] border border-orange-200 dark:border-orange-700">
+                                    <div className="text-[10px] text-gray-500 dark:text-white/50 mb-1">
+                                      EPS Est.
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                      ${event.epsEstimate.toFixed(2)}
+                                    </div>
+                                    {event.epsActual !== null && event.epsActual !== undefined && (
+                                      <div className={`text-xs font-semibold mt-1 ${
+                                        event.epsActual >= event.epsEstimate 
+                                          ? 'text-green-600 dark:text-green-400' 
+                                          : 'text-red-600 dark:text-red-400'
+                                      }`}>
+                                        Act: ${event.epsActual.toFixed(2)}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {event.revenueEstimate && (
+                                  <div className="text-right bg-white dark:bg-gray-800 rounded-lg p-3 min-w-[90px] border border-orange-200 dark:border-orange-700">
+                                    <div className="text-[10px] text-gray-500 dark:text-white/50 mb-1">
+                                      Revenue Est.
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                      ${(event.revenueEstimate / 1e9).toFixed(1)}B
+                                    </div>
+                                    {event.revenueActual && (
+                                      <div className={`text-xs font-semibold mt-1 ${
+                                        event.revenueActual >= event.revenueEstimate 
+                                          ? 'text-green-600 dark:text-green-400' 
+                                          : 'text-red-600 dark:text-red-400'
+                                      }`}>
+                                        Act: ${(event.revenueActual / 1e9).toFixed(1)}B
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  );
+                })()}
 
-                  {/* 时间标签 */}
-                  {event.time && (
-                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-white/5">
-                      <p className="text-[10px] text-gray-500 dark:text-white/50">
-                        {getEarningsTimeLabel(event.time)}
-                      </p>
+                {/* 其他时间财报 */}
+                {(() => {
+                  const otherEvents = groupedEarnings[selectedDate].filter(e => !e.time || (e.time !== 'bmo' && e.time !== 'amc'));
+                  if (otherEvents.length === 0) return null;
+                  return (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-2 h-2 rounded-full bg-gray-600 dark:bg-gray-400"></div>
+                        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                          其他时间 ({otherEvents.length})
+                        </h3>
+                      </div>
+                      <div className="space-y-2">
+                        {otherEvents.map((event, index) => (
+                          <div
+                            key={index}
+                            className="group bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-white/10 hover:border-primary dark:hover:border-primary hover:shadow-md transition-all cursor-pointer"
+                            onClick={() => {
+                              router.push(`/dashboard/stock/${event.symbol}`);
+                              setIsModalOpen(false);
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              {/* 左侧：公司信息 */}
+                              <div className="flex items-start gap-3 flex-1">
+                                {event.logo && (
+                                  <div className="w-12 h-12 bg-white dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-white/10 overflow-hidden">
+                                    <Image
+                                      src={event.logo}
+                                      alt={event.companyName}
+                                      width={48}
+                                      height={48}
+                                      className="object-contain"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-base font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors">
+                                      {event.symbol}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-700 dark:text-white/80 mb-1">
+                                    {event.companyName}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-white/50">
+                                    {event.sector && (
+                                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-white/10 rounded">
+                                        {event.sector}
+                                      </span>
+                                    )}
+                                    {(event.quarter && event.year) && (
+                                      <span className="px-2 py-0.5 bg-primary/10 rounded text-primary font-semibold">
+                                        Q{event.quarter} {event.year}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 右侧：财务数据 */}
+                              <div className="flex gap-3 flex-shrink-0">
+                                {event.epsEstimate !== null && event.epsEstimate !== undefined && (
+                                  <div className="text-right bg-white dark:bg-gray-700 rounded-lg p-3 min-w-[90px] border border-gray-200 dark:border-white/10">
+                                    <div className="text-[10px] text-gray-500 dark:text-white/50 mb-1">
+                                      EPS Est.
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                      ${event.epsEstimate.toFixed(2)}
+                                    </div>
+                                    {event.epsActual !== null && event.epsActual !== undefined && (
+                                      <div className={`text-xs font-semibold mt-1 ${
+                                        event.epsActual >= event.epsEstimate 
+                                          ? 'text-green-600 dark:text-green-400' 
+                                          : 'text-red-600 dark:text-red-400'
+                                      }`}>
+                                        Act: ${event.epsActual.toFixed(2)}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {event.revenueEstimate && (
+                                  <div className="text-right bg-white dark:bg-gray-700 rounded-lg p-3 min-w-[90px] border border-gray-200 dark:border-white/10">
+                                    <div className="text-[10px] text-gray-500 dark:text-white/50 mb-1">
+                                      Revenue Est.
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                      ${(event.revenueEstimate / 1e9).toFixed(1)}B
+                                    </div>
+                                    {event.revenueActual && (
+                                      <div className={`text-xs font-semibold mt-1 ${
+                                        event.revenueActual >= event.revenueEstimate 
+                                          ? 'text-green-600 dark:text-green-400' 
+                                          : 'text-red-600 dark:text-red-400'
+                                      }`}>
+                                        Act: ${(event.revenueActual / 1e9).toFixed(1)}B
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

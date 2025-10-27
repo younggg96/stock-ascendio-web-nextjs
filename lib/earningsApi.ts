@@ -1,24 +1,76 @@
 // Earnings Calendar API Service
-// Using multiple APIs for earnings calendar data
+// Using Finnhub API for S&P 500 earnings data
 
-export interface EarningsEvent {
-  date: string;
-  symbol: string;
-  companyName: string;
-  epsEstimate?: number | null;
-  epsActual?: number | null;
-  revenueEstimate?: number | null;
-  revenueActual?: number | null;
-  quarter?: number;
-  year?: number;
-  time?: 'bmo' | 'amc' | 'dmh'; // before market open, after market close, during market hours
-  fiscalYear?: number;
-  fiscalQuarter?: number;
-  logo?: string | null;
-  industry?: string | null;
-  marketCap?: number | null;
+import sp500Data from '@/data/sp500.constituents.json';
+
+/**
+ * Finnhub API 原始响应格式
+ */
+export interface FinnhubEarningsItem {
+  date: string;                    // 财报日期 "YYYY-MM-DD"
+  epsActual: number | null;        // 实际EPS
+  epsEstimate: number | null;      // 预估EPS
+  hour: 'bmo' | 'amc' | 'dmh';    // 财报时间: bmo=盘前, amc=盘后, dmh=盘中
+  quarter: number;                 // 季度 (1-4)
+  revenueActual: number | null;    // 实际营收
+  revenueEstimate: number | null;  // 预估营收
+  symbol: string;                  // 股票代码
+  year: number;                    // 年份
 }
 
+/**
+ * Finnhub API 响应结构
+ */
+export interface FinnhubEarningsResponse {
+  earningsCalendar: FinnhubEarningsItem[];
+}
+
+/**
+ * 财报时间类型
+ */
+export type EarningsTimeType = 'bmo' | 'amc' | 'dmh';
+
+/**
+ * 分组后的财报数据（按日期）
+ */
+export type GroupedEarnings = Record<string, EarningsEvent[]>;
+
+/**
+ * S&P 500 公司信息
+ */
+export interface SP500Company {
+  symbol: string;
+  name: string;
+  sector: string;
+  subIndustry: string;
+  headquarters: string;
+  dateAdded: string;
+  cik: string;
+  founded: string;
+}
+
+/**
+ * 应用内使用的财报事件接口（扩展了 Finnhub 数据）
+ */
+export interface EarningsEvent {
+  date: string;                      // 财报日期 "YYYY-MM-DD"
+  symbol: string;                    // 股票代码
+  companyName: string;               // 公司名称
+  epsEstimate: number | null;        // 预估EPS
+  epsActual: number | null;          // 实际EPS
+  revenueEstimate: number | null;    // 预估营收（单位：美元）
+  revenueActual: number | null;      // 实际营收（单位：美元）
+  quarter?: number;                  // 季度 (1-4)
+  year?: number;                     // 年份
+  time?: 'bmo' | 'amc' | 'dmh';     // 财报时间: bmo=盘前, amc=盘后, dmh=盘中
+  logo?: string | null;              // 公司Logo URL
+  sector?: string | null;            // 行业板块
+  subIndustry?: string | null;       // 细分行业
+}
+
+/**
+ * 公司信息接口
+ */
 export interface CompanyProfile {
   logo: string;
   name: string;
@@ -36,48 +88,25 @@ export interface CompanyProfile {
 
 // API Keys from environment
 const FINNHUB_API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY || "";
-const ALPHA_VANTAGE_API_KEY = process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY || "demo";
-const FMP_API_KEY = process.env.NEXT_PUBLIC_FMP_API_KEY || "";
 
 // API Base URLs
 const FINNHUB_BASE_URL = "https://finnhub.io/api/v1";
-const ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query";
-const FMP_BASE_URL = "https://financialmodelingprep.com/api/v3";
 
 // Cache for company profiles
 const companyProfileCache = new Map<string, CompanyProfile | null>();
 
-// Stock names mapping (can be expanded)
-const STOCK_NAMES: Record<string, string> = {
-  AAPL: "Apple Inc.",
-  GOOGL: "Alphabet Inc.",
-  GOOG: "Alphabet Inc.",
-  MSFT: "Microsoft Corp.",
-  TSLA: "Tesla, Inc.",
-  AMZN: "Amazon.com, Inc.",
-  NVDA: "NVIDIA Corp.",
-  META: "Meta Platforms, Inc.",
-  NFLX: "Netflix, Inc.",
-  AMD: "Advanced Micro Devices",
-  INTC: "Intel Corp.",
-  CSCO: "Cisco Systems",
-  ORCL: "Oracle Corp.",
-  IBM: "IBM",
-  CRM: "Salesforce",
-  ADBE: "Adobe Inc.",
-  PYPL: "PayPal Holdings",
-  V: "Visa Inc.",
-  MA: "Mastercard Inc.",
-  DIS: "Walt Disney Co.",
-  BA: "Boeing Co.",
-  GE: "General Electric",
-  JPM: "JPMorgan Chase",
-  BAC: "Bank of America",
-  WFC: "Wells Fargo",
-  GS: "Goldman Sachs",
-  MS: "Morgan Stanley",
-  C: "Citigroup Inc.",
-};
+// 从 S&P 500 JSON 数据创建映射
+const sp500Companies = sp500Data as SP500Company[];
+const sp500SymbolSet = new Set(sp500Companies.map(c => c.symbol));
+const sp500NamesMap: Record<string, string> = {};
+const sp500SectorMap: Record<string, string> = {};
+const sp500SubIndustryMap: Record<string, string> = {};
+
+sp500Companies.forEach(company => {
+  sp500NamesMap[company.symbol] = company.name;
+  sp500SectorMap[company.symbol] = company.sector;
+  sp500SubIndustryMap[company.symbol] = company.subIndustry;
+});
 
 /**
  * Fetch company profile from Finnhub
@@ -164,175 +193,36 @@ async function fetchFinnhubEarnings(
       return null;
     }
 
-    const data = await response.json();
+    const data: FinnhubEarningsResponse = await response.json();
 
     if (!data.earningsCalendar || data.earningsCalendar.length === 0) {
       console.warn("No earnings data from Finnhub");
-      return null;
+      return [];
     }
 
-    return data.earningsCalendar.map((item: any) => ({
-      date: item.date,
-      symbol: item.symbol,
-      companyName: STOCK_NAMES[item.symbol] || item.symbol,
-      epsEstimate: item.epsEstimate,
-      epsActual: item.epsActual,
-      revenueEstimate: item.revenueEstimate,
-      revenueActual: item.revenueActual,
-      quarter: item.quarter,
-      year: item.year,
-    }));
+    // 过滤并转换数据：只保留 S&P 500 公司的财报
+    const sp500Earnings = data.earningsCalendar
+      .filter((item: FinnhubEarningsItem) => sp500SymbolSet.has(item.symbol))
+      .map((item: FinnhubEarningsItem): EarningsEvent => ({
+        date: item.date,
+        symbol: item.symbol,
+        companyName: sp500NamesMap[item.symbol] || item.symbol,
+        time: item.hour, // 将 hour 映射到 time
+        epsEstimate: item.epsEstimate,
+        epsActual: item.epsActual,
+        revenueEstimate: item.revenueEstimate,
+        revenueActual: item.revenueActual,
+        quarter: item.quarter,
+        year: item.year,
+        sector: sp500SectorMap[item.symbol] || null,
+        subIndustry: sp500SubIndustryMap[item.symbol] || null,
+      }));
+
+    return sp500Earnings;
   } catch (error) {
     console.error("Error fetching Finnhub earnings:", error);
     return null;
   }
-}
-
-/**
- * Fetch earnings calendar from Alpha Vantage
- */
-async function fetchAlphaVantageEarnings(
-  symbol?: string
-): Promise<EarningsEvent[] | null> {
-  if (!ALPHA_VANTAGE_API_KEY || ALPHA_VANTAGE_API_KEY === "demo") {
-    console.warn("⚠️ Alpha Vantage API key not configured");
-    return null;
-  }
-
-  try {
-    let url = `${ALPHA_VANTAGE_BASE_URL}?function=EARNINGS_CALENDAR&apikey=${ALPHA_VANTAGE_API_KEY}`;
-    if (symbol) {
-      url += `&symbol=${symbol}`;
-    }
-
-    const response = await fetch(url, { 
-      cache: "no-store",
-      next: { revalidate: 3600 }
-    });
-
-    if (!response.ok) {
-      console.warn(`Alpha Vantage API returned ${response.status}`);
-      return null;
-    }
-
-    const csvText = await response.text();
-    const lines = csvText.split('\n');
-    
-    if (lines.length < 2) {
-      console.warn("No earnings data from Alpha Vantage");
-      return null;
-    }
-
-    // Parse CSV (skip header)
-    const events: EarningsEvent[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-
-      const [sym, name, reportDate, fiscalDateEnding, estimate, currency] = line.split(',');
-      
-      if (sym && reportDate) {
-        events.push({
-          date: reportDate,
-          symbol: sym,
-          companyName: name || STOCK_NAMES[sym] || sym,
-          epsEstimate: estimate ? parseFloat(estimate) : null,
-          fiscalYear: fiscalDateEnding ? new Date(fiscalDateEnding).getFullYear() : undefined,
-        });
-      }
-    }
-
-    return events;
-  } catch (error) {
-    console.error("Error fetching Alpha Vantage earnings:", error);
-    return null;
-  }
-}
-
-/**
- * Fetch earnings calendar from Financial Modeling Prep
- */
-async function fetchFMPEarnings(
-  from: string,
-  to: string
-): Promise<EarningsEvent[] | null> {
-  if (!FMP_API_KEY) {
-    console.warn("⚠️ FMP API key not configured");
-    return null;
-  }
-
-  try {
-    const url = `${FMP_BASE_URL}/earning_calendar?from=${from}&to=${to}&apikey=${FMP_API_KEY}`;
-    const response = await fetch(url, { 
-      cache: "no-store",
-      next: { revalidate: 3600 }
-    });
-
-    if (!response.ok) {
-      console.warn(`FMP API returned ${response.status}`);
-      return null;
-    }
-
-    const data = await response.json();
-
-    if (!data || data.length === 0) {
-      console.warn("No earnings data from FMP");
-      return null;
-    }
-
-    return data.map((item: any) => ({
-      date: item.date,
-      symbol: item.symbol,
-      companyName: STOCK_NAMES[item.symbol] || item.symbol,
-      epsEstimate: item.epsEstimated,
-      epsActual: item.eps,
-      revenueEstimate: item.revenueEstimated,
-      revenueActual: item.revenue,
-      time: item.time,
-      fiscalYear: item.fiscalDateEnding ? new Date(item.fiscalDateEnding).getFullYear() : undefined,
-    }));
-  } catch (error) {
-    console.error("Error fetching FMP earnings:", error);
-    return null;
-  }
-}
-
-/**
- * Generate mock earnings data as fallback
- */
-function getMockEarningsData(from: string, to: string): EarningsEvent[] {
-  const startDate = new Date(from);
-  const endDate = new Date(to);
-  const events: EarningsEvent[] = [];
-  
-  const symbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'NVDA', 'META', 'NFLX'];
-  const timeSlots: Array<'bmo' | 'amc' | 'dmh'> = ['bmo', 'amc', 'dmh'];
-  
-  // Generate events for each day in range
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    // Random 1-3 companies per day
-    const numEvents = Math.floor(Math.random() * 3) + 1;
-    const selectedSymbols = symbols
-      .sort(() => Math.random() - 0.5)
-      .slice(0, numEvents);
-    
-    selectedSymbols.forEach(symbol => {
-      events.push({
-        date: d.toISOString().split('T')[0],
-        symbol,
-        companyName: STOCK_NAMES[symbol] || symbol,
-        epsEstimate: parseFloat((Math.random() * 5).toFixed(2)),
-        epsActual: null,
-        revenueEstimate: Math.floor(Math.random() * 100000000000),
-        revenueActual: null,
-        quarter: Math.floor(Math.random() * 4) + 1,
-        year: d.getFullYear(),
-        time: timeSlots[Math.floor(Math.random() * timeSlots.length)],
-      });
-    });
-  }
-  
-  return events.sort((a, b) => a.date.localeCompare(b.date));
 }
 
 /**
@@ -380,7 +270,11 @@ async function enrichEarningsWithProfiles(
 }
 
 /**
- * Main function to fetch earnings calendar with fallbacks
+ * 获取 S&P 500 财报日历
+ * @param from 开始日期 (YYYY-MM-DD)
+ * @param to 结束日期 (YYYY-MM-DD)
+ * @param enrichWithProfiles 是否使用公司信息扩展数据
+ * @returns S&P 500 公司的财报事件列表
  */
 export async function fetchEarningsCalendar(
   from?: string,
@@ -395,78 +289,35 @@ export async function fetchEarningsCalendar(
   endDate.setDate(endDate.getDate() + 7);
   const defaultTo = to || endDate.toISOString().split('T')[0];
 
-  console.log(`📊 Fetching earnings calendar from ${defaultFrom} to ${defaultTo}...`);
-
-  // Try Finnhub first
+  // 从 Finnhub 获取 S&P 500 财报数据
   let earnings = await fetchFinnhubEarnings(defaultFrom, defaultTo);
-  if (earnings && earnings.length > 0) {
-    console.log(`✅ Successfully fetched ${earnings.length} earnings events from Finnhub`);
-    
-    // Enrich with company profiles if requested
-    if (enrichWithProfiles && FINNHUB_API_KEY) {
-      console.log(`🔄 Enriching earnings with company profiles...`);
-      earnings = await enrichEarningsWithProfiles(earnings);
-      console.log(`✅ Enriched earnings with company info`);
-    }
-    
-    return earnings;
+  
+  if (!earnings || earnings.length === 0) {
+    console.warn(`No S&P 500 earnings found from ${defaultFrom} to ${defaultTo}`);
+    return [];
   }
-
-  // Fallback to FMP
-  if (FMP_API_KEY) {
-    console.log(`🔄 Trying FMP for earnings calendar...`);
-    earnings = await fetchFMPEarnings(defaultFrom, defaultTo);
-    if (earnings && earnings.length > 0) {
-      console.log(`✅ Successfully fetched ${earnings.length} earnings events from FMP`);
-      
-      if (enrichWithProfiles && FINNHUB_API_KEY) {
-        earnings = await enrichEarningsWithProfiles(earnings);
-      }
-      
-      return earnings;
-    }
+  
+  // Enrich with company profiles if requested
+  if (enrichWithProfiles && FINNHUB_API_KEY) {
+    earnings = await enrichEarningsWithProfiles(earnings);
   }
-
-  // Fallback to Alpha Vantage (without date range)
-  if (ALPHA_VANTAGE_API_KEY && ALPHA_VANTAGE_API_KEY !== "demo") {
-    console.log(`🔄 Trying Alpha Vantage for earnings calendar...`);
-    earnings = await fetchAlphaVantageEarnings();
-    if (earnings && earnings.length > 0) {
-      // Filter by date range
-      const filtered = earnings.filter(e => e.date >= defaultFrom && e.date <= defaultTo);
-      if (filtered.length > 0) {
-        console.log(`✅ Successfully fetched ${filtered.length} earnings events from Alpha Vantage`);
-        
-        if (enrichWithProfiles && FINNHUB_API_KEY) {
-          return await enrichEarningsWithProfiles(filtered);
-        }
-        
-        return filtered;
-      }
-    }
-  }
-
-  // Use mock data as last resort
-  console.warn(`⚠️ Using mock earnings data - Configure API keys for real data`);
-  return getMockEarningsData(defaultFrom, defaultTo);
+  
+  return earnings;
 }
 
 /**
- * Fetch earnings for specific symbol
+ * 获取特定股票的财报（仅限 S&P 500）
+ * @param symbol 股票代码
+ * @returns 该股票的财报事件列表
  */
 export async function fetchSymbolEarnings(symbol: string): Promise<EarningsEvent[]> {
-  console.log(`📊 Fetching earnings for ${symbol}...`);
-
-  // Try Alpha Vantage for symbol-specific data
-  if (ALPHA_VANTAGE_API_KEY && ALPHA_VANTAGE_API_KEY !== "demo") {
-    const earnings = await fetchAlphaVantageEarnings(symbol);
-    if (earnings && earnings.length > 0) {
-      console.log(`✅ Successfully fetched earnings for ${symbol}`);
-      return earnings;
-    }
+  // 检查是否是 S&P 500 公司
+  if (!sp500SymbolSet.has(symbol)) {
+    console.warn(`${symbol} is not in S&P 500`);
+    return [];
   }
 
-  // Fallback to general calendar and filter
+  // 获取所有财报并过滤
   const allEarnings = await fetchEarningsCalendar();
   return allEarnings.filter(e => e.symbol === symbol);
 }
@@ -474,7 +325,7 @@ export async function fetchSymbolEarnings(symbol: string): Promise<EarningsEvent
 /**
  * Group earnings by date
  */
-export function groupEarningsByDate(events: EarningsEvent[]): Record<string, EarningsEvent[]> {
+export function groupEarningsByDate(events: EarningsEvent[]): GroupedEarnings {
   return events.reduce((acc, event) => {
     if (!acc[event.date]) {
       acc[event.date] = [];
@@ -520,5 +371,33 @@ export function getEarningsTimeLabel(time?: 'bmo' | 'amc' | 'dmh'): string {
     default:
       return 'TBD';
   }
+}
+
+/**
+ * 检查股票是否在 S&P 500 中
+ */
+export function isInSP500(symbol: string): boolean {
+  return sp500SymbolSet.has(symbol);
+}
+
+/**
+ * 获取 S&P 500 公司信息
+ */
+export function getSP500Company(symbol: string): SP500Company | null {
+  return sp500Companies.find(c => c.symbol === symbol) || null;
+}
+
+/**
+ * 获取所有 S&P 500 公司列表
+ */
+export function getAllSP500Companies(): SP500Company[] {
+  return sp500Companies;
+}
+
+/**
+ * 按行业板块获取 S&P 500 公司
+ */
+export function getSP500CompaniesBySector(sector: string): SP500Company[] {
+  return sp500Companies.filter(c => c.sector === sector);
 }
 
