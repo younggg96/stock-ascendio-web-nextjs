@@ -56,9 +56,6 @@ export default function KOLTrackerTable({
   const [editingKOL, setEditingKOL] = useState<KOL | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPlatform, setFilterPlatform] = useState<Platform | "all">("all");
-  const [filterTracking, setFilterTracking] = useState<
-    "all" | "tracking" | "not-tracking"
-  >("all");
 
   // Form state for add/edit
   const [formData, setFormData] = useState<CreateKOLInput>({
@@ -71,7 +68,7 @@ export default function KOLTrackerTable({
     isTracking: false,
   });
 
-  // Filter KOLs
+  // Filter KOLs (only tracked KOLs are shown in this component)
   const filteredKOLs = kols.filter((kol) => {
     // Search filter
     const matchesSearch =
@@ -82,13 +79,7 @@ export default function KOLTrackerTable({
     const matchesPlatform =
       filterPlatform === "all" || kol.platform === filterPlatform;
 
-    // Tracking filter
-    const matchesTracking =
-      filterTracking === "all" ||
-      (filterTracking === "tracking" && kol.isTracking) ||
-      (filterTracking === "not-tracking" && !kol.isTracking);
-
-    return matchesSearch && matchesPlatform && matchesTracking;
+    return matchesSearch && matchesPlatform;
   });
 
   // Reset form
@@ -190,7 +181,7 @@ export default function KOLTrackerTable({
       <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full">
           <Input
-            placeholder="Search KOL name or username..."
+            placeholder="Search tracked KOLs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="h-8 text-xs max-w-xs"
@@ -210,21 +201,6 @@ export default function KOLTrackerTable({
               <SelectItem value="reddit">Reddit</SelectItem>
               <SelectItem value="xiaohongshu">小红书</SelectItem>
               <SelectItem value="youtube">YouTube</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={filterTracking}
-            onValueChange={(value) =>
-              setFilterTracking(value as "all" | "tracking" | "not-tracking")
-            }
-          >
-            <SelectTrigger className="w-full sm:w-[150px] h-8 text-xs">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="tracking">Tracking</SelectItem>
-              <SelectItem value="not-tracking">Not Tracking</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -250,16 +226,17 @@ export default function KOLTrackerTable({
               <TableHead className="text-xs hidden md:table-cell">
                 Description
               </TableHead>
-              <TableHead className="text-xs">Tracking</TableHead>
               <TableHead className="text-xs text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredKOLs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   <p className="text-xs text-gray-500 dark:text-white/50">
-                    No KOLs found
+                    {kols.length === 0
+                      ? "No tracked KOLs yet. Add KOLs from the Top Ranking table or click 'Add KOL' button."
+                      : "No KOLs match your search criteria."}
                   </p>
                 </TableCell>
               </TableRow>
@@ -292,31 +269,6 @@ export default function KOLTrackerTable({
                   <TableCell className="text-xs max-w-[200px] truncate hidden md:table-cell">
                     {kol.description || "-"}
                   </TableCell>
-                  <TableCell>
-                    <button
-                      onClick={() => handleToggleTracking(kol)}
-                      className="flex items-center gap-1 text-xs hover:opacity-80 transition-opacity"
-                      title={
-                        kol.isTracking ? "Stop tracking" : "Start tracking"
-                      }
-                    >
-                      {kol.isTracking ? (
-                        <>
-                          <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
-                          <span className="text-yellow-600 dark:text-yellow-500 hidden sm:inline">
-                            Tracking
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <StarOff className="w-3.5 h-3.5 text-gray-400" />
-                          <span className="text-gray-500 dark:text-white/50 hidden sm:inline">
-                            Not tracking
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button
@@ -326,6 +278,15 @@ export default function KOLTrackerTable({
                         title="Edit KOL"
                       >
                         <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => handleToggleTracking(kol)}
+                        className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+                        title="Stop tracking"
+                      >
+                        <Star className="w-3.5 h-3.5 fill-yellow-500" />
                       </Button>
                       <Button
                         variant="ghost"
