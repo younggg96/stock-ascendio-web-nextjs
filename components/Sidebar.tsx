@@ -22,7 +22,7 @@ const navItems = [
     href: "/dashboard",
   },
   { icon: Newspaper, title: "News", href: "/dashboard/news" },
-  { icon: Users, title: "KOL Tracker", href: "#" },
+  { icon: Users, title: "KOL Tracker", href: "/dashboard/kol" },
   { icon: Settings, title: "Settings", href: "/dashboard/settings" },
 ];
 

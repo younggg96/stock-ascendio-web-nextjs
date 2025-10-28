@@ -331,11 +331,11 @@ export default function EarningsCalendar({
       <div className="space-y-3">
         <div className="animate-pulse space-y-3">
           <div className="h-12 bg-gray-100 dark:bg-white/5 rounded-lg"></div>
-          <div className="grid grid-cols-7 gap-2">
-            {[...Array(14)].map((_, i) => (
+          <div className="grid grid-cols-5 gap-2">
+            {[...Array(10)].map((_, i) => (
               <div
                 key={i}
-                className="h-24 bg-gray-100 dark:bg-white/5 rounded-lg"
+                className="h-48 bg-gray-100 dark:bg-white/5 rounded-lg"
               ></div>
             ))}
           </div>
