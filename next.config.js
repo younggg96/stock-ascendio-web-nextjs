@@ -30,7 +30,12 @@ const nextConfig = {
       "static2.finnhub.io",
       // Clearbit (Alternative Logo Source)
       "logo.clearbit.com",
+      // Wikimedia Commons (S&P 500 Company Logos)
+      "upload.wikimedia.org",
     ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 

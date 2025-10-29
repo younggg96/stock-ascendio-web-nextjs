@@ -47,6 +47,7 @@ export default function EarningsCalendar({
   const [isFromCache, setIsFromCache] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<"bmo" | "amc" | "all">("all");
 
   // 缓存配置
   const CACHE_PREFIX = "earnings_cache_";
@@ -155,7 +156,6 @@ export default function EarningsCalendar({
         if (!forceRefresh) {
           const cachedData = getFromCache(cacheKey);
           if (cachedData) {
-            console.log("✅ Loading earnings from cache");
             setEarnings(
               maxEvents ? cachedData.slice(0, maxEvents) : cachedData
             );
@@ -302,17 +302,33 @@ export default function EarningsCalendar({
     return date.toDateString() === today.toDateString();
   };
 
-  // 切换月份
+  // 切换日期（紧凑模式）或月份（日历模式）
   const goToPreviousMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1)
-    );
+    if (compact) {
+      // 紧凑模式：切换到上一天
+      const newDate = new Date(currentDate);
+      newDate.setDate(newDate.getDate() - 1);
+      setCurrentDate(newDate);
+    } else {
+      // 日历模式：切换到上一个月
+      setCurrentDate(
+        new Date(currentDate.getFullYear(), currentDate.getMonth() - 1)
+      );
+    }
   };
 
   const goToNextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1)
-    );
+    if (compact) {
+      // 紧凑模式：切换到下一天
+      const newDate = new Date(currentDate);
+      newDate.setDate(newDate.getDate() + 1);
+      setCurrentDate(newDate);
+    } else {
+      // 日历模式：切换到下一个月
+      setCurrentDate(
+        new Date(currentDate.getFullYear(), currentDate.getMonth() + 1)
+      );
+    }
   };
 
   const goToToday = () => {
@@ -335,7 +351,7 @@ export default function EarningsCalendar({
             {[...Array(10)].map((_, i) => (
               <div
                 key={i}
-                className="h-48 bg-gray-100 dark:bg-white/5 rounded-lg"
+                className="h-[200px] bg-gray-100 dark:bg-white/5 rounded-lg"
               ></div>
             ))}
           </div>
@@ -353,95 +369,129 @@ export default function EarningsCalendar({
     );
   }
 
-  // 紧凑模式（列表视图）
+  // 紧凑模式（列表视图 - 移动端）
   if (compact) {
+    // 按日期筛选当天的财报
+    const selectedDateStr = currentDate.toISOString().split("T")[0];
+    const todayEarnings = earnings.filter((e) => e.date === selectedDateStr);
+    const { bmo, amc } = groupEventsByTime(todayEarnings);
+
     return (
       <div className="space-y-3">
-        {earnings.slice(0, maxEvents).map((event, index) => {
-          const isBMO = event.time === "bmo";
-          const isAMC = event.time === "amc";
+        {/* 日期导航 */}
+        <div className="flex items-center justify-between bg-white dark:bg-gray-800/50 rounded-lg p-2 border border-gray-200 dark:border-white/10">
+          <button
+            onClick={goToPreviousMonth}
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-md transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-white/70" />
+          </button>
 
-          return (
-            <div
-              key={`${event.symbol}-${index}`}
-              className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-white/10 last:border-0"
-            >
-              <div className="flex items-center gap-3 flex-1">
-                <div
-                  className={`
-                  w-10 h-10 rounded-lg flex items-center justify-center
-                  ${
-                    isBMO
-                      ? "bg-blue-100 dark:bg-blue-900/30"
-                      : isAMC
-                      ? "bg-orange-100 dark:bg-orange-900/30"
-                      : "bg-primary/10"
-                  }
-                `}
-                >
-                  <Building2
-                    className={`
-                    w-5 h-5
-                    ${
-                      isBMO
-                        ? "text-blue-600 dark:text-blue-400"
-                        : isAMC
-                        ? "text-orange-600 dark:text-orange-400"
-                        : "text-primary"
-                    }
-                  `}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                      {event.symbol}
-                    </span>
-                    {event.time && (
-                      <span
-                        className={`
-                        text-[10px] px-1.5 py-0.5 rounded-full font-semibold
-                        ${
-                          isBMO
-                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700"
-                            : isAMC
-                            ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-                        }
-                      `}
-                      >
-                        {isBMO
-                          ? "盘前"
-                          : isAMC
-                          ? "盘后"
-                          : getEarningsTimeLabel(event.time)}
-                      </span>
-                    )}
-                    <span className="text-xs text-gray-500 dark:text-white/50 truncate">
-                      {event.companyName}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-gray-500 dark:text-white/50">
-                      {formatEarningsDate(event.date)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              {event.epsEstimate !== null &&
-                event.epsEstimate !== undefined && (
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500 dark:text-white/50">
-                      EPS Est.
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                      ${event.epsEstimate.toFixed(2)}
-                    </div>
-                  </div>
-                )}
+          <div className="flex flex-col items-center">
+            <div className="text-sm font-bold text-gray-900 dark:text-white">
+              {formatEarningsDate(selectedDateStr)}
             </div>
-          );
-        })}
+            <div className="text-[10px] text-gray-500 dark:text-white/50">
+              {currentDate.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </div>
+          </div>
+
+          <button
+            onClick={goToNextMonth}
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-md transition-colors"
+          >
+            <ChevronRight className="w-4 h-4 text-gray-600 dark:text-white/70" />
+          </button>
+        </div>
+
+        {/* 快速跳转今天按钮 */}
+        {!isToday(currentDate) && (
+          <button
+            onClick={goToToday}
+            className="w-full px-3 py-1.5 text-xs font-medium bg-primary text-white hover:bg-primary/90 rounded-lg transition-colors"
+          >
+            Back to Today
+          </button>
+        )}
+
+        {/* 时间切换按钮 */}
+        {todayEarnings.length > 0 && (
+          <div className="flex gap-2 bg-white dark:bg-gray-800/50 rounded-lg p-1 border border-gray-200 dark:border-white/10">
+            <button
+              onClick={() => setTimeFilter("all")}
+              className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                timeFilter === "all"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-gray-600 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/10"
+              }`}
+            >
+              All ({bmo.length + amc.length})
+            </button>
+            <button
+              onClick={() => setTimeFilter("bmo")}
+              className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                timeFilter === "bmo"
+                  ? "bg-slate-600 text-white shadow-sm"
+                  : "text-gray-600 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/10"
+              }`}
+            >
+              Pre-Market ({bmo.length})
+            </button>
+            <button
+              onClick={() => setTimeFilter("amc")}
+              className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                timeFilter === "amc"
+                  ? "bg-amber-500 text-white shadow-sm"
+                  : "text-gray-600 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/10"
+              }`}
+            >
+              After hours ({amc.length})
+            </button>
+          </div>
+        )}
+
+        {/* 财报列表 */}
+        {todayEarnings.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 dark:text-white/50 bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-white/10">
+            <Calendar className="w-10 h-10 mx-auto mb-2 opacity-50" />
+            <p className="text-xs">No earnings reports today</p>
+          </div>
+        ) : timeFilter === "all" ? (
+          <div className="flex flex-col lg:flex-row gap-3">
+            <EarningsEventList events={bmo} timeType="bmo" compact={true} />
+            <EarningsEventList events={amc} timeType="amc" compact={true} />
+          </div>
+        ) : timeFilter === "bmo" ? (
+          bmo.length > 0 ? (
+            <EarningsEventList
+              events={bmo}
+              timeType="bmo"
+              compact={true}
+              fullWidth={true}
+            />
+          ) : (
+            <div className="text-center py-8 text-gray-500 dark:text-white/50 bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-white/10">
+              <Calendar className="w-10 h-10 mx-auto mb-2 opacity-50" />
+              <p className="text-xs">No pre-market earnings reports</p>
+            </div>
+          )
+        ) : amc.length > 0 ? (
+          <EarningsEventList
+            events={amc}
+            timeType="amc"
+            compact={true}
+            fullWidth={true}
+          />
+        ) : (
+          <div className="text-center py-8 text-gray-500 dark:text-white/50 bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-white/10">
+            <Calendar className="w-10 h-10 mx-auto mb-2 opacity-50" />
+            <p className="text-xs">No after hours earnings reports</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -523,7 +573,6 @@ export default function EarningsCalendar({
         ))}
       </div>
 
-      {/* 只显示有财报的周（只显示工作日） */}
       {weeksWithEarnings.length === 0 ? (
         <div className="text-center py-12 text-gray-500 dark:text-white/50">
           <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -585,42 +634,56 @@ export default function EarningsCalendar({
                       )}
                     </div>
 
-                    {/* 盘前财报 (BMO) */}
                     {bmo.length > 0 && (
                       <div className="mb-2">
-                        <div className="text-[8px] font-semibold text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>
-                          Before Market Open ({bmo.length})
+                        <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-slate-600 dark:bg-slate-400"></div>
+                          Pre-Market ({bmo.length})
                         </div>
                         <div className="space-y-1">
                           {bmo.slice(0, 2).map((event, eventIndex) => (
                             <div
                               key={eventIndex}
-                              className="flex items-center gap-1 px-1.5 py-1 bg-blue-50 dark:bg-blue-900/20 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors cursor-pointer border border-blue-200 dark:border-blue-800"
+                              className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-50 dark:bg-slate-900/20 rounded hover:bg-slate-100 dark:hover:bg-slate-900/30 transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
                               title={`${event.symbol} - ${event.companyName} (Pre-market)`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 router.push(`/dashboard/stock/${event.symbol}`);
                               }}
                             >
-                              {event.logo && (
-                                <div className="w-4 h-4 bg-white rounded-sm flex-shrink-0 overflow-hidden">
+                              <div className="w-12 h-12 p-1 bg-white rounded-sm flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-300 dark:border-slate-700">
+                                {event.logo ? (
                                   <Image
                                     src={event.logo}
                                     alt={event.symbol}
-                                    width={16}
-                                    height={16}
-                                    className="object-contain"
+                                    width={64}
+                                    height={64}
+                                    className="object-contain w-full h-full"
+                                    onError={(e) => {
+                                      const target =
+                                        e.target as HTMLImageElement;
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = `<span class="text-xs font-bold text-slate-700 dark:text-slate-300">${event.symbol.substring(
+                                          0,
+                                          3
+                                        )}</span>`;
+                                      }
+                                    }}
                                   />
-                                </div>
-                              )}
-                              <div className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 truncate">
+                                ) : (
+                                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    {event.symbol.substring(0, 3)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
                                 {event.symbol}
                               </div>
                             </div>
                           ))}
                           {bmo.length > 2 && (
-                            <div className="text-[9px] text-blue-600 dark:text-blue-400 text-center">
+                            <div className="text-[10px] text-slate-600 dark:text-slate-400 text-center">
                               +{bmo.length - 2}
                             </div>
                           )}
@@ -631,39 +694,54 @@ export default function EarningsCalendar({
                     {/* 盘后财报 (AMC) */}
                     {amc.length > 0 && (
                       <div className="mb-1">
-                        <div className="text-[8px] font-semibold text-orange-600 dark:text-orange-400 mb-1 flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-orange-600 dark:bg-orange-400"></div>
+                        <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-amber-600 dark:bg-amber-400"></div>
                           After hours ({amc.length})
                         </div>
                         <div className="space-y-1">
                           {amc.slice(0, 2).map((event, eventIndex) => (
                             <div
                               key={eventIndex}
-                              className="flex items-center gap-1 px-1.5 py-1 bg-orange-50 dark:bg-orange-900/20 rounded hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors cursor-pointer border border-orange-200 dark:border-orange-800"
+                              className="flex items-center gap-1.5 px-2 py-1.5 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors cursor-pointer border border-amber-200 dark:border-amber-800"
                               title={`${event.symbol} - ${event.companyName} (After-hours)`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 router.push(`/dashboard/stock/${event.symbol}`);
                               }}
                             >
-                              {event.logo && (
-                                <div className="w-4 h-4 bg-white rounded-sm flex-shrink-0 overflow-hidden">
+                              <div className="w-12 h-12 p-1 bg-white rounded-sm flex items-center justify-center flex-shrink-0 overflow-hidden border border-amber-200 dark:border-amber-700">
+                                {event.logo ? (
                                   <Image
                                     src={event.logo}
                                     alt={event.symbol}
-                                    width={16}
-                                    height={16}
-                                    className="object-contain"
+                                    width={64}
+                                    height={64}
+                                    className="object-contain w-full h-full"
+                                    onError={(e) => {
+                                      const target =
+                                        e.target as HTMLImageElement;
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = `<span class="text-xs font-bold text-amber-700 dark:text-amber-300">${event.symbol.substring(
+                                          0,
+                                          3
+                                        )}</span>`;
+                                      }
+                                    }}
                                   />
-                                </div>
-                              )}
-                              <div className="text-[10px] font-semibold text-orange-700 dark:text-orange-300 truncate">
+                                ) : (
+                                  <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                                    {event.symbol.substring(0, 3)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs font-semibold text-amber-700 dark:text-amber-300 truncate">
                                 {event.symbol}
                               </div>
                             </div>
                           ))}
                           {amc.length > 2 && (
-                            <div className="text-[9px] text-orange-600 dark:text-orange-400 text-center">
+                            <div className="text-[10px] text-amber-600 dark:text-amber-400 text-center">
                               +{amc.length - 2}
                             </div>
                           )}
@@ -680,7 +758,7 @@ export default function EarningsCalendar({
 
       {/* Modal 显示选中日期的所有财报 */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="w-[80vw] max-w-[90vw] h-fit max-h-[85vh] !p-0 !gap-0">
+        <DialogContent className="w-[95vw] lg:w-[80vw] max-w-[95vw] h-fit max-h-[85vh] !p-0 !gap-0">
           <DialogHeader className="px-6 py-4 border-b border-gray-200 dark:border-white/10">
             <DialogTitle>
               {selectedDate && formatEarningsDate(selectedDate)}
@@ -700,7 +778,7 @@ export default function EarningsCalendar({
 
           <div className="w-full h-auto overflow-y-auto max-h-[calc(85vh-100px)] px-6 py-4">
             {selectedDate && groupedEarnings[selectedDate] && (
-              <div className="flex w-auto h-auto gap-4">
+              <div className="flex flex-col lg:flex-row w-auto h-auto gap-4">
                 <EarningsEventList
                   events={groupedEarnings[selectedDate].filter(
                     (e) => e.time === "bmo"

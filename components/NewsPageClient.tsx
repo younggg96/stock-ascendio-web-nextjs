@@ -9,6 +9,7 @@ import SectionCard from "@/components/SectionCard";
 import FinancialJuiceNews from "@/components/FinancialJuiceNews";
 import { TrendingUp, Calendar } from "lucide-react";
 import { SwitchTab } from "@/components/ui/switch-tab";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const newsCategories = [
   {
@@ -31,6 +32,7 @@ export default function NewsPageClient({ category }: NewsPageClientProps) {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(category);
+  const isMobile = useIsMobile();
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -81,7 +83,9 @@ export default function NewsPageClient({ category }: NewsPageClientProps) {
               )}
 
               {/* Earnings Tab Content */}
-              {activeTab === "earnings" && <EarningsCalendar />}
+              {activeTab === "earnings" && (
+                <EarningsCalendar compact={isMobile} />
+              )}
             </SectionCard>
           </div>
         </div>

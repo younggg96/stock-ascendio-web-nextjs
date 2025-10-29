@@ -1,27 +1,12 @@
 "use client";
 
 import { Toaster as Sonner } from "sonner";
-import { useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // Check on mount
-    checkMobile();
-
-    // Add event listener for window resize
-    window.addEventListener("resize", checkMobile);
-
-    // Cleanup
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const isMobile = useIsMobile();
 
   return (
     <Sonner

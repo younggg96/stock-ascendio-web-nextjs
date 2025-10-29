@@ -9,6 +9,8 @@ interface EarningsEventListProps {
   events: EarningsEvent[];
   timeType: "bmo" | "amc";
   onEventClick?: () => void;
+  compact?: boolean;
+  fullWidth?: boolean;
 }
 
 interface ThemeConfig {
@@ -28,30 +30,31 @@ interface ThemeConfig {
 const themeConfigs: Record<"bmo" | "amc", ThemeConfig> = {
   bmo: {
     title: "Pre-market",
-    bgColor: "bg-blue-50 dark:bg-blue-900/20",
-    borderColor: "border-blue-200 dark:border-blue-800",
-    hoverBorderColor: "hover:border-blue-400 dark:hover:border-blue-600",
-    textColor: "text-blue-700 dark:text-blue-300",
-    badgeBg: "bg-blue-100 dark:bg-blue-900/40",
-    badgeText: "text-blue-700 dark:text-blue-300",
-    logoBorder: "border-blue-200 dark:border-blue-700",
-    hoverTextColor: "group-hover:text-blue-600 dark:group-hover:text-blue-400",
-    dataBorder: "border-blue-200 dark:border-blue-700",
-    dotColor: "bg-blue-600 dark:bg-blue-400",
+    bgColor: "bg-slate-50 dark:bg-slate-900/20",
+    borderColor: "border-slate-300 dark:border-slate-700",
+    hoverBorderColor: "hover:border-slate-400 dark:hover:border-slate-600",
+    textColor: "text-slate-700 dark:text-slate-300",
+    badgeBg: "bg-slate-100 dark:bg-slate-900/40",
+    badgeText: "text-slate-700 dark:text-slate-300",
+    logoBorder: "border-slate-300 dark:border-slate-700",
+    hoverTextColor:
+      "group-hover:text-slate-600 dark:group-hover:text-slate-400",
+    dataBorder: "border-slate-300 dark:border-slate-700",
+    dotColor: "bg-slate-600 dark:bg-slate-400",
   },
   amc: {
     title: "After hours",
-    bgColor: "bg-orange-50 dark:bg-orange-900/20",
-    borderColor: "border-orange-200 dark:border-orange-800",
-    hoverBorderColor: "hover:border-orange-400 dark:hover:border-orange-600",
-    textColor: "text-orange-700 dark:text-orange-300",
-    badgeBg: "bg-orange-100 dark:bg-orange-900/40",
-    badgeText: "text-orange-700 dark:text-orange-300",
-    logoBorder: "border-orange-200 dark:border-orange-700",
+    bgColor: "bg-amber-50 dark:bg-amber-900/20",
+    borderColor: "border-amber-200 dark:border-amber-800",
+    hoverBorderColor: "hover:border-amber-400 dark:hover:border-amber-600",
+    textColor: "text-amber-700 dark:text-amber-300",
+    badgeBg: "bg-amber-100 dark:bg-amber-900/40",
+    badgeText: "text-amber-700 dark:text-amber-300",
+    logoBorder: "border-amber-200 dark:border-amber-700",
     hoverTextColor:
-      "group-hover:text-orange-600 dark:group-hover:text-orange-400",
-    dataBorder: "border-orange-200 dark:border-orange-700",
-    dotColor: "bg-orange-600 dark:bg-orange-400",
+      "group-hover:text-amber-600 dark:group-hover:text-amber-400",
+    dataBorder: "border-amber-200 dark:border-amber-700",
+    dotColor: "bg-amber-600 dark:bg-amber-400",
   },
 };
 
@@ -59,6 +62,8 @@ export default function EarningsEventList({
   events,
   timeType,
   onEventClick,
+  compact = false,
+  fullWidth = false,
 }: EarningsEventListProps) {
   const router = useRouter();
   const theme = themeConfigs[timeType];
@@ -80,66 +85,127 @@ export default function EarningsEventList({
   };
 
   return (
-    <div className="w-1/2">
-      <div className="flex items-center gap-2 mb-3">
-        {timeType === "amc" && (
-          <div className={`w-2 h-2 rounded-full ${theme.dotColor}`}></div>
-        )}
-        <h3 className={`text-sm font-bold ${theme.textColor}`}>
+    <div className={fullWidth ? "w-full" : "w-full lg:w-1/2"}>
+      <div
+        className={`flex items-center ${compact ? "gap-1.5" : "gap-2"} ${
+          compact ? "mb-2" : "mb-3"
+        }`}
+      >
+        <div
+          className={`${compact ? "w-1.5 h-1.5" : "w-2 h-2"} rounded-full ${
+            theme.dotColor
+          }`}
+        ></div>
+        <h3
+          className={`${compact ? "text-xs" : "text-base"} font-bold ${
+            theme.textColor
+          }`}
+        >
           {theme.title} ({sortedEvents.length})
         </h3>
       </div>
-      <div className="space-y-1.5">
+      <div className={compact ? "space-y-3" : "space-y-1.5"}>
         {sortedEvents.map((event, index) => (
           <div
             key={index}
-            className={`group ${theme.bgColor} rounded-md p-2.5 border ${theme.borderColor} ${theme.hoverBorderColor} hover:shadow-md transition-all cursor-pointer`}
+            className={`group ${theme.bgColor} rounded-md ${
+              compact ? "p-1.5" : "p-2.5"
+            } border ${theme.borderColor} ${
+              theme.hoverBorderColor
+            } hover:shadow-md transition-all cursor-pointer`}
             onClick={() => handleEventClick(event.symbol)}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div
+              className={`flex items-start justify-between ${
+                compact ? "gap-1.5" : "gap-3"
+              }`}
+            >
               {/* 左侧：公司信息 */}
-              <div className="flex items-start gap-2 flex-1">
-                {event.logo && (
-                  <div
-                    className={`w-5 h-5 bg-white dark:bg-gray-800 rounded flex items-center justify-center flex-shrink-0 border ${theme.logoBorder} overflow-hidden`}
-                  >
+              <div
+                className={`flex items-start ${
+                  compact ? "gap-1" : "gap-2"
+                } flex-1`}
+              >
+                <div
+                  className={`w-12 h-12 p-2 bg-white rounded-md flex items-center justify-center flex-shrink-0 border ${theme.logoBorder} overflow-hidden`}
+                >
+                  {event.logo ? (
                     <Image
                       src={event.logo}
                       alt={event.companyName}
-                      width={20}
-                      height={20}
-                      className="object-contain"
+                      width={48}
+                      height={48}
+                      className="object-contain w-full h-full"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<span class="text-xs font-bold ${
+                            theme.textColor
+                          }">${event.symbol.substring(0, 3)}</span>`;
+                        }
                       }}
                     />
-                  </div>
-                )}
+                  ) : (
+                    <span className={`text-xs font-bold ${theme.textColor}`}>
+                      {event.symbol.substring(0, 3)}
+                    </span>
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-0.5">
+                  <div
+                    className={`flex items-center ${
+                      compact ? "gap-0.5" : "gap-1.5"
+                    } mb-0.5`}
+                  >
                     <span
-                      className={`text-sm font-bold text-gray-900 dark:text-white ${theme.hoverTextColor} transition-colors`}
+                      className={`${
+                        compact ? "text-xs" : "text-base"
+                      } font-bold text-gray-900 dark:text-white ${
+                        theme.hoverTextColor
+                      } transition-colors`}
                     >
                       {event.symbol}
                     </span>
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 ${theme.badgeBg} rounded-full ${theme.badgeText} font-semibold`}
+                      className={`${
+                        compact ? "text-[9px] px-1" : "text-xs px-2"
+                      } py-0.5 ${theme.badgeBg} rounded-full ${
+                        theme.badgeText
+                      } font-semibold`}
                     >
                       {theme.title}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-700 dark:text-white/80 mb-0.5 truncate">
+                  <p
+                    className={`${
+                      compact ? "text-[11px]" : "text-sm"
+                    } text-gray-700 dark:text-white/80 mb-0.5 truncate`}
+                  >
                     {event.companyName}
                   </p>
-                  <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-white/50">
+                  <div
+                    className={`flex items-center ${
+                      compact ? "gap-0.5" : "gap-1.5"
+                    } ${
+                      compact ? "text-[9px]" : "text-xs"
+                    } text-gray-500 dark:text-white/50`}
+                  >
                     {event.sector && (
-                      <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-white/10 rounded">
+                      <span
+                        className={`${
+                          compact ? "px-1" : "px-2"
+                        } py-0.5 bg-gray-100 dark:bg-white/10 rounded`}
+                      >
                         {event.sector}
                       </span>
                     )}
                     {event.quarter && event.year && (
-                      <span className="px-1.5 py-0.5 bg-primary/10 rounded text-primary font-semibold">
+                      <span
+                        className={`${
+                          compact ? "px-1" : "px-2"
+                        } py-0.5 bg-primary/10 rounded text-primary font-semibold`}
+                      >
                         Q{event.quarter} {event.year}
                       </span>
                     )}
@@ -148,22 +214,38 @@ export default function EarningsEventList({
               </div>
 
               {/* 右侧：财务数据 */}
-              <div className="flex gap-2 flex-shrink-0">
+              <div
+                className={`flex ${
+                  compact ? "gap-0.5" : "gap-2"
+                } flex-shrink-0`}
+              >
                 {event.epsEstimate !== null &&
                   event.epsEstimate !== undefined && (
                     <div
-                      className={`text-right rounded p-2 min-w-[70px] border ${theme.dataBorder}`}
+                      className={`text-right rounded ${
+                        compact ? "p-1 min-w-[50px]" : "p-2.5 min-w-[80px]"
+                      } border ${theme.dataBorder}`}
                     >
-                      <div className="text-[9px] text-gray-500 dark:text-white/50 mb-0.5">
+                      <div
+                        className={`${
+                          compact ? "text-[8px]" : "text-[10px]"
+                        } text-gray-500 dark:text-white/50 mb-0.5`}
+                      >
                         EPS Est.
                       </div>
-                      <div className="text-xs font-bold text-gray-900 dark:text-white">
+                      <div
+                        className={`${
+                          compact ? "text-[11px]" : "text-sm"
+                        } font-bold text-gray-900 dark:text-white`}
+                      >
                         ${event.epsEstimate.toFixed(2)}
                       </div>
                       {event.epsActual !== null &&
                         event.epsActual !== undefined && (
                           <div
-                            className={`text-[10px] font-semibold mt-0.5 ${
+                            className={`${
+                              compact ? "text-[9px]" : "text-xs"
+                            } font-semibold mt-0.5 ${
                               event.epsActual >= event.epsEstimate
                                 ? "text-green-600 dark:text-green-400"
                                 : "text-red-600 dark:text-red-400"
@@ -176,17 +258,29 @@ export default function EarningsEventList({
                   )}
                 {event.revenueEstimate && (
                   <div
-                    className={`text-right rounded p-2 min-w-[70px] border ${theme.dataBorder}`}
+                    className={`text-right rounded ${
+                      compact ? "p-1 min-w-[50px]" : "p-2.5 min-w-[80px]"
+                    } border ${theme.dataBorder}`}
                   >
-                    <div className="text-[9px] text-gray-500 dark:text-white/50 mb-0.5">
+                    <div
+                      className={`${
+                        compact ? "text-[8px]" : "text-[10px]"
+                      } text-gray-500 dark:text-white/50 mb-0.5`}
+                    >
                       Revenue Est.
                     </div>
-                    <div className="text-xs font-bold text-gray-900 dark:text-white">
+                    <div
+                      className={`${
+                        compact ? "text-[11px]" : "text-sm"
+                      } font-bold text-gray-900 dark:text-white`}
+                    >
                       ${(event.revenueEstimate / 1e9).toFixed(1)}B
                     </div>
                     {event.revenueActual && (
                       <div
-                        className={`text-[10px] font-semibold mt-0.5 ${
+                        className={`${
+                          compact ? "text-[9px]" : "text-xs"
+                        } font-semibold mt-0.5 ${
                           event.revenueActual >= event.revenueEstimate
                             ? "text-green-600 dark:text-green-400"
                             : "text-red-600 dark:text-red-400"

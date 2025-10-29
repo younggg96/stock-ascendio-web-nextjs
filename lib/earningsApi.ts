@@ -1,7 +1,7 @@
 // Earnings Calendar API Service
 // Using Finnhub API for S&P 500 earnings data
 
-import sp500Data from "@/data/sp500.constituents.json";
+import sp500Data from "@/data/sp500.constituents.wikilogo.json";
 
 /**
  * Finnhub API 原始响应格式
@@ -47,6 +47,9 @@ export interface SP500Company {
   dateAdded: string;
   cik: string;
   founded: string;
+  logoUrl: string | null;
+  logoFile: string | null;
+  wikidata: string | null;
 }
 
 /**
@@ -101,11 +104,13 @@ const sp500SymbolSet = new Set(sp500Companies.map((c) => c.symbol));
 const sp500NamesMap: Record<string, string> = {};
 const sp500SectorMap: Record<string, string> = {};
 const sp500SubIndustryMap: Record<string, string> = {};
+const sp500LogoMap: Record<string, string | null> = {};
 
 sp500Companies.forEach((company) => {
   sp500NamesMap[company.symbol] = company.name;
   sp500SectorMap[company.symbol] = company.sector;
   sp500SubIndustryMap[company.symbol] = company.subIndustry;
+  sp500LogoMap[company.symbol] = company.logoUrl;
 });
 
 /**
@@ -219,6 +224,7 @@ async function fetchFinnhubEarnings(
           year: item.year,
           sector: sp500SectorMap[item.symbol] || null,
           subIndustry: sp500SubIndustryMap[item.symbol] || null,
+          logo: sp500LogoMap[item.symbol] || null,
         })
       );
 
@@ -347,22 +353,26 @@ export function groupEarningsByDate(events: EarningsEvent[]): GroupedEarnings {
  * Format earnings date for display
  */
 export function formatEarningsDate(dateStr: string): string {
-  const date = new Date(dateStr);
+  // Parse date string as local date to avoid timezone issues
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const earningsDate = new Date(year, month - 1, day);
+  earningsDate.setHours(0, 0, 0, 0);
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const earningsDate = new Date(date);
-  earningsDate.setHours(0, 0, 0, 0);
-
   const diffTime = earningsDate.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Tomorrow";
   if (diffDays === -1) return "Yesterday";
   if (diffDays > 1 && diffDays <= 7) return `In ${diffDays} days`;
 
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return earningsDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 /**
@@ -371,11 +381,9 @@ export function formatEarningsDate(dateStr: string): string {
 export function getEarningsTimeLabel(time?: "bmo" | "amc" | "dmh"): string {
   switch (time) {
     case "bmo":
-      return "Before Market Open";
+      return "Pre-Market";
     case "amc":
-      return "After Market Close";
-    case "dmh":
-      return "During Market Hours";
+      return "After hours";
     default:
       return "TBD";
   }
