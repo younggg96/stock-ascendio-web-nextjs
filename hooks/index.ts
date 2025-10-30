@@ -1,5 +1,10 @@
 // Export all custom hooks
-export { useStockData } from "./useStockData";
+export {
+  useStockQuote,
+  useMultipleQuotes,
+  useMarketIndices,
+  useChartData,
+} from "./useStockData";
 export {
   useIsMobile,
   useWindowWidth,
