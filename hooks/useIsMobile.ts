@@ -8,7 +8,13 @@ import { useState, useEffect } from "react";
  * @returns boolean indicating if the viewport is mobile size
  */
 export function useIsMobile(breakpoint: number = 768): boolean {
-  const [isMobile, setIsMobile] = useState(false);
+  // Initialize with undefined to avoid hydration mismatch
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < breakpoint;
+    }
+    return false;
+  });
 
   useEffect(() => {
     // Check if window is defined (client-side only)

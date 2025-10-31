@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
@@ -32,12 +32,22 @@ export default function NewsPageClient({ category }: NewsPageClientProps) {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(category);
+  const [isPending, startTransition] = useTransition();
   const isMobile = useIsMobile();
 
+  // 同步 URL 参数和本地状态
+  useEffect(() => {
+    setActiveTab(category);
+  }, [category]);
+
   const handleTabChange = (value: string) => {
+    // 立即更新本地状态，避免闪烁
     setActiveTab(value);
-    // 更新 URL 路径
-    router.push(`/dashboard/news/${value}`, { scroll: false });
+
+    // 使用 transition 更新 URL，不会阻塞 UI
+    startTransition(() => {
+      router.push(`/dashboard/news/${value}`, { scroll: false });
+    });
   };
 
   return (
@@ -72,6 +82,7 @@ export default function NewsPageClient({ category }: NewsPageClientProps) {
                   size="md"
                   variant="pills"
                   className="w-auto"
+                  disabled={isPending}
                 />
               }
             >

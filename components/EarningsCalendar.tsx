@@ -42,12 +42,13 @@ export default function EarningsCalendar({
   const [earnings, setEarnings] = useState<EarningsEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isFromCache, setIsFromCache] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [timeFilter, setTimeFilter] = useState<"bmo" | "amc" | "all">("all");
+  const [mounted, setMounted] = useState(false);
 
   // 缓存配置
   const CACHE_PREFIX = "earnings_cache_";
@@ -60,6 +61,7 @@ export default function EarningsCalendar({
 
   // 从缓存读取数据
   const getFromCache = (key: string) => {
+    if (typeof window === "undefined") return null;
     try {
       const cached = localStorage.getItem(key);
       if (!cached) return null;
@@ -82,6 +84,7 @@ export default function EarningsCalendar({
 
   // 保存到缓存
   const saveToCache = (key: string, data: any) => {
+    if (typeof window === "undefined") return;
     try {
       const cacheData = {
         data,
@@ -95,6 +98,7 @@ export default function EarningsCalendar({
 
   // 清理过期的缓存
   const cleanExpiredCache = () => {
+    if (typeof window === "undefined") return;
     try {
       const keys = Object.keys(localStorage);
       const now = Date.now();
@@ -192,12 +196,18 @@ export default function EarningsCalendar({
     [from, to, currentDate, maxEvents]
   );
 
+  // 标记组件已挂载，避免 hydration 错误
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     // 清理过期缓存
     cleanExpiredCache();
     // 获取数据
     fetchEarnings();
-  }, [fetchEarnings]);
+  }, [fetchEarnings, mounted]);
 
   const groupedEarnings = useMemo(
     () => groupEarningsByDate(earnings),
@@ -342,7 +352,53 @@ export default function EarningsCalendar({
     setTimeout(() => setIsRefreshing(false), 500); // 延迟一下让动画更明显
   };
 
+  // 避免 hydration 错误，首次渲染统一显示通用 skeleton
+  if (!mounted) {
+    return (
+      <div className="space-y-3">
+        <div className="animate-pulse space-y-3">
+          <div className="h-12 bg-gray-100 dark:bg-white/5 rounded-lg"></div>
+          <div className="h-[200px] bg-gray-100 dark:bg-white/5 rounded-lg"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // 组件已挂载后，根据 compact 显示不同的 loading
   if (loading) {
+    // Compact 模式的 loading skeleton
+    if (compact) {
+      return (
+        <div className="space-y-3">
+          <div className="animate-pulse space-y-3">
+            {/* 日期导航骨架 */}
+            <div className="h-16 bg-gray-100 dark:bg-white/5 rounded-lg"></div>
+
+            {/* 时间切换按钮骨架 */}
+            <div className="h-10 bg-gray-100 dark:bg-white/5 rounded-lg"></div>
+
+            {/* 列表项骨架 */}
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-white/5 rounded-lg"
+                >
+                  <div className="w-10 h-10 bg-gray-200 dark:bg-white/10 rounded-lg"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-24"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-16"></div>
+                  </div>
+                  <div className="w-12 h-6 bg-gray-200 dark:bg-white/10 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 桌面模式的 loading skeleton
     return (
       <div className="space-y-3">
         <div className="animate-pulse space-y-3">
@@ -445,7 +501,7 @@ export default function EarningsCalendar({
               onClick={() => setTimeFilter("amc")}
               className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
                 timeFilter === "amc"
-                  ? "bg-amber-500 text-white shadow-sm"
+                  ? "bg-orange-600 text-white shadow-sm"
                   : "text-gray-600 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/10"
               }`}
             >
@@ -694,22 +750,22 @@ export default function EarningsCalendar({
                     {/* 盘后财报 (AMC) */}
                     {amc.length > 0 && (
                       <div className="mb-1">
-                        <div className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-amber-600 dark:bg-amber-400"></div>
+                        <div className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1 flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-orange-600 dark:bg-orange-400"></div>
                           After hours ({amc.length})
                         </div>
                         <div className="space-y-1">
                           {amc.slice(0, 2).map((event, eventIndex) => (
                             <div
                               key={eventIndex}
-                              className="flex items-center gap-1.5 px-2 py-1.5 bg-amber-50 dark:bg-amber-900/20 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors cursor-pointer border border-amber-200 dark:border-amber-800"
+                              className="flex items-center gap-1.5 px-2 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors cursor-pointer border border-orange-200 dark:border-orange-800"
                               title={`${event.symbol} - ${event.companyName} (After-hours)`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 router.push(`/dashboard/stock/${event.symbol}`);
                               }}
                             >
-                              <div className="w-12 h-12 p-1 bg-white rounded-sm flex items-center justify-center flex-shrink-0 overflow-hidden border border-amber-200 dark:border-amber-700">
+                              <div className="w-12 h-12 p-1 bg-white rounded-sm flex items-center justify-center flex-shrink-0 overflow-hidden border border-orange-200 dark:border-orange-700">
                                 {event.logo ? (
                                   <Image
                                     src={event.logo}
@@ -722,7 +778,7 @@ export default function EarningsCalendar({
                                         e.target as HTMLImageElement;
                                       const parent = target.parentElement;
                                       if (parent) {
-                                        parent.innerHTML = `<span class="text-xs font-bold text-amber-700 dark:text-amber-300">${event.symbol.substring(
+                                        parent.innerHTML = `<span class="text-xs font-bold text-orange-700 dark:text-orange-300">${event.symbol.substring(
                                           0,
                                           3
                                         )}</span>`;
@@ -730,18 +786,18 @@ export default function EarningsCalendar({
                                     }}
                                   />
                                 ) : (
-                                  <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
+                                  <span className="text-xs font-bold text-orange-700 dark:text-orange-300">
                                     {event.symbol.substring(0, 3)}
                                   </span>
                                 )}
                               </div>
-                              <div className="text-xs font-semibold text-amber-700 dark:text-amber-300 truncate">
+                              <div className="text-xs font-semibold text-orange-700 dark:text-orange-300 truncate">
                                 {event.symbol}
                               </div>
                             </div>
                           ))}
                           {amc.length > 2 && (
-                            <div className="text-[10px] text-amber-600 dark:text-amber-400 text-center">
+                            <div className="text-[10px] text-orange-600 dark:text-orange-400 text-center">
                               +{amc.length - 2}
                             </div>
                           )}

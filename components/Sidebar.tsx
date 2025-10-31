@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  TrendingUp,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 
@@ -22,6 +23,7 @@ const navItems = [
     href: "/dashboard",
   },
   { icon: Newspaper, title: "News", href: "/dashboard/news" },
+  { icon: TrendingUp, title: "Stocks", href: "/dashboard/stocks" },
   { icon: Users, title: "KOL Tracker", href: "/dashboard/kol" },
   { icon: Settings, title: "Settings", href: "/dashboard/settings" },
 ];
@@ -79,6 +81,8 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               width={20}
               height={20}
               className="cursor-pointer"
+              priority
+              unoptimized
             />
             {!isCollapsed && (
               <span className="text-gray-900 dark:text-white text-base font-bold">

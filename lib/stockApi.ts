@@ -191,167 +191,137 @@ async function fetchFinnhubQuote(symbol: string): Promise<StockQuote | null> {
 }
 
 /**
- * Get mock data as fallback
- */
-function getMockQuote(symbol: string): StockQuote {
-  const mockData: Record<string, StockQuote> = {
-    AAPL: {
-      symbol: "AAPL",
-      name: "Apple Inc.",
-      price: 178.25,
-      change: 2.35,
-      changePercent: 1.34,
-    },
-    GOOGL: {
-      symbol: "GOOGL",
-      name: "Alphabet Inc.",
-      price: 170.29,
-      change: -0.98,
-      changePercent: -0.57,
-    },
-    MSFT: {
-      symbol: "MSFT",
-      name: "Microsoft Corp.",
-      price: 420.72,
-      change: 5.16,
-      changePercent: 1.24,
-    },
-    TSLA: {
-      symbol: "TSLA",
-      name: "Tesla, Inc.",
-      price: 175.79,
-      change: -1.89,
-      changePercent: -1.06,
-    },
-    AMZN: {
-      symbol: "AMZN",
-      name: "Amazon.com, Inc.",
-      price: 185.07,
-      change: 2.1,
-      changePercent: 1.15,
-    },
-    NVDA: {
-      symbol: "NVDA",
-      name: "NVIDIA Corp.",
-      price: 875.28,
-      change: 12.45,
-      changePercent: 1.44,
-    },
-  };
-
-  return (
-    mockData[symbol] || {
-      symbol,
-      name: STOCK_NAMES[symbol] || symbol,
-      price: 100 + Math.random() * 500,
-      change: (Math.random() - 0.5) * 10,
-      changePercent: (Math.random() - 0.5) * 5,
-    }
-  );
-}
-
-/**
  * Main function to fetch stock quote with fallbacks
  */
 export async function fetchStockQuote(symbol: string): Promise<StockQuote> {
-  console.log(`📊 Fetching data for ${symbol}...`);
-
   // Try Yahoo Finance first (no API key required)
   let quote = await fetchYahooQuote(symbol);
   if (quote) {
-    console.log(`✅ Successfully fetched ${symbol} from Yahoo Finance`);
     return quote;
   }
 
-  // Fallback to Alpha Vantage if Yahoo fails
-  if (ALPHA_VANTAGE_API_KEY && ALPHA_VANTAGE_API_KEY !== "demo") {
-    console.log(`🔄 Trying Alpha Vantage for ${symbol}...`);
-    quote = await fetchAlphaVantageQuote(symbol);
-    if (quote) {
-      console.log(`✅ Successfully fetched ${symbol} from Alpha Vantage`);
-      return quote;
-    }
+  // Try Finnhub as fallback
+  quote = await fetchFinnhubQuote(symbol);
+  if (quote) {
+    return quote;
   }
 
-  // Fallback to Finnhub if both fail
-  if (FINNHUB_API_KEY) {
-    console.log(`🔄 Trying Finnhub for ${symbol}...`);
-    quote = await fetchFinnhubQuote(symbol);
-    if (quote) {
-      console.log(`✅ Successfully fetched ${symbol} from Finnhub`);
-      return quote;
-    }
+  // Try Alpha Vantage as last resort
+  quote = await fetchAlphaVantageQuote(symbol);
+  if (quote) {
+    return quote;
   }
 
-  // Use mock data as last resort
-  console.warn(
-    `⚠️ Using mock data for ${symbol} - Configure API keys for real data`
+  // All APIs failed
+  throw new Error(
+    `Failed to fetch stock quote for ${symbol} from all available APIs`
   );
-  console.warn(`📝 See STOCK_API_SETUP.md for instructions`);
-  quote = getMockQuote(symbol);
-
-  return quote;
 }
 
 /**
  * Fetch multiple stock quotes
+ * Returns only successfully fetched quotes, skips failed ones
  */
 export async function fetchMultipleQuotes(
   symbols: string[]
 ): Promise<StockQuote[]> {
-  const promises = symbols.map((symbol) => fetchStockQuote(symbol));
-  return Promise.all(promises);
+  const promises = symbols.map(async (symbol) => {
+    try {
+      return await fetchStockQuote(symbol);
+    } catch (error) {
+      console.error(`Failed to fetch quote for ${symbol}:`, error);
+      return null;
+    }
+  });
+
+  const results = await Promise.all(promises);
+  return results.filter((quote): quote is StockQuote => quote !== null);
 }
 
 /**
  * Fetch market indices
+ * Returns only successfully fetched indices, skips failed ones
  */
 export async function fetchMarketIndices(): Promise<MarketIndex[]> {
   const indices = Object.entries(INDEX_SYMBOLS);
   const promises = indices.map(async ([name, symbol]) => {
-    const quote = await fetchStockQuote(symbol);
-    return {
-      name,
-      value: quote.price.toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-      change: quote.change,
-      changePercent: quote.changePercent,
-    };
+    try {
+      const quote = await fetchStockQuote(symbol);
+      return {
+        name,
+        value: quote.price.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        change: quote.change,
+        changePercent: quote.changePercent,
+      };
+    } catch (error) {
+      console.error(`Failed to fetch index ${name}:`, error);
+      return null;
+    }
   });
 
-  return Promise.all(promises);
+  const results = await Promise.all(promises);
+  return results.filter((index): index is MarketIndex => index !== null);
 }
 
 /**
- * Fetch intraday chart data
+ * Fetch intraday chart data using Yahoo Finance API
  */
 export async function fetchChartData(
   symbol: string,
-  interval: string = "5min"
+  interval: string = "5m",
+  range: string = "1d"
 ): Promise<ChartData[]> {
-  // Generate mock intraday data for now
-  // In production, use Alpha Vantage TIME_SERIES_INTRADAY or Yahoo Finance API
-  const data: ChartData[] = [];
-  const basePrice = 170;
-  const times = [
-    "9:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "1:00 PM",
-    "2:00 PM",
-    "3:00 PM",
-    "4:00 PM",
-  ];
-
-  times.forEach((time, index) => {
-    data.push({
-      time,
-      value: basePrice + Math.sin(index * 0.5) * 5 + Math.random() * 2,
+  try {
+    const url = `${YAHOO_BASE_URL}/${symbol}?interval=${interval}&range=${range}`;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        Accept: "application/json",
+      },
+      cache: "no-store",
     });
-  });
 
-  return data;
+    if (!response.ok) {
+      throw new Error(`Yahoo API returned ${response.status} for ${symbol}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.chart?.result?.[0]) {
+      throw new Error(`Invalid Yahoo API response for ${symbol}`);
+    }
+
+    const result = data.chart.result[0];
+    const timestamps = result.timestamp || [];
+    const prices = result.indicators?.quote?.[0]?.close || [];
+
+    if (timestamps.length === 0 || prices.length === 0) {
+      throw new Error(`No chart data available for ${symbol}`);
+    }
+
+    const chartData: ChartData[] = timestamps
+      .map((ts: number, index: number) => {
+        const date = new Date(ts * 1000);
+        const time = date.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+
+        return {
+          time,
+          value: prices[index] || 0,
+        };
+      })
+      .filter((item: ChartData) => item.value > 0); // Filter out null/zero values
+
+    return chartData;
+  } catch (error) {
+    console.error(`Error fetching chart data for ${symbol}:`, error);
+    throw new Error(`Failed to fetch chart data for ${symbol}`);
+  }
 }

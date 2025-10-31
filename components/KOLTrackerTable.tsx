@@ -317,20 +317,6 @@ export default function KOLTrackerTable({
           </DialogHeader>
           <div className="space-y-3 py-3">
             <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-xs">
-                Name *
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Enter KOL name"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
               <Label htmlFor="username" className="text-xs">
                 Username *
               </Label>
@@ -365,50 +351,6 @@ export default function KOLTrackerTable({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="followers" className="text-xs">
-                Followers
-              </Label>
-              <Input
-                id="followers"
-                type="number"
-                value={formData.followers}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    followers: parseInt(e.target.value) || 0,
-                  })
-                }
-                placeholder="0"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-xs">
-                Description
-              </Label>
-              <Input
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Brief description"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="tracking"
-                checked={formData.isTracking}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isTracking: checked })
-                }
-              />
-              <Label htmlFor="tracking" className="text-xs">
-                Start tracking immediately
-              </Label>
-            </div>
           </div>
           <DialogFooter className="gap-2">
             <Button
@@ -420,7 +362,7 @@ export default function KOLTrackerTable({
               Cancel
             </Button>
             <Button onClick={handleAdd} size="sm" className="h-8 text-xs">
-              Add KOL
+              Add
             </Button>
           </DialogFooter>
         </DialogContent>

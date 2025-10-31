@@ -10,13 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SwitchTab } from "@/components/ui/switch-tab";
 import {
   KOL,
   Platform,
@@ -60,31 +54,23 @@ export default function TopKOLRanking({ kols, onUpdate }: TopKOLRankingProps) {
 
   return (
     <div className="space-y-3">
-      {/* Filter */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-primary" />
-          <span className="text-xs font-medium text-gray-600 dark:text-white/60">
-            Ranked by followers
-          </span>
-        </div>
-        <Select
+      {/* Platform Filter */}
+      <div className="mb-3">
+        <SwitchTab
+          options={[
+            { value: "all", label: "All" },
+            { value: "twitter", label: "X" },
+            { value: "reddit", label: "Reddit" },
+            { value: "xiaohongshu", label: "小红书" },
+            { value: "youtube", label: "YouTube" },
+          ]}
           value={filterPlatform}
           onValueChange={(value) =>
             setFilterPlatform(value as Platform | "all")
           }
-        >
-          <SelectTrigger className="w-[150px] h-8 text-xs">
-            <SelectValue placeholder="All Platforms" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Platforms</SelectItem>
-            <SelectItem value="twitter">X (Twitter)</SelectItem>
-            <SelectItem value="reddit">Reddit</SelectItem>
-            <SelectItem value="xiaohongshu">小红书</SelectItem>
-            <SelectItem value="youtube">YouTube</SelectItem>
-          </SelectContent>
-        </Select>
+          size="sm"
+          variant="pills"
+        />
       </div>
 
       {/* Ranking Table */}

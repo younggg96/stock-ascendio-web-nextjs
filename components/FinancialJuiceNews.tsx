@@ -14,25 +14,64 @@ export default function FinancialJuiceNews({
 }: FinancialJuiceNewsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
-  const widgetInitialized = useRef(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const initializingRef = useRef(false);
 
   useEffect(() => {
-    // 防止重复初始化
-    if (widgetInitialized.current) return;
+    if (!containerRef.current) return;
+
+    // 检查容器是否已经有 iframe（widget 已加载）
+    const hasIframe = containerRef.current.querySelector("iframe");
+    if (hasIframe) {
+      setLoading(false);
+      return;
+    }
+
+    // 防止同时进行多次初始化
+    if (initializingRef.current) return;
+    initializingRef.current = true;
+
+    // 超时保护，8秒后强制结束 loading
+    const loadingTimeout = setTimeout(() => {
+      console.warn("Widget loading timeout");
+      setLoading(false);
+      initializingRef.current = false;
+    }, 8000);
 
     const initWidget = () => {
       // 检查是否已经加载了脚本
-      if (document.getElementById("FJ-Widgets")) {
-        // 如果脚本已存在，直接初始化
-        if (window.FJWidgets && containerRef.current) {
-          initializeWidget();
-        }
+      const existingScript = document.getElementById("FJ-Widgets");
+
+      if (window.FJWidgets) {
+        // FJWidgets 已可用，直接初始化
+        clearTimeout(loadingTimeout);
+        initializeWidget();
         return;
       }
 
-      // 创建脚本
+      if (existingScript) {
+        // 脚本标签存在但 FJWidgets 未就绪，等待加载完成
+        let attempts = 0;
+        const maxAttempts = 40; // 最多等待 4 秒
+        const checkInterval = setInterval(() => {
+          attempts++;
+          if (window.FJWidgets) {
+            clearInterval(checkInterval);
+            clearTimeout(loadingTimeout);
+            initializeWidget();
+          } else if (attempts >= maxAttempts) {
+            clearInterval(checkInterval);
+            clearTimeout(loadingTimeout);
+            console.warn("Widget script loading timeout");
+            setLoading(false);
+            initializingRef.current = false;
+          }
+        }, 100);
+        return;
+      }
+
+      // 创建新脚本
       const script = document.createElement("script");
       script.type = "text/javascript";
       script.id = "FJ-Widgets";
@@ -40,20 +79,35 @@ export default function FinancialJuiceNews({
       script.src = `https://feed.financialjuice.com/widgets/widgets.js?r=${r}`;
 
       script.onload = () => {
+        clearTimeout(loadingTimeout);
         initializeWidget();
       };
 
       script.onerror = () => {
         console.error("Failed to load FinancialJuice widget script");
+        clearTimeout(loadingTimeout);
         setError(true);
         setLoading(false);
+        initializingRef.current = false;
       };
 
       document.head.appendChild(script);
     };
 
     const initializeWidget = () => {
-      if (!window.FJWidgets || !containerRef.current) return;
+      if (!window.FJWidgets || !containerRef.current) {
+        console.warn("FJWidgets or container not available");
+        setLoading(false);
+        initializingRef.current = false;
+        return;
+      }
+
+      // 再次检查是否已有内容
+      if (containerRef.current.querySelector("iframe")) {
+        setLoading(false);
+        initializingRef.current = false;
+        return;
+      }
 
       const isDark = resolvedTheme === "dark";
 
@@ -69,12 +123,13 @@ export default function FinancialJuiceNews({
 
       try {
         new window.FJWidgets.createWidget(options);
-        widgetInitialized.current = true;
         setLoading(false);
+        initializingRef.current = false;
       } catch (error) {
         console.error("Error initializing FinancialJuice widget:", error);
         setError(true);
         setLoading(false);
+        initializingRef.current = false;
       }
     };
 
@@ -85,6 +140,8 @@ export default function FinancialJuiceNews({
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(loadingTimeout);
+      initializingRef.current = false;
     };
   }, [width, height, resolvedTheme]);
 
@@ -103,18 +160,17 @@ export default function FinancialJuiceNews({
   return (
     <div className="relative w-full h-full">
       {loading && (
-        <div className="absolute inset-0 bg-white dark:bg-gray-900 z-10 rounded-lg p-4 space-y-3">
+        <div className="absolute inset-0 bg-gray-50/50 dark:bg-white/[0.02] z-10 rounded-lg p-4 space-y-[5px] transition-opacity duration-200">
           {/* Skeleton Loading */}
           {[...Array(8)].map((_, index) => (
             <div
               key={index}
-              className="animate-pulse flex gap-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg"
+              className="animate-pulse flex items-center gap-3 h-[50px] px-3 bg-gray-100/80 dark:bg-white/5 rounded-lg"
             >
-              <div className="flex-shrink-0 w-12 h-12 bg-gray-300 dark:bg-gray-700 rounded"></div>
+              <div className="flex-shrink-0 w-10 h-10 bg-gray-200 dark:bg-white/10 rounded"></div>
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
-                <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-5/6"></div>
+                <div className="h-3 bg-gray-200 dark:bg-white/10 rounded w-3/4"></div>
+                <div className="h-2.5 bg-gray-200 dark:bg-white/10 rounded w-full"></div>
               </div>
             </div>
           ))}
@@ -123,8 +179,8 @@ export default function FinancialJuiceNews({
       <div
         id="financialjuice-news-widget-container"
         ref={containerRef}
-        className="w-full h-full rounded-lg overflow-hidden [&_iframe]:rounded-lg"
-        style={{ minHeight: height }}
+        className="w-full h-full rounded-lg overflow-hidden [&_iframe]:rounded-lg transition-opacity duration-200"
+        style={{ minHeight: height, opacity: loading ? 0 : 1 }}
       />
       <style jsx global>{`
         #financialjuice-news-widget-container {

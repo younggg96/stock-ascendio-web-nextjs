@@ -24,6 +24,8 @@ export default function LandingHeader({
           width={24}
           height={24}
           className="w-6 h-6 group-hover:scale-110 transition-transform"
+          priority
+          unoptimized
         />
         <span
           className={`${textColorClass} text-lg sm:text-xl font-bold group-hover:text-primary transition-colors`}

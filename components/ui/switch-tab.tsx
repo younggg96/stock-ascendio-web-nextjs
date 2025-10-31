@@ -17,6 +17,7 @@ interface SwitchTabProps {
   className?: string;
   size?: "sm" | "md" | "lg";
   variant?: "pills" | "tabs" | "underline";
+  disabled?: boolean;
 }
 
 export const SwitchTab = React.memo(function SwitchTab({
@@ -26,6 +27,7 @@ export const SwitchTab = React.memo(function SwitchTab({
   className,
   size = "md",
   variant = "pills",
+  disabled = false,
 }: SwitchTabProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const buttonRefs = React.useRef<Map<string, HTMLButtonElement>>(new Map());
@@ -77,7 +79,7 @@ export const SwitchTab = React.memo(function SwitchTab({
   };
 
   // Update indicator position and size
-  React.useLayoutEffect(() => {
+  const updateIndicator = React.useCallback(() => {
     const activeOption = options.find((opt) => opt.value === value);
     if (!activeOption) return;
 
@@ -102,6 +104,20 @@ export const SwitchTab = React.memo(function SwitchTab({
 
     setIndicatorStyle(style);
   }, [value, options, variant]);
+
+  React.useLayoutEffect(() => {
+    updateIndicator();
+  }, [updateIndicator]);
+
+  // 监听窗口大小变化，更新指示器位置（响应移动端 label 隐藏/显示）
+  React.useEffect(() => {
+    const handleResize = () => {
+      updateIndicator();
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [updateIndicator]);
 
   const config = {
     size: sizeConfig[size],
@@ -138,7 +154,7 @@ export const SwitchTab = React.memo(function SwitchTab({
       {/* Options */}
       {options.map((option) => {
         const isActive = value === option.value;
-        const isDisabled = option.disabled;
+        const isDisabled = disabled || option.disabled;
 
         return (
           <button
