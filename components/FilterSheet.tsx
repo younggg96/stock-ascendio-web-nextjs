@@ -11,10 +11,15 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { TriggerButton } from "@/components/ui/trigger-button";
-import { Filter, RotateCcw, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import {
+  Filter,
+  RotateCcw,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from "lucide-react";
 import { MultiSelectOption } from "@/components/ui/multi-select";
 import { ExpandableOptions } from "@/components/ui/expandable-options";
-import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { DateRangePicker, DateRange } from "@/components/ui/date-range-picker";
@@ -22,19 +27,9 @@ import { DateRangePicker, DateRange } from "@/components/ui/date-range-picker";
 // Re-export DateRange and Sentiment for consumers
 export type { DateRange };
 
-type Platform = "x" | "reddit" | "youtube" | "xiaohongshu";
 export type Sentiment = "bullish" | "bearish" | "neutral";
 
 interface FilterSheetProps {
-  // Platform filters
-  availablePlatforms: Array<{
-    id: Platform;
-    label: string;
-    icon: string;
-  }>;
-  selectedPlatform: Platform;
-  onPlatformChange: (platform: Platform) => void;
-
   // Author filters
   authorOptions: MultiSelectOption[];
   selectedAuthors: string[];
@@ -69,33 +64,30 @@ const timeRangeOptions = [
 ];
 
 const sentimentOptions = [
-  { 
-    label: "Bullish", 
-    value: "bullish" as Sentiment, 
-    icon: TrendingUp, 
+  {
+    label: "Bullish",
+    value: "bullish" as Sentiment,
+    icon: TrendingUp,
     iconColor: "text-green-500",
-    variant: "green" as const
+    variant: "green" as const,
   },
-  { 
-    label: "Bearish", 
-    value: "bearish" as Sentiment, 
-    icon: TrendingDown, 
+  {
+    label: "Bearish",
+    value: "bearish" as Sentiment,
+    icon: TrendingDown,
     iconColor: "text-red-500",
-    variant: "red" as const
+    variant: "red" as const,
   },
-  { 
-    label: "Neutral", 
-    value: "neutral" as Sentiment, 
-    icon: Minus, 
+  {
+    label: "Neutral",
+    value: "neutral" as Sentiment,
+    icon: Minus,
     iconColor: "text-gray-500 dark:text-gray-400",
-    variant: "gray" as const
+    variant: "gray" as const,
   },
 ];
 
 export function FilterSheet({
-  availablePlatforms,
-  selectedPlatform,
-  onPlatformChange,
   authorOptions,
   selectedAuthors,
   onAuthorsChange,
@@ -119,7 +111,7 @@ export function FilterSheet({
 
   const toggleSentiment = (sentiment: Sentiment) => {
     if (selectedSentiments.includes(sentiment)) {
-      onSentimentsChange(selectedSentiments.filter(s => s !== sentiment));
+      onSentimentsChange(selectedSentiments.filter((s) => s !== sentiment));
     } else {
       onSentimentsChange([...selectedSentiments, sentiment]);
     }
@@ -142,7 +134,12 @@ export function FilterSheet({
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative" aria-label="Open filters">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="relative"
+          aria-label="Open filters"
+        >
           <Filter className="w-3 h-3" />
           {activeFilterCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
@@ -151,7 +148,10 @@ export function FilterSheet({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full xs:max-w-md flex flex-col p-0">
+      <SheetContent
+        side="right"
+        className="w-full xs:max-w-md flex flex-col p-0"
+      >
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
           <SheetDescription>
@@ -161,35 +161,6 @@ export function FilterSheet({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto space-y-6">
-          {/* Platform Filter */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between h-6">
-              <Label className="text-base font-semibold">Platform</Label>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {availablePlatforms.map((platform) => (
-                <TriggerButton
-                  key={platform.id}
-                  onClick={() => onPlatformChange(platform.id)}
-                  selected={selectedPlatform === platform.id}
-                  size="sm"
-                  className="w-full flex items-center gap-2"
-                >
-                  <Image
-                    src={platform.icon}
-                    alt={platform.label}
-                    width={20}
-                    height={20}
-                    className="w-3 h-3 flex-shrink-0"
-                  />
-                  <span className="text-xs">{platform.label}</span>
-                </TriggerButton>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
           {/* Author Filter */}
           <div className="space-y-3">
             <div className="flex items-center justify-between h-6">
@@ -200,9 +171,17 @@ export function FilterSheet({
                     {selectedAuthors.length} selected
                   </span>
                 )}
-                {selectedAuthors.length > 0 && <Button variant="ghost" size="sm" className="!p-0 !w-6 !h-6" onClick={() => onAuthorsChange([])} aria-label="Clear authors">
-                  <RotateCcw className="w-3 h-3" />
-                </Button>}
+                {selectedAuthors.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="!p-0 !w-6 !h-6"
+                    onClick={() => onAuthorsChange([])}
+                    aria-label="Clear authors"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                  </Button>
+                )}
               </div>
             </div>
             {authorOptions.length > 0 ? (
@@ -232,9 +211,17 @@ export function FilterSheet({
                     {selectedTags.length} selected
                   </span>
                 )}
-                {selectedTags.length > 0 && <Button variant="ghost" size="sm" className="!p-0 !w-6 !h-6" onClick={() => onTagsChange([])} aria-label="Clear tags">
-                  <RotateCcw className="w-3 h-3" />
-                </Button>}
+                {selectedTags.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="!p-0 !w-6 !h-6"
+                    onClick={() => onTagsChange([])}
+                    aria-label="Clear tags"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                  </Button>
+                )}
               </div>
             </div>
             {tagOptions.length > 0 ? (
@@ -266,9 +253,17 @@ export function FilterSheet({
                     {selectedSentiments.length} selected
                   </span>
                 )}
-                {selectedSentiments.length > 0 && <Button variant="ghost" size="sm" className="!p-0 !w-6 !h-6" onClick={() => onSentimentsChange([])} aria-label="Clear sentiments">
-                  <RotateCcw className="w-3 h-3" />
-                </Button>}
+                {selectedSentiments.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="!p-0 !w-6 !h-6"
+                    onClick={() => onSentimentsChange([])}
+                    aria-label="Clear sentiments"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                  </Button>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -298,9 +293,17 @@ export function FilterSheet({
           <div className="space-y-3">
             <div className="flex items-center justify-between h-6">
               <Label className="text-base font-semibold">Time Range</Label>
-              {timeRange !== "all" && <Button variant="ghost" size="sm" className="!p-0 !w-6 !h-6" onClick={handleReset} aria-label="Reset filters" >
-                <RotateCcw className="w-3 h-3" />
-              </Button>}
+              {timeRange !== "all" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="!p-0 !w-6 !h-6"
+                  onClick={handleReset}
+                  aria-label="Reset filters"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                </Button>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-2">
               {timeRangeOptions.map((option) => (
@@ -327,4 +330,3 @@ export function FilterSheet({
     </Sheet>
   );
 }
-

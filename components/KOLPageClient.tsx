@@ -18,7 +18,7 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
   const [kols, setKols] = useState<KOL[]>(initialKOLs);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"tracked" | "ranking">("tracked");
+  const [activeTab, setActiveTab] = useState<"tracked" | "ranking">("ranking");
 
   // Reload KOLs
   const loadKOLs = async () => {
@@ -42,14 +42,14 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
   const tabOptions = useMemo(
     () => [
       {
-        value: "tracked",
-        label: "My Tracked",
-        icon: <Star className="w-3.5 h-3.5" />,
-      },
-      {
         value: "ranking",
         label: "Top Ranking",
         icon: <TrendingUp className="w-3.5 h-3.5" />,
+      },
+      {
+        value: "tracked",
+        label: "My Tracked",
+        icon: <Star className="w-3.5 h-3.5" />,
       },
     ],
     []
@@ -72,21 +72,15 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
           <div className="space-y-2">
             {/* Unified KOL Table with Tab Switcher */}
             <SectionCard
-              title="KOL Tracker"
               useSectionHeader
-              sectionHeaderSubtitle={
-                activeTab === "tracked"
-                  ? "Manage and track your selected KOLs"
-                  : "Discover top-ranked KOLs across all platforms"
-              }
-              headerRightExtra={
+              headerExtra={
                 <SwitchTab
                   options={tabOptions}
                   value={activeTab}
                   onValueChange={(value) =>
                     setActiveTab(value as "tracked" | "ranking")
                   }
-                  size="sm"
+                  size="md"
                   variant="pills"
                 />
               }

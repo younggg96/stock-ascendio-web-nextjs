@@ -114,70 +114,71 @@ export default function StockSearchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-0 gap-0">
-        <DialogHeader>
-          <DialogTitle>Add Stock</DialogTitle>
+      <DialogContent className="w-[90vw] max-w-[500px] sm:max-w-[500px] !py-3 !px-0 gap-0 max-h-[85vh] sm:max-h-[600px]">
+        <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
+          <DialogTitle className="text-lg sm:text-xl">Add Stock</DialogTitle>
         </DialogHeader>
+
         {/* Search Bar */}
-        <div className="p-4 pb-3">
+        <div className="px-4 pb-3 sm:px-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               placeholder="Search stocks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-10 bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10"
+              className="pl-10 h-11 sm:h-10 bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-base sm:text-sm"
               autoFocus
             />
           </div>
         </div>
 
         {/* Results */}
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className="max-h-[calc(85vh-120px)] sm:max-h-[440px] min-h-[400px] overflow-y-auto overscroll-contain">
           {!searchTerm && (
-            <div className="px-4 py-2 text-xs font-medium text-gray-500 dark:text-white/50">
-              Popular equities
+            <div className="px-4 py-2 sm:px-6 text-xs font-medium text-gray-500 dark:text-white/50 tracking-wide">
+              Popular stocks
             </div>
           )}
 
           {displayList.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-white/50">
-              <Building2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No stocks found</p>
+            <div className="h-[400px] flex flex-col items-center justify-center text-center py-12 sm:py-8 text-gray-500 dark:text-white/50">
+              <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-base sm:text-sm">No stocks found</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-white/5">
+            <div className="divide-y divide-gray-100 dark:divide-white/5 min-h-[400px]">
               {displayList.map((stock) => (
                 <button
                   key={stock.symbol}
                   onClick={() => handleSelectStock(stock)}
-                  className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                  className="w-full px-4 py-4 sm:px-6 sm:py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 sm:gap-3">
                     {/* Logo */}
                     {stock.logo ? (
-                      <div className="w-8 h-8 p-1 rounded overflow-hidden bg-white flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
+                      <div className="w-10 h-10 sm:w-8 sm:h-8 p-1 rounded overflow-hidden bg-white flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
                         <Image
                           src={stock.logo}
                           alt={stock.symbol}
-                          width={32}
-                          height={32}
+                          width={40}
+                          height={40}
                           className="object-contain"
                           unoptimized
                         />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
-                        <Building2 className="w-4 h-4 text-gray-400" />
+                      <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
+                        <Building2 className="w-5 h-5 sm:w-4 sm:h-4 text-gray-400" />
                       </div>
                     )}
 
                     {/* Info */}
                     <div className="text-left">
-                      <div className="font-semibold text-sm text-gray-900 dark:text-white">
+                      <div className="font-semibold text-base sm:text-sm text-gray-900 dark:text-white">
                         {stock.symbol}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-white/50">
+                      <div className="text-sm sm:text-xs text-gray-500 dark:text-white/50">
                         {stock.name}
                       </div>
                     </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   Table,
   TableBody,
@@ -51,9 +52,12 @@ export default function KOLTrackerTable({
   kols,
   onUpdate,
 }: KOLTrackerTableProps) {
+  const isMobile = useIsMobile();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingKOL, setEditingKOL] = useState<KOL | null>(null);
+  const [deletingKOLId, setDeletingKOLId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPlatform, setFilterPlatform] = useState<Platform | "all">("all");
 
@@ -126,13 +130,21 @@ export default function KOLTrackerTable({
     }
   };
 
+  // Open delete confirmation dialog
+  const openDeleteDialog = (id: string) => {
+    setDeletingKOLId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
   // Handle delete KOL
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this KOL?")) return;
+  const handleDelete = async () => {
+    if (!deletingKOLId) return;
 
     try {
-      await deleteKOL(id);
+      await deleteKOL(deletingKOLId);
       toast.success("KOL deleted successfully");
+      setIsDeleteDialogOpen(false);
+      setDeletingKOLId(null);
       onUpdate();
     } catch (error) {
       toast.error("Failed to delete KOL");
@@ -214,97 +226,186 @@ export default function KOLTrackerTable({
         </Button>
       </div>
 
-      {/* Table */}
-      <div className="border border-border-light dark:border-border-dark rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs">Name</TableHead>
-              <TableHead className="text-xs">Username</TableHead>
-              <TableHead className="text-xs">Platform</TableHead>
-              <TableHead className="text-xs">Followers</TableHead>
-              <TableHead className="text-xs hidden md:table-cell">
-                Description
-              </TableHead>
-              <TableHead className="text-xs text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredKOLs.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  <p className="text-xs text-gray-500 dark:text-white/50">
-                    {kols.length === 0
-                      ? "No tracked KOLs yet. Add KOLs from the Top Ranking table or click 'Add KOL' button."
-                      : "No KOLs match your search criteria."}
+      {/* Mobile Card View */}
+      {isMobile ? (
+        <div className="space-y-2">
+          {filteredKOLs.length === 0 ? (
+            <div className="text-center py-8 border border-border-light dark:border-border-dark rounded-lg">
+              <p className="text-xs text-gray-500 dark:text-white/50">
+                {kols.length === 0
+                  ? "No tracked KOLs yet. Add KOLs from the Top Ranking table or click 'Add KOL' button."
+                  : "No KOLs match your search criteria."}
+              </p>
+            </div>
+          ) : (
+            filteredKOLs.map((kol) => (
+              <div
+                key={kol.id}
+                className="border border-border-light dark:border-border-dark rounded-lg p-3 bg-card-light dark:bg-card-dark"
+              >
+                {/* Header with Name and Actions */}
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                      {kol.name}
+                    </h3>
+                    <p className="text-xs text-gray-600 dark:text-white/60 truncate">
+                      {kol.username}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 ml-2">
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => openEditDialog(kol)}
+                      title="Edit KOL"
+                      className="h-7 w-7 p-0"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => handleToggleTracking(kol)}
+                      className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 h-7 w-7 p-0"
+                      title="Stop tracking"
+                    >
+                      <Star className="w-3.5 h-3.5 fill-yellow-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => openDeleteDialog(kol.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 h-7 w-7 p-0"
+                      title="Delete KOL"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Platform and Followers */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Image
+                      src={platformConfig[kol.platform].icon}
+                      alt={platformConfig[kol.platform].name}
+                      width={14}
+                      height={14}
+                      className="opacity-70"
+                    />
+                    <span className="text-xs text-gray-700 dark:text-white/70">
+                      {platformConfig[kol.platform].name}
+                    </span>
+                  </div>
+                  <span className="text-xs font-medium text-gray-900 dark:text-white">
+                    {formatFollowers(kol.followers)} followers
+                  </span>
+                </div>
+
+                {/* Description */}
+                {kol.description && (
+                  <p className="text-xs text-gray-600 dark:text-white/60 line-clamp-2">
+                    {kol.description}
                   </p>
-                </TableCell>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        /* Desktop Table View */
+        <div className="border border-border-light dark:border-border-dark rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Name</TableHead>
+                <TableHead className="text-xs">Username</TableHead>
+                <TableHead className="text-xs">Platform</TableHead>
+                <TableHead className="text-xs">Followers</TableHead>
+                <TableHead className="text-xs hidden md:table-cell">
+                  Description
+                </TableHead>
+                <TableHead className="text-xs text-right">Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredKOLs.map((kol) => (
-                <TableRow key={kol.id}>
-                  <TableCell className="text-xs font-medium">
-                    {kol.name}
-                  </TableCell>
-                  <TableCell className="text-xs text-gray-600 dark:text-white/60">
-                    {kol.username}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <Image
-                        src={platformConfig[kol.platform].icon}
-                        alt={platformConfig[kol.platform].name}
-                        width={16}
-                        height={16}
-                        className="opacity-70"
-                      />
-                      <span className="text-xs">
-                        {platformConfig[kol.platform].name}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {formatFollowers(kol.followers)}
-                  </TableCell>
-                  <TableCell className="text-xs max-w-[200px] truncate hidden md:table-cell">
-                    {kol.description || "-"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        onClick={() => openEditDialog(kol)}
-                        title="Edit KOL"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        onClick={() => handleToggleTracking(kol)}
-                        className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
-                        title="Stop tracking"
-                      >
-                        <Star className="w-3.5 h-3.5 fill-yellow-500" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        onClick={() => handleDelete(kol.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
-                        title="Delete KOL"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {filteredKOLs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <p className="text-xs text-gray-500 dark:text-white/50">
+                      {kols.length === 0
+                        ? "No tracked KOLs yet. Add KOLs from the Top Ranking table or click 'Add KOL' button."
+                        : "No KOLs match your search criteria."}
+                    </p>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : (
+                filteredKOLs.map((kol) => (
+                  <TableRow key={kol.id}>
+                    <TableCell className="text-xs font-medium">
+                      {kol.name}
+                    </TableCell>
+                    <TableCell className="text-xs text-gray-600 dark:text-white/60">
+                      {kol.username}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <Image
+                          src={platformConfig[kol.platform].icon}
+                          alt={platformConfig[kol.platform].name}
+                          width={16}
+                          height={16}
+                          className="opacity-70"
+                        />
+                        <span className="text-xs">
+                          {platformConfig[kol.platform].name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {formatFollowers(kol.followers)}
+                    </TableCell>
+                    <TableCell className="text-xs max-w-[200px] truncate hidden md:table-cell">
+                      {kol.description || "-"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => openEditDialog(kol)}
+                          title="Edit KOL"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => handleToggleTracking(kol)}
+                          className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
+                          title="Stop tracking"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-yellow-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => openDeleteDialog(kol.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                          title="Delete KOL"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -483,6 +584,36 @@ export default function KOLTrackerTable({
             </Button>
             <Button onClick={handleEdit} size="sm" className="h-8 text-xs">
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete KOL</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this KOL? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="h-8 text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDelete}
+              size="sm"
+              className="h-8 text-xs bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

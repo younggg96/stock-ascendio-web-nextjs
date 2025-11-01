@@ -34,9 +34,13 @@ export interface RedditContentProps extends BaseContentProps {
 
 export interface YouTubeContentProps extends BaseContentProps {
   viewCount?: number;
+  likeCount?: number;
+  commentCount?: number;
   duration?: string;
   thumbnailUrl?: string;
   channelName?: string;
+  channelThumbnailUrl?: string;
+  publishedAt?: string;
 }
 
 export interface XiaohongshuContentProps extends BaseContentProps {

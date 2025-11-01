@@ -35,9 +35,13 @@ export interface UnifiedPost {
     }>;
     // For YouTube
     viewCount?: number;
+    likeCount?: number;
+    commentCount?: number;
     duration?: string;
     thumbnailUrl?: string;
     channelName?: string;
+    channelThumbnailUrl?: string;
+    publishedAt?: string;
   };
 }
 
@@ -111,7 +115,7 @@ export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
     platform: "youtube",
     author: video.channel_name,
     authorId: video.channel_id,
-    avatarUrl: video.channel_avatar_url,
+    avatarUrl: video.channel_thumbnail_url || video.channel_avatar_url,
     title: video.title,
     content: video.description,
     url: video.video_url,
@@ -128,9 +132,13 @@ export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
     isMarketRelated: video.is_market_related,
     platformData: {
       viewCount: video.view_count,
-      duration: video.duration,
+      likeCount: video.like_count,
+      commentCount: video.comment_count,
+      duration: video.duration_seconds?.toString() || video.duration,
       thumbnailUrl: video.thumbnail_url,
       channelName: video.channel_name,
+      channelThumbnailUrl: video.channel_thumbnail_url,
+      publishedAt: video.published_at,
     },
   };
 }

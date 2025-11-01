@@ -28,17 +28,6 @@ import { FilterSheet, DateRange, Sentiment } from "./FilterSheet";
 
 type Platform = "x" | "reddit" | "youtube" | "xiaohongshu";
 
-const platforms = [
-  { id: "x" as Platform, label: "X", icon: "/logo/x.svg" },
-  { id: "reddit" as Platform, label: "Reddit", icon: "/logo/reddit.svg" },
-  { id: "youtube" as Platform, label: "YouTube", icon: "/logo/youtube.svg" },
-  {
-    id: "xiaohongshu" as Platform,
-    label: "小红书",
-    icon: "/logo/xiaohongshu.svg",
-  },
-];
-
 const PostTabOption = [
   {
     value: "all",
@@ -52,6 +41,61 @@ const PostTabOption = [
   },
 ];
 
+const PlatformTabOption = [
+  {
+    value: "x",
+    label: "X",
+    icon: (
+      <Image
+        src="/logo/x.svg"
+        alt="X"
+        width={16}
+        height={16}
+        className="w-4 h-4"
+      />
+    ),
+  },
+  {
+    value: "reddit",
+    label: "Reddit",
+    icon: (
+      <Image
+        src="/logo/reddit.svg"
+        alt="Reddit"
+        width={16}
+        height={16}
+        className="w-4 h-4"
+      />
+    ),
+  },
+  {
+    value: "youtube",
+    label: "YouTube",
+    icon: (
+      <Image
+        src="/logo/youtube.svg"
+        alt="YouTube"
+        width={16}
+        height={16}
+        className="w-4 h-4"
+      />
+    ),
+  },
+  {
+    value: "xiaohongshu",
+    label: "小红书",
+    icon: (
+      <Image
+        src="/logo/xiaohongshu.svg"
+        alt="小红书"
+        width={16}
+        height={16}
+        className="w-4 h-4"
+      />
+    ),
+  },
+];
+
 export default function PostList() {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("x");
   const [selectedTab, setSelectedTab] = useState<string>("all");
@@ -60,7 +104,7 @@ export default function PostList() {
   const [selectedSentiments, setSelectedSentiments] = useState<Sentiment[]>([]);
   const [timeRange, setTimeRange] = useState<string>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  
+
   // Cache posts data for each platform
   const [platformPosts, setPlatformPosts] = useState<
     Record<Platform, UnifiedPost[]>
@@ -114,16 +158,13 @@ export default function PostList() {
   const currentError = platformErrors[selectedPlatform];
   const hasMore = platformHasMore[selectedPlatform];
 
-  // Get current platform info
-  const currentPlatformInfo = useMemo(
-    () => platforms.find((p) => p.id === selectedPlatform),
-    [selectedPlatform]
-  );
-
   // Extract unique authors from current platform posts
   const availableAuthors = useMemo(() => {
-    const uniqueAuthorsMap = new Map<string, { author: string; authorId: string; avatarUrl: string }>();
-    
+    const uniqueAuthorsMap = new Map<
+      string,
+      { author: string; authorId: string; avatarUrl: string }
+    >();
+
     currentPosts.forEach((post) => {
       if (post.isMarketRelated && !uniqueAuthorsMap.has(post.authorId)) {
         uniqueAuthorsMap.set(post.authorId, {
@@ -134,7 +175,7 @@ export default function PostList() {
       }
     });
 
-    return Array.from(uniqueAuthorsMap.values()).sort((a, b) => 
+    return Array.from(uniqueAuthorsMap.values()).sort((a, b) =>
       a.author.localeCompare(b.author)
     );
   }, [currentPosts]);
@@ -159,7 +200,7 @@ export default function PostList() {
   // Extract unique tags from current platform posts
   const availableTags = useMemo(() => {
     const uniqueTagsSet = new Set<string>();
-    
+
     currentPosts.forEach((post) => {
       if (post.aiTags) {
         post.aiTags.forEach((tag) => {
@@ -181,72 +222,76 @@ export default function PostList() {
   }, [availableTags]);
 
   // Helper function to filter by time range
-  const isWithinTimeRange = useCallback((postDate: string, range: string): boolean => {
-    if (range === "all") return true;
-    
-    const now = new Date();
-    const postTime = new Date(postDate);
-    
-    // Custom date range filter
-    if (range === "custom" && dateRange) {
-      const hasFrom = dateRange.from !== undefined;
-      const hasTo = dateRange.to !== undefined;
-      
-      if (hasFrom && hasTo) {
-        return postTime >= dateRange.from! && postTime <= dateRange.to!;
-      } else if (hasFrom) {
-        return postTime >= dateRange.from!;
-      } else if (hasTo) {
-        return postTime <= dateRange.to!;
-      }
-      return true;
-    }
-    
-    // Preset time range filters
-    const diffInMs = now.getTime() - postTime.getTime();
-    const diffInHours = diffInMs / (1000 * 60 * 60);
-    
-    switch (range) {
-      case "1h":
-        return diffInHours <= 1;
-      case "24h":
-        return diffInHours <= 24;
-      case "7d":
-        return diffInHours <= 24 * 7;
-      case "30d":
-        return diffInHours <= 24 * 30;
-      case "3m":
-        return diffInHours <= 24 * 90;
-      default:
+  const isWithinTimeRange = useCallback(
+    (postDate: string, range: string): boolean => {
+      if (range === "all") return true;
+
+      const now = new Date();
+      const postTime = new Date(postDate);
+
+      // Custom date range filter
+      if (range === "custom" && dateRange) {
+        const hasFrom = dateRange.from !== undefined;
+        const hasTo = dateRange.to !== undefined;
+
+        if (hasFrom && hasTo) {
+          return postTime >= dateRange.from! && postTime <= dateRange.to!;
+        } else if (hasFrom) {
+          return postTime >= dateRange.from!;
+        } else if (hasTo) {
+          return postTime <= dateRange.to!;
+        }
         return true;
-    }
-  }, [dateRange]);
+      }
+
+      // Preset time range filters
+      const diffInMs = now.getTime() - postTime.getTime();
+      const diffInHours = diffInMs / (1000 * 60 * 60);
+
+      switch (range) {
+        case "1h":
+          return diffInHours <= 1;
+        case "24h":
+          return diffInHours <= 24;
+        case "7d":
+          return diffInHours <= 24 * 7;
+        case "30d":
+          return diffInHours <= 24 * 30;
+        case "3m":
+          return diffInHours <= 24 * 90;
+        default:
+          return true;
+      }
+    },
+    [dateRange]
+  );
 
   // Filter posts based on selected authors, tags, sentiments, and time range
   const filteredPosts = useMemo(() => {
     let filtered = currentPosts;
-    
+
     // Filter by authors
     if (selectedAuthors.length > 0) {
       filtered = filtered.filter((post) =>
         selectedAuthors.includes(post.authorId)
       );
     }
-    
+
     // Filter by tags
     if (selectedTags.length > 0) {
-      filtered = filtered.filter((post) =>
-        post.aiTags && post.aiTags.some((tag) => selectedTags.includes(tag))
+      filtered = filtered.filter(
+        (post) =>
+          post.aiTags && post.aiTags.some((tag) => selectedTags.includes(tag))
       );
     }
-    
+
     // Filter by sentiments
     if (selectedSentiments.length > 0) {
       filtered = filtered.filter((post) =>
         selectedSentiments.includes(post.sentiment)
       );
     }
-    
+
     // Filter by time range or custom date range
     // When dateRange is set, use it regardless of timeRange value
     if (dateRange?.from || dateRange?.to) {
@@ -254,7 +299,7 @@ export default function PostList() {
         const postTime = new Date(post.createdAt);
         const hasFrom = dateRange.from !== undefined;
         const hasTo = dateRange.to !== undefined;
-        
+
         if (hasFrom && hasTo) {
           return postTime >= dateRange.from! && postTime <= dateRange.to!;
         } else if (hasFrom) {
@@ -266,13 +311,21 @@ export default function PostList() {
       });
     } else if (timeRange !== "all" && timeRange !== "") {
       // Only use preset time range if no custom date range is set
-      filtered = filtered.filter((post) => 
+      filtered = filtered.filter((post) =>
         isWithinTimeRange(post.createdAt, timeRange)
       );
     }
-    
+
     return filtered;
-  }, [currentPosts, selectedAuthors, selectedTags, selectedSentiments, timeRange, dateRange, isWithinTimeRange]);
+  }, [
+    currentPosts,
+    selectedAuthors,
+    selectedTags,
+    selectedSentiments,
+    timeRange,
+    dateRange,
+    isWithinTimeRange,
+  ]);
 
   // Calculate active filter count
   const activeFilterCount = useMemo(() => {
@@ -280,7 +333,7 @@ export default function PostList() {
     if (selectedAuthors.length > 0) count++;
     if (selectedTags.length > 0) count++;
     if (selectedSentiments.length > 0) count++;
-    if (timeRange !== "all" || (dateRange?.from || dateRange?.to)) count++;
+    if (timeRange !== "all" || dateRange?.from || dateRange?.to) count++;
     return count;
   }, [selectedAuthors, selectedTags, selectedSentiments, timeRange, dateRange]);
 
@@ -473,33 +526,40 @@ export default function PostList() {
       headerBorder
       padding="md"
       scrollable
-      contentClassName="space-y-0 px-4 pb-4 mt-2"
+      contentClassName="space-y-0 px-4 pb-0 mt-2"
       onScroll={handleScroll}
       headerExtra={
-        <SwitchTab
-          options={PostTabOption}
-          value={selectedTab}
-          onValueChange={handleTabChange}
-          size="md"
-          variant="pills"
-          className="w-auto"
-        />
+        <div className="flex flex-col gap-2">
+          <SwitchTab
+            options={PostTabOption}
+            value={selectedTab}
+            onValueChange={handleTabChange}
+            size="md"
+            variant="pills"
+            className="w-fit"
+          />
+          <SwitchTab
+            options={PlatformTabOption}
+            value={selectedPlatform}
+            onValueChange={handlePlatformChange}
+            size="md"
+            variant="underline"
+            className="w-auto"
+          />
+        </div>
       }
       headerRightExtra={
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={refreshCurrentPlatform}
             aria-label="Refresh"
           >
             <RotateCcw className="w-3 h-3" />
           </Button>
-          
+
           <FilterSheet
-            availablePlatforms={platforms}
-            selectedPlatform={selectedPlatform}
-            onPlatformChange={handlePlatformChange}
             authorOptions={authorOptions}
             selectedAuthors={selectedAuthors}
             onAuthorsChange={setSelectedAuthors}
@@ -523,12 +583,16 @@ export default function PostList() {
       {filteredPosts.length === 0 && !isLoading && !currentError && (
         <EmptyState
           title={
-            selectedAuthors.length > 0 || selectedTags.length > 0 || selectedSentiments.length > 0
+            selectedAuthors.length > 0 ||
+            selectedTags.length > 0 ||
+            selectedSentiments.length > 0
               ? "No posts match your filters"
               : "No posts available"
           }
           description={
-            selectedAuthors.length > 0 || selectedTags.length > 0 || selectedSentiments.length > 0
+            selectedAuthors.length > 0 ||
+            selectedTags.length > 0 ||
+            selectedSentiments.length > 0
               ? "Try adjusting your filters or clear them to see more posts."
               : "There are no posts to display at the moment."
           }
@@ -596,9 +660,13 @@ export default function PostList() {
                   sentiment={post.sentiment}
                   onFormatText={formatTweetText}
                   viewCount={post.platformData?.viewCount}
+                  likeCount={post.platformData?.likeCount}
+                  commentCount={post.platformData?.commentCount}
                   duration={post.platformData?.duration}
                   thumbnailUrl={post.platformData?.thumbnailUrl}
                   channelName={post.platformData?.channelName}
+                  channelThumbnailUrl={post.platformData?.channelThumbnailUrl}
+                  publishedAt={post.platformData?.publishedAt}
                 />
               );
             case "xiaohongshu":

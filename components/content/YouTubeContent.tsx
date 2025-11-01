@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
+import {
+  ExternalLink,
+  Eye,
+  ThumbsUp,
+  MessageCircle,
+  Clock,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,20 +33,93 @@ export default function YouTubeContent({
   sentiment,
   onFormatText,
   viewCount,
+  likeCount,
+  commentCount,
   duration,
   thumbnailUrl,
   channelName,
+  channelThumbnailUrl,
+  publishedAt,
 }: YouTubeContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const summary = aiSummary || "";
 
+  // Format numbers with K/M suffix
+  const formatNumber = (num?: number) => {
+    if (!num) return "0";
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  // Format duration from seconds to MM:SS or HH:MM:SS
+  const formatDuration = (seconds?: string) => {
+    if (!seconds) return "";
+    const sec = parseInt(seconds);
+    const hours = Math.floor(sec / 3600);
+    const minutes = Math.floor((sec % 3600) / 60);
+    const secs = sec % 60;
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs
+        .toString()
+        .padStart(2, "0")}`;
+    }
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Format published date
+  const formatPublishedDate = (dateStr?: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+  };
+
   return (
     <>
-      <div className="space-y-2 mb-3">
+      <div className="space-y-3 mb-3">
+        {/* Video Stats */}
+        <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-white/60">
+          {viewCount !== undefined && (
+            <div className="flex items-center gap-1">
+              <Eye className="w-3.5 h-3.5" />
+              <span>{formatNumber(viewCount)}</span>
+            </div>
+          )}
+          {likeCount !== undefined && (
+            <div className="flex items-center gap-1">
+              <ThumbsUp className="w-3.5 h-3.5" />
+              <span>{formatNumber(likeCount)}</span>
+            </div>
+          )}
+          {commentCount !== undefined && (
+            <div className="flex items-center gap-1">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>{formatNumber(commentCount)}</span>
+            </div>
+          )}
+          {duration && (
+            <div className="flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" />
+              <span>{formatDuration(duration)}</span>
+            </div>
+          )}
+        </div>
+
         {/* Summary */}
         <div className="text-xs text-gray-600 dark:text-white/60">
-          Summary: {summary}
+          <span className="font-medium">Summary: </span>
+          {summary}
         </div>
 
         {/* Video Description */}
