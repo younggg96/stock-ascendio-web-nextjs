@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { signUp, signIn, getErrorMessage } from "@/lib/supabase/auth";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { PasswordInput } from "./ui/password-input";
 
 type AuthMode = "login" | "signup";
 
@@ -88,7 +90,7 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
               variant="ghost"
               type="button"
               onClick={() => onModeChange("login")}
-              className={`flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-300 relative z-10 hover:bg-transparent dark:hover:bg-transparent ${
+              className={`flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-300 relative z-10 hover:!bg-transparent dark:hover:!bg-transparent ${
                 mode === "login"
                   ? "text-white dark:text-background-dark"
                   : "text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white"
@@ -100,7 +102,7 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
               variant="ghost"
               type="button"
               onClick={() => onModeChange("signup")}
-              className={`flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-300 relative z-10 hover:bg-transparent dark:hover:bg-transparent ${
+              className={`flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-300 relative z-10 hover:!bg-transparent dark:hover:!bg-transparent ${
                 mode === "signup"
                   ? "text-white dark:text-background-dark"
                   : "text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white"
@@ -126,10 +128,12 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
                 >
                   Full Name
                 </label>
-                <input
+                <Input
                   id="name"
+                  name="name"
                   type="text"
-                  className="w-full h-12 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-black/30 border border-gray-300 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 dark:placeholder:text-white/30 px-4 text-sm font-normal focus:outline-none transition-all duration-300 hover:border-gray-400 dark:hover:border-white/20"
+                  autoComplete="name"
+                  className="h-12 bg-gray-50 dark:bg-black/30 hover:border-gray-400 dark:hover:border-white/20 transition-all duration-300"
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -137,41 +141,89 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="email"
-                className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                className="w-full h-12 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-black/30 border border-gray-300 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 dark:placeholder:text-white/30 px-4 text-sm font-normal focus:outline-none transition-all duration-300 hover:border-gray-400 dark:hover:border-white/20"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+            {/* Login Email & Password */}
+            {mode === "login" && (
+              <>
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="email-login"
+                    className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
+                  >
+                    Email Address
+                  </label>
+                  <Input
+                    id="email-login"
+                    name="email-login"
+                    type="email"
+                    autoComplete="username email"
+                    className="h-12 bg-gray-50 dark:bg-black/30 hover:border-gray-400 dark:hover:border-white/20 transition-all duration-300"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
 
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="password"
-                className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                className="w-full h-12 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-black/30 border border-gray-300 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 dark:placeholder:text-white/30 px-4 text-sm font-normal focus:outline-none transition-all duration-300 hover:border-gray-400 dark:hover:border-white/20"
-                placeholder={
-                  mode === "login" ? "Enter your password" : "Create a password"
-                }
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="password-login"
+                    className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
+                  >
+                    Password
+                  </label>
+                  <PasswordInput
+                    id="password-login"
+                    name="password-login"
+                    autoComplete="current-password"
+                    className="h-12 bg-gray-50 dark:bg-black/30 hover:border-gray-400 dark:hover:border-white/20 transition-all duration-300"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Signup Email & Password */}
+            {mode === "signup" && (
+              <>
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="email-signup"
+                    className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
+                  >
+                    Email Address
+                  </label>
+                  <Input
+                    id="email-signup"
+                    name="email-signup"
+                    type="email"
+                    autoComplete="email"
+                    className="h-12 bg-gray-50 dark:bg-black/30 hover:border-gray-400 dark:hover:border-white/20 transition-all duration-300"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="password-signup"
+                    className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
+                  >
+                    Password
+                  </label>
+                  <PasswordInput
+                    id="password-signup"
+                    name="password-signup"
+                    autoComplete="new-password"
+                    className="h-12 bg-gray-50 dark:bg-black/30 hover:border-gray-400 dark:hover:border-white/20 transition-all duration-300"
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
 
             <div
               className={`transition-all duration-300 overflow-hidden ${
