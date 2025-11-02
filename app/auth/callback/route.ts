@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (data.user) {
+      console.log("data.user", data.user);
       // Check if user already exists
       const { data: existingUser } = await supabase
         .from("users")
@@ -28,14 +29,13 @@ export async function GET(request: NextRequest) {
         .eq("id", data.user.id)
         .single();
 
-      console.log("existingUser", existingUser);
       // Only insert if user doesn't exist (first time login)
       if (!existingUser) {
         const { error: insertError } = await supabase.from("users").insert({
           id: data.user.id,
           email: data.user.email,
-          username: data.user.user_metadata?.username || null,
-          avatar_url: data.user.user_metadata?.avatar_url || null,
+          username: data.user.user_metadata?.display_name || null,
+          avatar_url: null,
           theme: "SYSTEM",
           is_subscribe_newsletter: false,
           notification_is_live: false,

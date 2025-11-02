@@ -78,7 +78,7 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
 
         <div className="relative z-10">
           {/* Mode Toggle */}
-          <div className="relative flex gap-2 mb-6 sm:mb-8 bg-gray-100 dark:bg-black/40 rounded-full p-1.5 border border-gray-200 dark:border-white/5">
+          <div className="relative flex gap-2 mb-6 sm:mb-8 rounded-full p-1.5 border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-white/5">
             {/* Sliding Background Indicator */}
             <div
               className={`absolute top-1.5 bottom-1.5 w-[calc(50%-10px)] bg-primary rounded-full shadow-lg shadow-primary/30 transition-all duration-300 ease-out ${
@@ -113,34 +113,10 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div
-              className={`transition-all duration-300 overflow-hidden ${
-                mode === "signup"
-                  ? "max-h-24 opacity-100 mb-0"
-                  : "max-h-0 opacity-0 -mb-4"
-              }`}
-            >
-              <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="name"
-                  className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
-                >
-                  Full Name
-                </label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  className="h-12 bg-gray-50 dark:bg-black/30 hover:border-gray-400 dark:hover:border-white/20 transition-all duration-300"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-            </div>
-
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4 transition-all duration-300"
+          >
             {/* Login Email & Password */}
             {mode === "login" && (
               <>
@@ -187,6 +163,24 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
             {mode === "signup" && (
               <>
                 <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="name"
+                      className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
+                    >
+                      Full Name
+                    </label>
+                    <Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      className="h-12 bg-gray-50 dark:bg-black/30 hover:border-gray-400 dark:hover:border-white/20 transition-all duration-300"
+                      placeholder="Enter your full name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
                   <label
                     htmlFor="email-signup"
                     className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"

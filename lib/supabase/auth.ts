@@ -43,7 +43,7 @@ export async function signUp(params: SignUpParams): Promise<AuthResponse> {
         data: {
           display_name: name,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
       },
     });
 
@@ -150,7 +150,7 @@ export async function resetPassword(
     const { email } = params;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `http://localhost:3000/reset-password`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
     });
 
     if (error) {
@@ -288,7 +288,7 @@ export async function resendVerificationEmail(
       type: "signup",
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
       },
     });
 
