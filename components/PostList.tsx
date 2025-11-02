@@ -536,7 +536,7 @@ export default function PostList() {
             onValueChange={handleTabChange}
             size="md"
             variant="pills"
-            className="w-fit"
+            className="!w-fit"
           />
           <SwitchTab
             options={PlatformTabOption}

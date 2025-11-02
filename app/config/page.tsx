@@ -34,6 +34,7 @@ import Image from "next/image";
 import sp500Data from "@/data/sp500.constituents.wikilogo.json";
 import SectionCard from "@/components/SectionCard";
 import CompanyLogo from "@/components/CompanyLogo";
+import ThemeToggle from "@/components/ThemeToggle";
 import type {
   NotificationMethod,
   Platform,
@@ -255,6 +256,11 @@ export default function ConfigPage() {
       <div className="absolute inset-0 bg-grid z-0"></div>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background-light/90 dark:via-background-dark/90 to-background-light dark:to-background-dark z-0"></div>
 
+      {/* Theme Toggle - Top Right */}
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-2xl relative z-10">
         {/* Header */}
         <div className="text-center mb-5">
@@ -291,7 +297,6 @@ export default function ConfigPage() {
                     <SelectContent>
                       <SelectItem value="EMAIL">Email</SelectItem>
                       <SelectItem value="SMS">SMS</SelectItem>
-                      <SelectItem value="BOTH">Both</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -41,7 +41,7 @@ export async function signUp(params: SignUpParams): Promise<AuthResponse> {
       password,
       options: {
         data: {
-          name,
+          display_name: name,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },

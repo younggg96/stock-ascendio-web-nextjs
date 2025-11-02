@@ -5,12 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signUp, signIn, getErrorMessage } from "@/lib/supabase/auth";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
 
 type AuthMode = "login" | "signup";
 
-export default function AuthForm() {
+interface AuthFormProps {
+  mode: AuthMode;
+  onModeChange: (mode: AuthMode) => void;
+}
+
+export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -65,42 +70,44 @@ export default function AuthForm() {
 
   return (
     <div className="w-full max-w-sm sm:max-w-md px-4 sm:px-0 animate-fade-in-up">
-      <div className="relative bg-[#0a0e0a] backdrop-blur-xl border border-[#1a1f1a] rounded-2xl p-6 sm:p-8 shadow-2xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-1">
+      <div className="relative bg-white dark:bg-[#0a0e0a] backdrop-blur-xl border border-gray-200 dark:border-[#1a1f1a] rounded-2xl p-6 sm:p-8 shadow-2xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-1">
         {/* Glow Effect */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
         <div className="relative z-10">
           {/* Mode Toggle */}
-          <div className="relative flex gap-2 mb-6 sm:mb-8 bg-black/40 rounded-full p-1.5 border border-white/5">
+          <div className="relative flex gap-2 mb-6 sm:mb-8 bg-gray-100 dark:bg-black/40 rounded-full p-1.5 border border-gray-200 dark:border-white/5">
             {/* Sliding Background Indicator */}
             <div
-              className={`absolute top-1.5 bottom-1.5 w-[calc(50%-4px)] bg-primary rounded-full shadow-lg shadow-primary/30 transition-all duration-300 ease-out ${
+              className={`absolute top-1.5 bottom-1.5 w-[calc(50%-10px)] bg-primary rounded-full shadow-lg shadow-primary/30 transition-all duration-300 ease-out ${
                 mode === "login" ? "left-1.5" : "left-[calc(50%+4px)]"
               }`}
             ></div>
 
-            <button
+            <Button
+              variant="ghost"
               type="button"
-              onClick={() => setMode("login")}
-              className={`flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-300 relative z-10 ${
+              onClick={() => onModeChange("login")}
+              className={`flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-300 relative z-10 hover:bg-transparent dark:hover:bg-transparent ${
                 mode === "login"
-                  ? "text-background-dark"
-                  : "text-white/60 hover:text-white"
+                  ? "text-white dark:text-background-dark"
+                  : "text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
               Login
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
               type="button"
-              onClick={() => setMode("signup")}
-              className={`flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-300 relative z-10 ${
+              onClick={() => onModeChange("signup")}
+              className={`flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-300 relative z-10 hover:bg-transparent dark:hover:bg-transparent ${
                 mode === "signup"
-                  ? "text-background-dark"
-                  : "text-white/60 hover:text-white"
+                  ? "text-white dark:text-background-dark"
+                  : "text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
               Sign Up
-            </button>
+            </Button>
           </div>
 
           {/* Form */}
@@ -115,14 +122,14 @@ export default function AuthForm() {
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="name"
-                  className="text-white/90 text-sm font-medium text-left"
+                  className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
                 >
                   Full Name
                 </label>
                 <input
                   id="name"
                   type="text"
-                  className="w-full h-12 rounded-lg text-white bg-black/30 border border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-white/30 px-4 text-sm font-normal focus:outline-none transition-all duration-300 hover:border-white/20"
+                  className="w-full h-12 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-black/30 border border-gray-300 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 dark:placeholder:text-white/30 px-4 text-sm font-normal focus:outline-none transition-all duration-300 hover:border-gray-400 dark:hover:border-white/20"
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -133,14 +140,14 @@ export default function AuthForm() {
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="email"
-                className="text-white/90 text-sm font-medium text-left"
+                className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
               >
                 Email Address
               </label>
               <input
                 id="email"
                 type="email"
-                className="w-full h-12 rounded-lg text-white bg-black/30 border border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-white/30 px-4 text-sm font-normal focus:outline-none transition-all duration-300 hover:border-white/20"
+                className="w-full h-12 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-black/30 border border-gray-300 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 dark:placeholder:text-white/30 px-4 text-sm font-normal focus:outline-none transition-all duration-300 hover:border-gray-400 dark:hover:border-white/20"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -150,14 +157,14 @@ export default function AuthForm() {
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="password"
-                className="text-white/90 text-sm font-medium text-left"
+                className="text-gray-800 dark:text-white/90 text-sm font-medium text-left"
               >
                 Password
               </label>
               <input
                 id="password"
                 type="password"
-                className="w-full h-12 rounded-lg text-white bg-black/30 border border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-white/30 px-4 text-sm font-normal focus:outline-none transition-all duration-300 hover:border-white/20"
+                className="w-full h-12 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-black/30 border border-gray-300 dark:border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-gray-400 dark:placeholder:text-white/30 px-4 text-sm font-normal focus:outline-none transition-all duration-300 hover:border-gray-400 dark:hover:border-white/20"
                 placeholder={
                   mode === "login" ? "Enter your password" : "Create a password"
                 }
@@ -184,7 +191,7 @@ export default function AuthForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 mt-2 rounded-lg bg-gradient-to-r from-primary to-primary/90 text-background-dark text-sm font-bold tracking-wide hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full h-12 mt-2 rounded-lg bg-gradient-to-r from-primary to-primary/90 text-white dark:text-background-dark text-sm font-bold tracking-wide hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isLoading
                 ? "Processing..."
@@ -196,16 +203,18 @@ export default function AuthForm() {
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-            <span className="text-white/40 text-xs font-medium">OR</span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-white/10 to-transparent"></div>
+            <span className="text-gray-500 dark:text-white/40 text-xs font-medium">
+              OR
+            </span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-white/10 to-transparent"></div>
           </div>
 
           {/* Social Login */}
           <div className="flex flex-col gap-3">
             <button
               type="button"
-              className="w-full h-11 rounded-lg bg-black/30 border border-white/10 text-white text-sm font-medium hover:bg-black/50 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-lg bg-gray-50 dark:bg-black/30 border border-gray-300 dark:border-white/10 text-gray-800 dark:text-white text-sm font-medium hover:bg-gray-100 dark:hover:bg-black/50 hover:border-gray-400 dark:hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

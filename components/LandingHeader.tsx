@@ -1,16 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
+import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 
-interface LandingHeaderProps {
-  variant?: "light" | "dark";
-}
-
-export default function LandingHeader({
-  variant = "light",
-}: LandingHeaderProps) {
+export default function LandingHeader() {
+  const { theme } = useTheme();
   const textColorClass =
-    variant === "dark" ? "text-white" : "text-gray-900 dark:text-white";
+    theme === "dark" ? "text-white" : "text-gray-900 dark:text-white";
+  const isAuthRoute = usePathname() === "/auth";
 
   return (
     <header className="relative z-10 px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 flex justify-between items-center">
@@ -33,7 +33,17 @@ export default function LandingHeader({
           Ascendio
         </span>
       </Link>
-      <ThemeToggle />
+      <div className="flex items-center gap-4">
+        {!isAuthRoute && (
+          <Link
+            href="/auth"
+            className="text-sm text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 transition-colors"
+          >
+            Sign In
+          </Link>
+        )}
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
