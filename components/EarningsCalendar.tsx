@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import CompanyLogo from "./CompanyLogo";
 import {
   Calendar,
   ChevronLeft,
@@ -709,23 +709,14 @@ export default function EarningsCalendar({
                             >
                               <div className="w-12 h-12 p-1 bg-white rounded-sm flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-300 dark:border-slate-700">
                                 {event.logo ? (
-                                  <Image
-                                    src={event.logo}
-                                    alt={event.symbol}
-                                    width={64}
-                                    height={64}
-                                    className="object-contain w-full h-full"
-                                    onError={(e) => {
-                                      const target =
-                                        e.target as HTMLImageElement;
-                                      const parent = target.parentElement;
-                                      if (parent) {
-                                        parent.innerHTML = `<span class="text-xs font-bold text-slate-700 dark:text-slate-300">${event.symbol.substring(
-                                          0,
-                                          3
-                                        )}</span>`;
-                                      }
-                                    }}
+                                  <CompanyLogo
+                                    logoUrl={event.logo || ""}
+                                    symbol={event.symbol}
+                                    name={event.companyName}
+                                    size="xl"
+                                    shape="rounded"
+                                    border="light"
+                                    className="w-full h-full"
                                   />
                                 ) : (
                                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -765,32 +756,16 @@ export default function EarningsCalendar({
                                 router.push(`/dashboard/stock/${event.symbol}`);
                               }}
                             >
-                              <div className="w-12 h-12 p-1 bg-white rounded-sm flex items-center justify-center flex-shrink-0 overflow-hidden border border-orange-200 dark:border-orange-700">
-                                {event.logo ? (
-                                  <Image
-                                    src={event.logo}
-                                    alt={event.symbol}
-                                    width={64}
-                                    height={64}
-                                    className="object-contain w-full h-full"
-                                    onError={(e) => {
-                                      const target =
-                                        e.target as HTMLImageElement;
-                                      const parent = target.parentElement;
-                                      if (parent) {
-                                        parent.innerHTML = `<span class="text-xs font-bold text-orange-700 dark:text-orange-300">${event.symbol.substring(
-                                          0,
-                                          3
-                                        )}</span>`;
-                                      }
-                                    }}
-                                  />
-                                ) : (
-                                  <span className="text-xs font-bold text-orange-700 dark:text-orange-300">
-                                    {event.symbol.substring(0, 3)}
-                                  </span>
-                                )}
-                              </div>
+                              <CompanyLogo
+                                logoUrl={event.logo || ""}
+                                symbol={event.symbol}
+                                name={event.companyName}
+                                size="lg"
+                                shape="square"
+                                border="light"
+                                borderColor="orange"
+                                textColor="text-orange-700 dark:text-orange-300"
+                              />
                               <div className="text-xs font-semibold text-orange-700 dark:text-orange-300 truncate">
                                 {event.symbol}
                               </div>

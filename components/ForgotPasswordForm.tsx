@@ -3,33 +3,37 @@
 import { useState, FormEvent } from "react";
 import { KeyRound, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { resetPassword, getErrorMessage } from "@/lib/supabase/auth";
+import { toast } from "sonner";
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage("");
 
     // Basic validation
     if (!email) {
-      setMessage("Please enter your email address");
+      toast.error("Please enter your email address");
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
+    // Call Supabase
+    const result = await resetPassword({ email });
+
+    if (result.success) {
       setIsSuccess(true);
-      setMessage(
-        "If an account exists with this email, you will receive password reset instructions."
+      toast.success(
+        "Password reset email sent! Please check your inbox and follow the instructions."
       );
-      setIsLoading(false);
-    }, 1500);
+    } else {
+      toast.error(getErrorMessage(result.errorCode, result.error));
+    }
+    setIsLoading(false);
   };
 
   return (
@@ -85,17 +89,13 @@ export default function ForgotPasswordForm() {
               >
                 {isLoading ? "Sending..." : "Send Reset Link"}
               </button>
-
-              {message && !isSuccess && (
-                <p className="text-xs text-center animate-fade-in text-red-400">
-                  {message}
-                </p>
-              )}
             </form>
           ) : (
             <div className="animate-fade-in">
               <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
-                <p className="text-primary text-sm text-center">{message}</p>
+                <p className="text-primary text-sm text-center">
+                  Email sent successfully! Please check your inbox.
+                </p>
               </div>
               <div className="text-center text-white/60 text-xs mb-4">
                 <p>Didn&apos;t receive the email? Check your spam folder.</p>
@@ -104,7 +104,6 @@ export default function ForgotPasswordForm() {
                 onClick={() => {
                   setIsSuccess(false);
                   setEmail("");
-                  setMessage("");
                 }}
                 className="w-full h-12 rounded-lg bg-black/30 border border-white/10 text-white text-sm font-medium hover:bg-black/50 hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
               >

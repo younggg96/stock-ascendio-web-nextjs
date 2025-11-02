@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useState, Fragment } from "react";
+import CompanyLogo from "./CompanyLogo";
 import {
   Table,
   TableBody,
@@ -99,10 +99,9 @@ export default function TrackedStocksTable({
             const sentimentStyle = sentimentConfig[overallSentiment];
 
             return (
-              <>
+              <Fragment key={stock.id}>
                 {/* Main Row */}
                 <TableRow
-                  key={stock.id}
                   className={`${
                     !stock.isTracking ? "opacity-50" : ""
                   } cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5`}
@@ -112,16 +111,15 @@ export default function TrackedStocksTable({
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {stock.logo ? (
-                        <div className="w-8 h-8 p-1 rounded overflow-hidden bg-white flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
-                          <Image
-                            src={stock.logo}
-                            alt={stock.symbol}
-                            width={32}
-                            height={32}
-                            className="object-contain"
-                            unoptimized
-                          />
-                        </div>
+                        <CompanyLogo
+                          logoUrl={stock.logo}
+                          symbol={stock.symbol}
+                          name={stock.symbol}
+                          size="sm"
+                          shape="rounded"
+                          border="light"
+                          unoptimized
+                        />
                       ) : (
                         <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
                           <Building2 className="w-4 h-4 text-gray-400" />
@@ -218,7 +216,7 @@ export default function TrackedStocksTable({
                     )}
                   </TableCell>
                 </TableRow>
-              </>
+              </Fragment>
             );
           })}
         </TableBody>

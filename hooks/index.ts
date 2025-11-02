@@ -11,3 +11,5 @@ export {
   useBreakpoints,
   Breakpoints,
 } from "./useIsMobile";
+export { useAuth, type UseAuthReturn } from "./useAuth";
+export { useUserProfile } from "./useUserProfile";

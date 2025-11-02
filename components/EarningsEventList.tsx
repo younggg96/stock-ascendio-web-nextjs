@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import Image from "next/image";
+import CompanyLogo from "./CompanyLogo";
 import { useRouter } from "next/navigation";
 import { EarningsEvent } from "@/lib/earningsApi";
 
@@ -129,28 +129,17 @@ export default function EarningsEventList({
                 <div
                   className={`w-12 h-12 p-2 bg-white rounded-md flex items-center justify-center flex-shrink-0 border ${theme.logoBorder} overflow-hidden`}
                 >
-                  {event.logo ? (
-                    <Image
-                      src={event.logo}
-                      alt={event.companyName}
-                      width={48}
-                      height={48}
-                      className="object-contain w-full h-full"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = `<span class="text-xs font-bold ${
-                            theme.textColor
-                          }">${event.symbol.substring(0, 3)}</span>`;
-                        }
-                      }}
-                    />
-                  ) : (
-                    <span className={`text-xs font-bold ${theme.textColor}`}>
-                      {event.symbol.substring(0, 3)}
-                    </span>
-                  )}
+                  <CompanyLogo
+                    logoUrl={event.logo || ""}
+                    symbol={event.symbol}
+                    name={event.companyName}
+                    size="lg"
+                    shape="rounded"
+                    border="light"
+                    borderColor={timeType === "bmo" ? "primary" : "orange"}
+                    textColor={theme.textColor}
+                    className="w-full h-full"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div

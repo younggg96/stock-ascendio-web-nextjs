@@ -32,6 +32,16 @@ const nextConfig = {
       "logo.clearbit.com",
       // Wikimedia Commons (S&P 500 Company Logos)
       "upload.wikimedia.org",
+      // Supabase Storage
+      "*.supabase.co",
+    ],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",

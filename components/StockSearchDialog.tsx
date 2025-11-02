@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import CompanyLogo from "./CompanyLogo";
 import {
   Dialog,
   DialogContent,
@@ -157,16 +157,16 @@ export default function StockSearchDialog({
                   <div className="flex items-center gap-3 sm:gap-3">
                     {/* Logo */}
                     {stock.logo ? (
-                      <div className="w-10 h-10 sm:w-8 sm:h-8 p-1 rounded overflow-hidden bg-white flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
-                        <Image
-                          src={stock.logo}
-                          alt={stock.symbol}
-                          width={40}
-                          height={40}
-                          className="object-contain"
-                          unoptimized
-                        />
-                      </div>
+                      <CompanyLogo
+                        logoUrl={stock.logo}
+                        symbol={stock.symbol}
+                        name={stock.name}
+                        size="md"
+                        shape="rounded"
+                        border="light"
+                        unoptimized
+                        className="w-10 h-10 sm:w-8 sm:h-8"
+                      />
                     ) : (
                       <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
                         <Building2 className="w-5 h-5 sm:w-4 sm:h-4 text-gray-400" />

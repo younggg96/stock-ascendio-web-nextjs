@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
+import Image from "next/image";
 import {
   User,
   CreditCard,
@@ -15,8 +16,6 @@ import {
   X,
   Sparkles,
   Globe,
-  Clock,
-  DollarSign,
   Camera,
   Image as ImageIcon,
   Edit,
@@ -25,6 +24,7 @@ import {
   Monitor,
   SunMoon,
 } from "lucide-react";
+import { toast } from "sonner";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import SectionCard from "@/components/SectionCard";
@@ -50,6 +50,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useAuth, useUserProfile } from "@/hooks";
+import {
+  updateUserProfile,
+  updateTheme as updateThemeDb,
+  updateNotificationSettings,
+} from "@/lib/supabase/api/users";
+import { createClient } from "@/lib/supabase/client";
+import type { Theme as ThemeType } from "@/lib/supabase/database.types";
 
 const settingsTabs = [
   { value: "account", icon: User, label: "Account" },
@@ -58,7 +66,7 @@ const settingsTabs = [
   { value: "preferences", icon: Settings, label: "Preferences" },
 ];
 
-const pricingPlans = [
+const getPricingPlans = (currentMembership: string) => [
   {
     name: "Free",
     price: 0,
@@ -69,8 +77,14 @@ const pricingPlans = [
       { text: "Real-time data", included: false },
       { text: "AI analysis", included: false },
     ],
-    buttonText: "Current Plan",
+    buttonText: currentMembership === "FREE" ? "Current Plan" : "Downgrade",
     buttonVariant: "outline" as const,
+    buttonDisabled: currentMembership === "FREE",
+    badge:
+      currentMembership === "FREE"
+        ? { icon: Sparkles, text: "Current Plan" }
+        : undefined,
+    highlight: currentMembership === "FREE",
   },
   {
     name: "Pro",
@@ -82,11 +96,14 @@ const pricingPlans = [
       { text: "Advanced charts", included: true, highlighted: true },
       { text: "Priority support", included: true, highlighted: true },
     ],
-    buttonText: "Current Plan",
+    buttonText: currentMembership === "PRO" ? "Current Plan" : "Upgrade",
     buttonVariant: "default" as const,
-    buttonDisabled: true,
-    badge: { icon: Sparkles, text: "Current Plan" },
-    highlight: true,
+    buttonDisabled: currentMembership === "PRO",
+    badge:
+      currentMembership === "PRO"
+        ? { icon: Sparkles, text: "Current Plan" }
+        : undefined,
+    highlight: currentMembership === "PRO",
     popularLabel: "POPULAR",
   },
   {
@@ -99,8 +116,14 @@ const pricingPlans = [
       { text: "Team collaboration", included: true },
       { text: "24/7 dedicated support", included: true },
     ],
-    buttonText: "Upgrade",
+    buttonText: currentMembership === "ENTERPRISE" ? "Current Plan" : "Upgrade",
     buttonVariant: "default" as const,
+    buttonDisabled: currentMembership === "ENTERPRISE",
+    badge:
+      currentMembership === "ENTERPRISE"
+        ? { icon: Sparkles, text: "Current Plan" }
+        : undefined,
+    highlight: currentMembership === "ENTERPRISE",
   },
 ];
 
@@ -108,6 +131,13 @@ function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
+  const { user, isLoading: authLoading } = useAuth();
+  const {
+    profile,
+    isLoading: profileLoading,
+    refresh: refreshProfile,
+  } = useUserProfile();
+
   const [activeTab, setActiveTab] = useState("account");
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -115,11 +145,34 @@ function SettingsContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [formData, setFormData] = useState({
-    fullName: "John Doe",
-    email: "john@example.com",
-    phone: "+1 (555) 000-0000",
+    username: "",
+    email: "",
+    phone: "",
   });
+
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    priceAlerts: true,
+    marketNews: true,
+    portfolioUpdates: true,
+    breakingNews: true,
+    tradeConfirmations: true,
+  });
+
+  // Load profile data into form
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        username: profile.username || "",
+        email: profile.email || "",
+        phone: profile.phone_e164 || "",
+      });
+    }
+  }, [profile]);
 
   useEffect(() => {
     setMounted(true);
@@ -139,6 +192,18 @@ function SettingsContent() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("File size must be less than 2MB");
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
+        return;
+      }
+
       setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -148,13 +213,50 @@ function SettingsContent() {
     }
   };
 
-  const handleUploadAvatar = () => {
-    if (selectedFile) {
-      // TODO: Implement actual upload logic
-      console.log("Uploading file:", selectedFile);
-      setAvatarDialogOpen(false);
-      setSelectedFile(null);
-      setPreviewUrl(null);
+  const handleUploadAvatar = async () => {
+    if (!selectedFile || !user) return;
+
+    setIsUploading(true);
+    try {
+      const supabase = createClient();
+      const fileExt = selectedFile.name.split(".").pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("user-uploads")
+        .upload(filePath, selectedFile, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("user-uploads").getPublicUrl(filePath);
+
+      // Update user profile with new avatar URL
+      const result = await updateUserProfile(user.id, {
+        avatar_url: publicUrl,
+      });
+
+      if (result.success) {
+        toast.success("Avatar updated successfully");
+        await refreshProfile();
+        setAvatarDialogOpen(false);
+        setSelectedFile(null);
+        setPreviewUrl(null);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error(error.message || "Failed to upload avatar");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -162,20 +264,84 @@ function SettingsContent() {
     setIsEditing(!isEditing);
   };
 
-  const handleSaveChanges = () => {
-    // TODO: Implement actual save logic
-    console.log("Saving changes:", formData);
-    setIsEditing(false);
+  const handleSaveChanges = async () => {
+    if (!user) return;
+
+    // Validate phone number format (E.164)
+    if (formData.phone && formData.phone.trim() !== "") {
+      const phoneRegex = /^\+[1-9]\d{1,14}$/;
+      if (!phoneRegex.test(formData.phone)) {
+        toast.error(
+          "Invalid phone format. Use E.164 format: +[country code][number] (e.g., +14155552671)"
+        );
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    try {
+      // Note: Email is managed by Supabase Auth and cannot be updated here
+      const result = await updateUserProfile(user.id, {
+        username: formData.username || null,
+        phone_e164:
+          formData.phone && formData.phone.trim() !== ""
+            ? formData.phone
+            : null,
+      });
+
+      if (result.success) {
+        toast.success("Profile updated successfully");
+        await refreshProfile();
+        setIsEditing(false);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      console.error("Save error:", error);
+
+      // Handle specific database constraint errors
+      if (error.message?.includes("chk_phone_format")) {
+        toast.error(
+          "Invalid phone format. Use E.164 format: +[country code][number]"
+        );
+      } else {
+        toast.error(error.message || "Failed to update profile");
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancelEdit = () => {
-    // Reset form data to original values
-    setFormData({
-      fullName: "John Doe",
-      email: "john@example.com",
-      phone: "+1 (555) 000-0000",
-    });
+    // Reset form data to profile values
+    if (profile) {
+      setFormData({
+        username: profile.username || "",
+        email: profile.email || "",
+        phone: profile.phone_e164 || "",
+      });
+    }
     setIsEditing(false);
+  };
+
+  const handleThemeChange = async (newTheme: string) => {
+    setTheme(newTheme);
+
+    if (user && profile) {
+      // Update theme in database
+      const themeValue = newTheme.toUpperCase() as ThemeType;
+      await updateThemeDb(user.id, themeValue);
+    }
+  };
+
+  const handleNotificationChange = async (
+    key: keyof typeof notificationSettings,
+    value: boolean
+  ) => {
+    setNotificationSettings((prev) => ({ ...prev, [key]: value }));
+
+    // TODO: Save to database when notification settings are mapped to database fields
+    // For now, just update local state
   };
 
   return (
@@ -282,9 +448,27 @@ function SettingsContent() {
                         >
                           <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3">
                             <div className="relative">
-                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-lg">
-                                JD
-                              </div>
+                              {profile?.avatar_url ? (
+                                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-lg">
+                                  <Image
+                                    src={profile.avatar_url}
+                                    alt="Profile"
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 640px) 64px, 80px"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-lg">
+                                  {profile?.username
+                                    ? profile.username
+                                        .substring(0, 2)
+                                        .toUpperCase()
+                                    : profile?.email
+                                        ?.substring(0, 2)
+                                        .toUpperCase() || "US"}
+                                </div>
+                              )}
                               <DialogTrigger asChild>
                                 <button className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-white dark:bg-card-dark rounded-full flex items-center justify-center shadow-md border-2 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:scale-110 transition-all duration-200 cursor-pointer">
                                   <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-600 dark:text-white/70" />
@@ -311,11 +495,15 @@ function SettingsContent() {
                                 >
                                   {previewUrl ? (
                                     <div className="relative w-full h-full p-3 sm:p-4">
-                                      <img
-                                        src={previewUrl}
-                                        alt="Preview"
-                                        className="w-full h-full object-cover rounded-lg"
-                                      />
+                                      <div className="relative w-full h-full">
+                                        <Image
+                                          src={previewUrl}
+                                          alt="Preview"
+                                          fill
+                                          className="object-cover rounded-lg"
+                                          sizes="(max-width: 640px) 300px, 400px"
+                                        />
+                                      </div>
                                     </div>
                                   ) : (
                                     <div className="flex flex-col items-center justify-center pt-4 pb-5 sm:pt-5 sm:pb-6 px-4">
@@ -359,64 +547,52 @@ function SettingsContent() {
                                 type="button"
                                 size="sm"
                                 onClick={handleUploadAvatar}
-                                disabled={!selectedFile}
+                                disabled={!selectedFile || isUploading}
                                 className="gap-1.5 w-full sm:w-auto h-8 text-xs"
                               >
                                 <Upload className="w-3 h-3" />
-                                Upload
+                                {isUploading ? "Uploading..." : "Upload"}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
 
-                        {/* Full Name */}
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-medium text-gray-700 dark:text-white/70 flex items-center gap-1.5">
-                            <User className="w-3 h-3" />
-                            Full Name
-                          </Label>
-                          {isEditing ? (
-                            <Input
-                              id="full-name"
-                              type="text"
-                              value={formData.fullName}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  fullName: e.target.value,
-                                })
-                              }
-                              className="h-8 sm:h-9 text-xs sm:text-sm"
-                            />
-                          ) : (
-                            <p className="text-xs sm:text-sm text-gray-900 dark:text-white py-1.5 sm:py-2 px-2.5 sm:px-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
-                              {formData.fullName}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Email */}
+                        {/* Email - Read Only */}
                         <div className="space-y-1.5">
                           <Label className="text-xs font-medium text-gray-700 dark:text-white/70 flex items-center gap-1.5">
                             <Mail className="w-3 h-3" />
                             Email Address
                           </Label>
+                          <div className="relative">
+                            <p className="text-xs sm:text-sm text-gray-900 dark:text-white py-1.5 sm:py-2 px-2.5 sm:px-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10 break-all">
+                              {formData.email}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Username */}
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-white/70 flex items-center gap-1.5">
+                            <User className="w-3 h-3" />
+                            Username
+                          </Label>
                           {isEditing ? (
                             <Input
-                              id="email"
-                              type="email"
-                              value={formData.email}
+                              id="username"
+                              type="text"
+                              value={formData.username}
                               onChange={(e) =>
                                 setFormData({
                                   ...formData,
-                                  email: e.target.value,
+                                  username: e.target.value,
                                 })
                               }
+                              placeholder="Enter username"
                               className="h-8 sm:h-9 text-xs sm:text-sm"
                             />
                           ) : (
-                            <p className="text-xs sm:text-sm text-gray-900 dark:text-white py-1.5 sm:py-2 px-2.5 sm:px-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10 break-all">
-                              {formData.email}
+                            <p className="text-xs sm:text-sm text-gray-900 dark:text-white py-1.5 sm:py-2 px-2.5 sm:px-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
+                              {formData.username || "-"}
                             </p>
                           )}
                         </div>
@@ -428,21 +604,28 @@ function SettingsContent() {
                             Phone Number
                           </Label>
                           {isEditing ? (
-                            <Input
-                              id="phone"
-                              type="tel"
-                              value={formData.phone}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  phone: e.target.value,
-                                })
-                              }
-                              className="h-8 sm:h-9 text-xs sm:text-sm"
-                            />
+                            <div className="space-y-1">
+                              <Input
+                                id="phone"
+                                type="tel"
+                                value={formData.phone}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    phone: e.target.value,
+                                  })
+                                }
+                                placeholder="+14155552671"
+                                className="h-8 sm:h-9 text-xs sm:text-sm"
+                              />
+                              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-white/50">
+                                Format: +[country code][number] (e.g.,
+                                +14155552671)
+                              </p>
+                            </div>
                           ) : (
                             <p className="text-xs sm:text-sm text-gray-900 dark:text-white py-1.5 sm:py-2 px-2.5 sm:px-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
-                              {formData.phone}
+                              {formData.phone || "-"}
                             </p>
                           )}
                         </div>
@@ -462,9 +645,10 @@ function SettingsContent() {
                               size="sm"
                               className="gap-1.5 w-full sm:w-auto sm:ml-auto h-8 text-xs"
                               onClick={handleSaveChanges}
+                              disabled={isSaving}
                             >
                               <Check className="w-3 h-3" />
-                              Save Changes
+                              {isSaving ? "Saving..." : "Save Changes"}
                             </Button>
                           </div>
                         )}
@@ -482,9 +666,11 @@ function SettingsContent() {
                     >
                       {/* Pricing Cards */}
                       <div className="p-4 mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
-                        {pricingPlans.map((plan) => (
-                          <PricingCard key={plan.name} {...plan} />
-                        ))}
+                        {getPricingPlans(profile?.membership || "FREE").map(
+                          (plan) => (
+                            <PricingCard key={plan.name} {...plan} />
+                          )
+                        )}
                       </div>
                     </SectionCard>
                   </TabsContent>
@@ -663,7 +849,9 @@ function SettingsContent() {
                                 return (
                                   <button
                                     key={mode.value}
-                                    onClick={() => setTheme(mode.value)}
+                                    onClick={() =>
+                                      handleThemeChange(mode.value)
+                                    }
                                     className={`w-[100px] flex flex-col items-center gap-1.5 sm:gap-2 p-2 sm:p-3 rounded-lg border-2 transition-all duration-200 ${
                                       isActive
                                         ? "border-primary bg-primary/5 dark:bg-primary/10"

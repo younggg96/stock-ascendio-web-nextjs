@@ -2,47 +2,65 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signUp, signIn, getErrorMessage } from "@/lib/supabase/auth";
+import { toast } from "sonner";
 
 type AuthMode = "login" | "signup";
 
 export default function AuthForm() {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage("");
 
     // Basic validation
     if (!email || !password) {
-      setMessage("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       setIsLoading(false);
       return;
     }
 
     if (mode === "signup" && !name) {
-      setMessage("Please enter your name");
+      toast.error("Please enter your name");
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setMessage(
-        mode === "login"
-          ? "Login successful! Redirecting..."
-          : "Account created successfully! Redirecting..."
-      );
-      setIsLoading(false);
+    // Call Supabase Auth
+    if (mode === "login") {
+      // Sign in
+      const result = await signIn({ email, password });
 
-      // In a real app, redirect to dashboard
-      // router.push('/dashboard');
-    }, 1500);
+      if (result.success) {
+        toast.success("Login successful! Redirecting...");
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1000);
+      } else {
+        toast.error(getErrorMessage(result.errorCode, result.error));
+      }
+      setIsLoading(false);
+    } else {
+      // Sign up
+      const result = await signUp({ email, password, name });
+
+      if (result.success) {
+        toast.success(
+          "Account created! Please check your email to verify your account."
+        );
+        setIsLoading(false);
+      } else {
+        toast.error(getErrorMessage(result.errorCode, result.error));
+        setIsLoading(false);
+      }
+    }
   };
 
   return (
@@ -174,18 +192,6 @@ export default function AuthForm() {
                 ? "Login"
                 : "Create Account"}
             </button>
-
-            {message && (
-              <p
-                className={`text-xs text-center animate-fade-in ${
-                  message.includes("successful")
-                    ? "text-primary"
-                    : "text-red-400"
-                }`}
-              >
-                {message}
-              </p>
-            )}
           </form>
 
           {/* Divider */}
