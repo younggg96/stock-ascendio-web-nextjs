@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   fetchStockQuote,
   fetchMultipleQuotes,
-  fetchMarketIndices,
+  // fetchMarketIndices,
   fetchChartData,
 } from "@/lib/stockApi";
 
@@ -50,19 +50,19 @@ export async function GET(request: NextRequest) {
         });
 
       case "indices":
-        console.log("Fetching real-time market indices...");
-        const indices = await fetchMarketIndices();
-        console.log("Market indices fetched:", indices);
+      // console.log("Fetching real-time market indices...");
+      // // const indices = await fetchMarketIndices();
+      // console.log("Market indices fetched:", indices);
 
-        if (!indices || indices.length === 0) {
-          throw new Error("No market indices data available");
-        }
+      // if (!indices || indices.length === 0) {
+      //   throw new Error("No market indices data available");
+      // }
 
-        return NextResponse.json(indices, {
-          headers: {
-            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
-          },
-        });
+      // return NextResponse.json(indices, {
+      //   headers: {
+      //     "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+      //   },
+      // });
 
       case "chart":
         if (!symbol) {

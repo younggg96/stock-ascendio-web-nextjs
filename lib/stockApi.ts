@@ -243,38 +243,38 @@ export async function fetchMultipleQuotes(
  * Fetch market indices with chart data
  * Returns only successfully fetched indices, skips failed ones
  */
-export async function fetchMarketIndices(): Promise<MarketIndex[]> {
-  const indices = Object.entries(INDEX_SYMBOLS);
-  const promises = indices.map(async ([name, symbol]) => {
-    try {
-      // Fetch both quote and intraday chart data
-      const [quote, chartData] = await Promise.all([
-        fetchStockQuote(symbol),
-        fetchChartData(symbol, "15m", "1d").catch(() => []),
-      ]);
+// export async function fetchMarketIndices(): Promise<MarketIndex[]> {
+//   const indices = Object.entries(INDEX_SYMBOLS);
+//   const promises = indices.map(async ([name, symbol]) => {
+//     try {
+//       // Fetch both quote and intraday chart data
+//       const [quote, chartData] = await Promise.all([
+//         fetchStockQuote(symbol),
+//         fetchChartData(symbol, "15m", "1d").catch(() => []),
+//       ]);
 
-      // Extract prices for sparkline (last 20 points)
-      const prices = chartData.slice(-20).map((d) => d.value);
+//       // Extract prices for sparkline (last 20 points)
+//       const prices = chartData.slice(-20).map((d) => d.value);
 
-      return {
-        name,
-        value: quote.price.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }),
-        change: quote.change,
-        changePercent: quote.changePercent,
-        chartData: prices.length > 0 ? prices : undefined,
-      };
-    } catch (error) {
-      console.error(`Failed to fetch index ${name}:`, error);
-      return null;
-    }
-  });
+//       return {
+//         name,
+//         value: quote.price.toLocaleString("en-US", {
+//           minimumFractionDigits: 2,
+//           maximumFractionDigits: 2,
+//         }),
+//         change: quote.change,
+//         changePercent: quote.changePercent,
+//         chartData: prices.length > 0 ? prices : undefined,
+//       };
+//     } catch (error) {
+//       console.error(`Failed to fetch index ${name}:`, error);
+//       return null;
+//     }
+//   });
 
-  const results = await Promise.all(promises);
-  return results.filter((index): index is MarketIndex => index !== null);
-}
+//   const results = await Promise.all(promises);
+//   return results.filter((index): index is MarketIndex => index !== null);
+// }
 
 /**
  * Fetch intraday chart data using Yahoo Finance API
