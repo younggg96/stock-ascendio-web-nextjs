@@ -15,6 +15,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
+import { Button } from "./ui/button";
 
 const navItems = [
   {
@@ -92,13 +93,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           </Link>
 
           {/* Close button for mobile */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             className="lg:hidden flex items-center justify-center text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 transition-colors"
             title="Close menu"
           >
-            <X className="w-4 h-4" />
-          </button>
+            <X className="w-3 h-3" />
+          </Button>
 
           {/* Collapse button for desktop */}
           {!isCollapsed && (

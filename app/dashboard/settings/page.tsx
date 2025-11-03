@@ -665,7 +665,7 @@ function SettingsContent() {
                       sectionHeaderSubtitle="Select the perfect plan for your investment needs"
                     >
                       {/* Pricing Cards */}
-                      <div className="p-4 mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
+                      <div className="px-4 sm:px-6 mt-0 sm:mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
                         {getPricingPlans(profile?.membership || "FREE").map(
                           (plan) => (
                             <PricingCard key={plan.name} {...plan} />
@@ -681,7 +681,7 @@ function SettingsContent() {
                     className="mt-0 space-y-4 sm:space-y-6"
                   >
                     <SectionCard
-                      title="Notification Preferences"
+                      title="Notifications"
                       useSectionHeader
                       sectionHeaderIcon={Bell}
                       sectionHeaderSubtitle="Manage how you receive notifications"

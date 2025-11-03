@@ -52,10 +52,7 @@ export default function PricingCard({
       {/* Badge */}
       {badge && (
         <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 z-10">
-          <div className="px-2 py-0.5 sm:px-2.5 sm:py-0.5 md:px-3 md:py-1 bg-gradient-to-r from-primary to-primary text-white text-[8px] sm:text-[9px] md:text-[10px] font-semibold rounded-full shadow-lg flex items-center gap-0.5 sm:gap-1">
-            {badge.icon && (
-              <badge.icon className="w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-2.5 md:h-2.5" />
-            )}
+          <div className="px-2 py-0.5 sm:px-2.5 sm:py-0.5 md:px-3 md:py-1 bg-gradient-to-r from-primary to-primary text-white text-[10px] sm:text-[11px] md:text-xs font-semibold rounded-full shadow-lg flex items-center gap-0.5 sm:gap-1">
             {badge.text}
           </div>
         </div>
@@ -68,7 +65,7 @@ export default function PricingCard({
             {name}
           </h3>
           {popularLabel && (
-            <span className="h-fit px-1 py-0.5 sm:px-1.5 sm:py-0.5 bg-primary/10 dark:bg-primary/20 text-primary text-[8px] sm:text-[9px] md:text-[10px] font-semibold rounded">
+            <span className="h-fit px-1 py-0.5 sm:px-1.5 sm:py-0.5 bg-primary/10 dark:bg-primary/20 text-primary text-[10px] sm:text-[11px] md:text-xs font-semibold rounded">
               {popularLabel}
             </span>
           )}
