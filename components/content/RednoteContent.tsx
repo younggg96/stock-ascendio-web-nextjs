@@ -37,7 +37,7 @@ export default function RednoteContent({
 
   return (
     <>
-      <div className="space-y-2 mb-3">
+      <div className="space-y-2 mb-1">
         {/* Summary */}
         <div className="text-xs text-gray-600 dark:text-white/60">
           Summary: {summary}

@@ -134,7 +134,7 @@ export default function RedditContent({
 
   return (
     <>
-      <div className="space-y-2 mb-3">
+      <div className="space-y-2 mb-1">
         {/* Summary */}
         <ContentWithModal
           onOpenModal={() => setIsModalOpen(true)}

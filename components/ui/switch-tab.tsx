@@ -193,7 +193,7 @@ export const SwitchTab = React.memo(function SwitchTab({
       {variant === "underline" && (
         <div
           className={cn(
-            "absolute pointer-events-none",
+            "absolute pointer-events-none left-0",
             config.variant.indicator
           )}
           style={indicatorStyle}

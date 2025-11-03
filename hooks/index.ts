@@ -13,3 +13,4 @@ export {
 } from "./useIsMobile";
 export { useAuth, type UseAuthReturn } from "./useAuth";
 export { useUserProfile } from "./useUserProfile";
+export { useTrackedKOLs } from "./useTrackedKOLs";

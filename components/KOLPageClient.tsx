@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import SectionCard from "@/components/SectionCard";
@@ -9,6 +9,8 @@ import TopKOLRanking from "@/components/TopKOLRanking";
 import { SwitchTab } from "@/components/ui/switch-tab";
 import { KOL } from "@/lib/kolApi";
 import { Star, TrendingUp } from "lucide-react";
+import { useTrackedKOLs } from "@/hooks";
+import type { Platform } from "@/lib/supabase/database.types";
 
 interface KOLPageClientProps {
   initialKOLs: KOL[];
@@ -20,7 +22,42 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"tracked" | "ranking">("ranking");
 
-  // Reload KOLs
+  // Use the tracked KOLs hook to get real data from the API
+  const {
+    trackedKOLs: apiTrackedKOLs,
+    isLoading: isLoadingTracked,
+    refresh: refreshTracked,
+  } = useTrackedKOLs();
+
+  // Convert TrackedKOL to KOL format for compatibility with KOLTrackerTable
+  const convertedTrackedKOLs = useMemo<KOL[]>(() => {
+    return apiTrackedKOLs.map((tracked) => {
+      // Map platform types
+      const platformMap: {
+        [key: string]: "twitter" | "reddit" | "youtube" | "rednote";
+      } = {
+        TWITTER: "twitter",
+        REDDIT: "reddit",
+        YOUTUBE: "youtube",
+        REDNOTE: "rednote",
+      };
+
+      return {
+        id: `${tracked.platform}-${tracked.kol_id}`,
+        name: tracked.creator_name || tracked.kol_id,
+        username: tracked.kol_id,
+        platform: platformMap[tracked.platform] || "twitter",
+        followers: 0, // This info is not available from user_kol_entries
+        description: `${tracked.posts_count || 0} posts`,
+        avatarUrl: tracked.creator_avatar_url || "",
+        isTracking: true,
+        createdAt: tracked.updated_at,
+        updatedAt: tracked.updated_at,
+      };
+    });
+  }, [apiTrackedKOLs]);
+
+  // Reload KOLs (for Top Ranking tab)
   const loadKOLs = async () => {
     try {
       setIsRefreshing(true);
@@ -35,8 +72,12 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
     }
   };
 
-  // Stats
-  const trackedKOLs = kols.filter((kol) => kol.isTracking);
+  // Reload tracked KOLs when switching to the tracked tab
+  useEffect(() => {
+    if (activeTab === "tracked") {
+      refreshTracked();
+    }
+  }, [activeTab, refreshTracked]);
 
   // Tab options - use useMemo to avoid recreating on every render
   const tabOptions = useMemo(
@@ -48,7 +89,7 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
       },
       {
         value: "tracked",
-        label: "My Tracked",
+        label: "Tracking KOLs",
         icon: <Star className="w-3.5 h-3.5" />,
       },
     ],
@@ -87,7 +128,10 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
             >
               <div className="px-4 pb-4">
                 {activeTab === "tracked" ? (
-                  <KOLTrackerTable kols={trackedKOLs} onUpdate={loadKOLs} />
+                  <KOLTrackerTable
+                    kols={convertedTrackedKOLs}
+                    onUpdate={refreshTracked}
+                  />
                 ) : (
                   <TopKOLRanking kols={kols} onUpdate={loadKOLs} />
                 )}

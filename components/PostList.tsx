@@ -19,6 +19,7 @@ import {
   redditPostToUnifiedPost,
   youtubeVideoToUnifiedPost,
   RednoteNoteToUnifiedPost,
+  socialPostToUnifiedPost,
 } from "@/lib/postTypes";
 import { SwitchTab } from "./ui/switch-tab";
 import { Button } from "./ui/button";
@@ -345,6 +346,21 @@ export default function PostList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlatform, loadedPlatforms.size]);
 
+  // Reset data and refetch when switching tabs
+  useEffect(() => {
+    // Clear current platform's data and reload
+    setPlatformPosts((prev) => ({
+      ...prev,
+      [selectedPlatform]: [],
+    }));
+    setLoadedPlatforms((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(selectedPlatform);
+      return newSet;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTab]);
+
   // Reset filters when switching platforms
   useEffect(() => {
     setSelectedAuthors([]);
@@ -355,6 +371,18 @@ export default function PostList() {
   }, [selectedPlatform]);
 
   const getApiEndpoint = (platform: Platform): string => {
+    // If tracking tab is selected, use the tracking API with platform filter
+    if (selectedTab === "tracking") {
+      const platformMap = {
+        x: "TWITTER",
+        reddit: "REDDIT",
+        youtube: "YOUTUBE",
+        rednote: "REDNOTE",
+      };
+      return `/api/kol-subscriptions/posts?platform=${platformMap[platform]}`;
+    }
+
+    // Default endpoints for "all" tab
     const endpoints = {
       x: "/api/tweets",
       reddit: "/api/reddit",
@@ -368,6 +396,12 @@ export default function PostList() {
     data: any,
     platform: Platform
   ): UnifiedPost[] => {
+    // If we're in tracking tab, use the unified social posts format
+    if (selectedTab === "tracking" && data.posts) {
+      return data.posts.map(socialPostToUnifiedPost) || [];
+    }
+
+    // Default conversion for "all" tab
     switch (platform) {
       case "x":
         return data.tweets?.map(tweetToUnifiedPost) || [];
@@ -530,14 +564,14 @@ export default function PostList() {
       onScroll={handleScroll}
       className="h-full flex flex-col"
       headerExtra={
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-6">
           <SwitchTab
             options={PostTabOption}
             value={selectedTab}
             onValueChange={handleTabChange}
             size="md"
             variant="pills"
-            className="!w-fit"
+            className="!w-fit mb-2"
           />
           <SwitchTab
             options={PlatformTabOption}
@@ -550,7 +584,7 @@ export default function PostList() {
         </div>
       }
       headerRightExtra={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pb-2">
           <Button
             variant="ghost"
             size="sm"
@@ -577,7 +611,8 @@ export default function PostList() {
           />
         </div>
       }
-      headerClassName="!pb-0"
+      headerClassName="!pb-0 !pt-2"
+      liveIndicatorClassName="!mb-2"
     >
       {isLoading &&
         [...Array(10)].map((_, i) => <CardSkeleton key={i} lines={10} />)}

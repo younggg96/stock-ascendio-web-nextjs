@@ -40,6 +40,8 @@ import {
   deleteKOL,
   CreateKOLInput,
 } from "@/lib/kolApi";
+import { trackKOL, untrackKOL } from "@/lib/trackedKolApi";
+import type { Platform as DBPlatform } from "@/lib/supabase/database.types";
 import { Pencil, Trash2, Plus, Star, StarOff } from "lucide-react";
 import { toast } from "sonner";
 
@@ -99,11 +101,23 @@ export default function KOLTrackerTable({
     });
   };
 
-  // Handle add KOL
+  // Handle add KOL - now uses real tracking API
   const handleAdd = async () => {
     try {
-      await createKOL(formData);
-      toast.success("KOL added successfully");
+      // Map platform types for the tracking API
+      const platformMap: { [key: string]: DBPlatform } = {
+        twitter: "TWITTER",
+        reddit: "REDDIT",
+        youtube: "YOUTUBE",
+        rednote: "REDNOTE",
+      };
+
+      await trackKOL({
+        kol_id: formData.username,
+        platform: platformMap[formData.platform],
+        notify: true,
+      });
+      toast.success("KOL added to tracking list successfully");
       setIsAddDialogOpen(false);
       resetForm();
       onUpdate();
@@ -136,29 +150,44 @@ export default function KOLTrackerTable({
     setIsDeleteDialogOpen(true);
   };
 
-  // Handle delete KOL
+  // Handle delete KOL - now uses real tracking API
   const handleDelete = async () => {
     if (!deletingKOLId) return;
 
     try {
-      await deleteKOL(deletingKOLId);
-      toast.success("KOL deleted successfully");
+      // Parse the composite ID to get platform and kol_id
+      const parts = deletingKOLId.split("-");
+      if (parts.length >= 2) {
+        const platform = parts[0] as DBPlatform;
+        const kolId = parts.slice(1).join("-");
+        await untrackKOL(kolId, platform);
+        toast.success("KOL removed from tracking list successfully");
+      } else {
+        throw new Error("Invalid KOL ID format");
+      }
       setIsDeleteDialogOpen(false);
       setDeletingKOLId(null);
       onUpdate();
     } catch (error) {
-      toast.error("Failed to delete KOL");
+      toast.error("Failed to remove KOL");
       console.error(error);
     }
   };
 
-  // Handle toggle tracking
+  // Handle toggle tracking - now uses real tracking API
   const handleToggleTracking = async (kol: KOL) => {
     try {
-      await updateKOL(kol.id, { isTracking: !kol.isTracking });
-      toast.success(
-        kol.isTracking ? "Stopped tracking KOL" : "Started tracking KOL"
-      );
+      // Parse the composite ID to get platform and kol_id
+      const parts = kol.id.split("-");
+      if (parts.length >= 2) {
+        const platform = parts[0] as DBPlatform;
+        const kolId = parts.slice(1).join("-");
+        // In the tracked tab, toggle means untrack
+        await untrackKOL(kolId, platform);
+        toast.success("Stopped tracking KOL");
+      } else {
+        throw new Error("Invalid KOL ID format");
+      }
       onUpdate();
     } catch (error) {
       toast.error("Failed to update tracking status");
@@ -222,7 +251,7 @@ export default function KOLTrackerTable({
           className="flex items-center gap-1.5 h-8 text-xs w-full sm:w-auto"
         >
           <Plus className="w-3.5 h-3.5" />
-          Add KOL
+          Track New KOL
         </Button>
       </div>
 
@@ -233,7 +262,7 @@ export default function KOLTrackerTable({
             <div className="text-center py-8 border border-border-light dark:border-border-dark rounded-lg">
               <p className="text-xs text-gray-500 dark:text-white/50">
                 {kols.length === 0
-                  ? "No tracked KOLs yet. Add KOLs from the Top Ranking table or click 'Add KOL' button."
+                  ? "No tracked KOLs yet. Click 'Track New KOL' button to start tracking."
                   : "No KOLs match your search criteria."}
               </p>
             </div>
@@ -257,15 +286,6 @@ export default function KOLTrackerTable({
                     <Button
                       variant="ghost"
                       size="xs"
-                      onClick={() => openEditDialog(kol)}
-                      title="Edit KOL"
-                      className="h-7 w-7 p-0"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="xs"
                       onClick={() => handleToggleTracking(kol)}
                       className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950/20 h-7 w-7 p-0"
                       title="Stop tracking"
@@ -277,7 +297,7 @@ export default function KOLTrackerTable({
                       size="xs"
                       onClick={() => openDeleteDialog(kol.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 h-7 w-7 p-0"
-                      title="Delete KOL"
+                      title="Remove from tracking"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
@@ -335,7 +355,7 @@ export default function KOLTrackerTable({
                   <TableCell colSpan={6} className="text-center py-8">
                     <p className="text-xs text-gray-500 dark:text-white/50">
                       {kols.length === 0
-                        ? "No tracked KOLs yet. Add KOLs from the Top Ranking table or click 'Add KOL' button."
+                        ? "No tracked KOLs yet. Click 'Track New KOL' button to start tracking."
                         : "No KOLs match your search criteria."}
                     </p>
                   </TableCell>
@@ -374,14 +394,6 @@ export default function KOLTrackerTable({
                         <Button
                           variant="ghost"
                           size="xs"
-                          onClick={() => openEditDialog(kol)}
-                          title="Edit KOL"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="xs"
                           onClick={() => handleToggleTracking(kol)}
                           className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
                           title="Stop tracking"
@@ -393,7 +405,7 @@ export default function KOLTrackerTable({
                           size="xs"
                           onClick={() => openDeleteDialog(kol.id)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
-                          title="Delete KOL"
+                          title="Remove from tracking"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
@@ -411,9 +423,9 @@ export default function KOLTrackerTable({
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New KOL</DialogTitle>
+            <DialogTitle>Track New KOL</DialogTitle>
             <DialogDescription>
-              Add a new KOL to track their content and updates.
+              Add a KOL to your tracking list to see their content and updates.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-3">
@@ -463,7 +475,7 @@ export default function KOLTrackerTable({
               Cancel
             </Button>
             <Button onClick={handleAdd} size="sm" className="h-8 text-xs">
-              Add
+              Track
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -593,10 +605,10 @@ export default function KOLTrackerTable({
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete KOL</DialogTitle>
+            <DialogTitle>Remove KOL from Tracking</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this KOL? This action cannot be
-              undone.
+              Are you sure you want to stop tracking this KOL? You can add them
+              back to your tracking list later.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -613,7 +625,7 @@ export default function KOLTrackerTable({
               size="sm"
               className="h-8 text-xs bg-red-600 hover:bg-red-700 text-white"
             >
-              Delete
+              Remove
             </Button>
           </DialogFooter>
         </DialogContent>

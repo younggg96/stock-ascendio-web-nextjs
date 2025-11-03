@@ -153,7 +153,7 @@ export default function PostActions({
   };
 
   return (
-    <div className="flex items-center gap-1 mt-2">
+    <div className="flex items-center gap-1">
       {/* Like Button */}
       <Button
         variant="ghost"

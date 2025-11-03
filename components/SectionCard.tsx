@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SectionCardProps {
   // Header props
@@ -28,6 +29,7 @@ interface SectionCardProps {
   // Container props
   className?: string;
   padding?: "sm" | "md" | "lg" | "none";
+  liveIndicatorClassName?: string;
 }
 
 export default function SectionCard({
@@ -50,6 +52,7 @@ export default function SectionCard({
   onScroll,
   className = "",
   padding = "md",
+  liveIndicatorClassName = "",
 }: SectionCardProps) {
   const titleSizeClasses = {
     sm: "text-[16px]",
@@ -128,7 +131,12 @@ export default function SectionCard({
               <div className="w-full sm:w-auto">{headerRightExtra}</div>
             )}
             {showLiveIndicator && (
-              <span className="text-primary text-xs font-bold flex items-center gap-1">
+              <span
+                className={cn(
+                  liveIndicatorClassName,
+                  "text-primary text-xs font-bold flex items-center gap-1"
+                )}
+              >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>

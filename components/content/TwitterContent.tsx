@@ -56,7 +56,7 @@ export default function TwitterContent({
 
   return (
     <>
-      <div className="space-y-2 mb-3">
+      <div className="space-y-2 mb-1">
         {/* Tweet Text */}
         <ContentWithModal
           onOpenModal={() => setIsModalOpen(true)}

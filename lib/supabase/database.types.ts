@@ -116,6 +116,93 @@ export interface Database {
           created_at?: string;
         };
       };
+      social_posts: {
+        Row: {
+          post_id: string;
+          platform: Platform;
+          creator_id: string;
+          creator_name: string;
+          creator_avatar_url: string | null;
+          content: string;
+          content_url: string;
+          published_at: string;
+          media_urls: string[] | null;
+          likes_count: number | null;
+          ai_summary: string | null;
+          ai_sentiment: Sentiment | null;
+          ai_tags: string[] | null;
+          is_market_related: boolean | null;
+          created_at: string;
+        };
+        Insert: {
+          post_id: string;
+          platform: Platform;
+          creator_id: string;
+          creator_name: string;
+          creator_avatar_url?: string | null;
+          content: string;
+          content_url: string;
+          published_at: string;
+          media_urls?: string[] | null;
+          likes_count?: number | null;
+          ai_summary?: string | null;
+          ai_sentiment?: Sentiment | null;
+          ai_tags?: string[] | null;
+          is_market_related?: boolean | null;
+          created_at?: string;
+        };
+        Update: {
+          post_id?: string;
+          platform?: Platform;
+          creator_id?: string;
+          creator_name?: string;
+          creator_avatar_url?: string | null;
+          content?: string;
+          content_url?: string;
+          published_at?: string;
+          media_urls?: string[] | null;
+          likes_count?: number | null;
+          ai_summary?: string | null;
+          ai_sentiment?: Sentiment | null;
+          ai_tags?: string[] | null;
+          is_market_related?: boolean | null;
+          created_at?: string;
+        };
+      };
+      user_post_likes: {
+        Row: {
+          user_id: string;
+          post_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          post_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          post_id?: string;
+          created_at?: string;
+        };
+      };
+      user_post_favorites: {
+        Row: {
+          user_id: string;
+          post_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          post_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          post_id?: string;
+          created_at?: string;
+        };
+      };
     };
   };
 }
@@ -128,6 +215,7 @@ export type PaymentMethod = "CREDIT_CARD" | "PAYPAL" | "ALIPAY" | "WECHAT";
 export type PaymentMethodType = "CREDIT_CARD" | "PAYPAL" | "ALIPAY" | "WECHAT";
 export type Platform = "TWITTER" | "YOUTUBE" | "REDNOTE" | "REDDIT";
 export type Theme = "LIGHT" | "DARK" | "SYSTEM";
+export type Sentiment = "negative" | "neutral" | "positive";
 
 // Helper types
 export type UserProfile = Database["public"]["Tables"]["users"]["Row"];
@@ -146,3 +234,23 @@ export type PaymentMethodInsert =
   Database["public"]["Tables"]["user_payment_methods"]["Insert"];
 export type PaymentMethodUpdate =
   Database["public"]["Tables"]["user_payment_methods"]["Update"];
+
+export type SocialPost = Database["public"]["Tables"]["social_posts"]["Row"];
+export type SocialPostInsert =
+  Database["public"]["Tables"]["social_posts"]["Insert"];
+export type SocialPostUpdate =
+  Database["public"]["Tables"]["social_posts"]["Update"];
+
+export type UserPostLike =
+  Database["public"]["Tables"]["user_post_likes"]["Row"];
+export type UserPostLikeInsert =
+  Database["public"]["Tables"]["user_post_likes"]["Insert"];
+export type UserPostLikeUpdate =
+  Database["public"]["Tables"]["user_post_likes"]["Update"];
+
+export type UserPostFavorite =
+  Database["public"]["Tables"]["user_post_favorites"]["Row"];
+export type UserPostFavoriteInsert =
+  Database["public"]["Tables"]["user_post_favorites"]["Insert"];
+export type UserPostFavoriteUpdate =
+  Database["public"]["Tables"]["user_post_favorites"]["Update"];

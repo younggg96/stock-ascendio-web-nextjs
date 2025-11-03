@@ -188,3 +188,38 @@ export function RednoteNoteToUnifiedPost(note: any): UnifiedPost {
     totalFavorites: note.total_favorites,
   };
 }
+
+// Conversion function for tracking API (unified social posts)
+export function socialPostToUnifiedPost(post: any): UnifiedPost {
+  const platformMap: { [key: string]: "x" | "reddit" | "youtube" | "rednote" } =
+    {
+      TWITTER: "x",
+      REDDIT: "reddit",
+      YOUTUBE: "youtube",
+      REDNOTE: "rednote",
+    };
+
+  return {
+    id: post.post_id,
+    platform: platformMap[post.platform] || "x",
+    author: post.creator_name,
+    authorId: post.creator_id,
+    avatarUrl: post.creator_avatar_url || "",
+    content: post.content,
+    url: post.content_url,
+    createdAt: post.published_at,
+    likes: post.likes_count || 0,
+    comments: 0,
+    mediaUrls: post.media_urls || [],
+    aiSummary: post.ai_summary || "",
+    aiReasoning: "",
+    aiAnalysis: "",
+    aiTags: post.ai_tags || [],
+    sentiment: mapSentiment(post.ai_sentiment || "neutral"),
+    isMarketRelated: post.is_market_related ?? false,
+    userLiked: post.user_liked,
+    userFavorited: post.user_favorited,
+    totalLikes: post.total_likes,
+    totalFavorites: post.total_favorites,
+  };
+}
