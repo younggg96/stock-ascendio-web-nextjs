@@ -63,14 +63,16 @@ export default function PricingCard({
 
       {/* Header */}
       <div className="mb-3 sm:mb-4 md:mb-5">
-        <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white mb-1 sm:mb-1.5 flex flex-wrap items-center gap-1 sm:gap-1.5">
-          {name}
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 dark:text-white mb-1 sm:mb-1.5 flex flex-wrap items-center gap-1 sm:gap-1.5">
+            {name}
+          </h3>
           {popularLabel && (
-            <span className="px-1 py-0.5 sm:px-1.5 sm:py-0.5 bg-primary/10 dark:bg-primary/20 text-primary text-[8px] sm:text-[9px] md:text-[10px] font-semibold rounded">
+            <span className="h-fit px-1 py-0.5 sm:px-1.5 sm:py-0.5 bg-primary/10 dark:bg-primary/20 text-primary text-[8px] sm:text-[9px] md:text-[10px] font-semibold rounded">
               {popularLabel}
             </span>
           )}
-        </h3>
+        </div>
         <div className="flex items-baseline gap-0.5 sm:gap-1">
           <span className={priceClasses}>${price}</span>
           <span className="text-gray-500 dark:text-white/50 text-xs sm:text-sm">
