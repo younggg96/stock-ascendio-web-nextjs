@@ -263,7 +263,7 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
             <Button
               variant="outline"
               size="lg"
-              className="w-full h-11 rounded-lg bg-gray-50 dark:bg-black/30 border border-gray-300 dark:border-white/10 text-gray-800 dark:text-white text-sm font-medium hover:bg-gray-100 dark:hover:bg-black/50 hover:border-gray-400 dark:hover:border-white/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+              className="w-full hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
             >
               <Image
                 src="/logo/google.svg"
