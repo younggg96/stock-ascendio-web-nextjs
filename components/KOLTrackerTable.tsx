@@ -211,7 +211,7 @@ export default function KOLTrackerTable({
               <SelectItem value="all">All Platforms</SelectItem>
               <SelectItem value="twitter">X (Twitter)</SelectItem>
               <SelectItem value="reddit">Reddit</SelectItem>
-              <SelectItem value="xiaohongshu">小红书</SelectItem>
+              <SelectItem value="rednote">Rednote</SelectItem>
               <SelectItem value="youtube">YouTube</SelectItem>
             </SelectContent>
           </Select>
@@ -447,7 +447,7 @@ export default function KOLTrackerTable({
                 <SelectContent>
                   <SelectItem value="twitter">X (Twitter)</SelectItem>
                   <SelectItem value="reddit">Reddit</SelectItem>
-                  <SelectItem value="xiaohongshu">小红书</SelectItem>
+                  <SelectItem value="rednote">Rednote</SelectItem>
                   <SelectItem value="youtube">YouTube</SelectItem>
                 </SelectContent>
               </Select>
@@ -523,7 +523,7 @@ export default function KOLTrackerTable({
                 <SelectContent>
                   <SelectItem value="twitter">X (Twitter)</SelectItem>
                   <SelectItem value="reddit">Reddit</SelectItem>
-                  <SelectItem value="xiaohongshu">小红书</SelectItem>
+                  <SelectItem value="rednote">Rednote</SelectItem>
                   <SelectItem value="youtube">YouTube</SelectItem>
                 </SelectContent>
               </Select>

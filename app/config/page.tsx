@@ -296,7 +296,7 @@ export default function ConfigPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="EMAIL">Email</SelectItem>
-                      <SelectItem value="SMS">SMS</SelectItem>
+                      <SelectItem value="MESSAGE">Message</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

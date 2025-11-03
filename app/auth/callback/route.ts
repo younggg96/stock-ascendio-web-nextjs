@@ -9,50 +9,47 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = createServerSupabaseClient();
-
     // Exchange code for session
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: sessionData, error: exchangeError } =
+      await supabase.auth.exchangeCodeForSession(code);
 
-    if (error) {
-      console.error("Auth callback error:", error);
+    if (exchangeError) {
+      console.error("Auth callback error:", exchangeError);
       return NextResponse.redirect(
         new URL("/auth?error=verification_failed", request.url)
       );
     }
 
-    if (data.user) {
-      console.log("data.user", data.user);
-      // Check if user already exists
-      const { data: existingUser } = await supabase
-        .from("users")
-        .select("id")
-        .eq("id", data.user.id)
-        .single();
+    // Sync display_name from auth metadata to users.username
+    if (sessionData?.user) {
+      try {
+        const userId = sessionData.user.id;
+        const displayName = sessionData.user.user_metadata?.display_name;
 
-      // Only insert if user doesn't exist (first time login)
-      if (!existingUser) {
-        const { error: insertError } = await supabase.from("users").insert({
-          id: data.user.id,
-          email: data.user.email,
-          username: data.user.user_metadata?.display_name || null,
-          avatar_url: null,
-          theme: "SYSTEM",
-          is_subscribe_newsletter: false,
-          notification_is_live: false,
-          membership: "FREE",
-        });
+        // Check if user profile exists and username is empty
+        const { data: userProfile } = await supabase
+          .from("users")
+          .select("username")
+          .eq("id", userId)
+          .single();
 
-        if (insertError) {
-          console.error("User insert error:", insertError);
-          return NextResponse.redirect(
-            new URL("/auth?error=profile_creation_failed", request.url)
-          );
+        // If username is empty and display_name exists, update it
+        if (
+          (!userProfile?.username || userProfile.username === "") &&
+          displayName
+        ) {
+          await supabase
+            .from("users")
+            .update({ username: displayName })
+            .eq("id", userId);
         }
+      } catch (error) {
+        console.error("Error syncing username:", error);
+        // Don't block the login flow if this fails
       }
-
-      // Redirect to config page for initial setup
-      return NextResponse.redirect(new URL("/config", request.url));
     }
+
+    return NextResponse.redirect(new URL("/config", request.url));
   }
 
   // Regular login or returning user - redirect to dashboard

@@ -123,7 +123,7 @@ export interface Database {
 // Enums - Must match database enum definitions EXACTLY (case-sensitive)
 export type MembershipType = "FREE" | "ENHANCED" | "PRO" | "ENTERPRISE";
 export type BillingCycle = "MONTHLY" | "YEARLY";
-export type NotificationMethod = "EMAIL" | "SMS" | "BOTH";
+export type NotificationMethod = "EMAIL" | "MESSAGE";
 export type PaymentMethod = "CREDIT_CARD" | "PAYPAL" | "ALIPAY" | "WECHAT";
 export type PaymentMethodType = "CREDIT_CARD" | "PAYPAL" | "ALIPAY" | "WECHAT";
 export type Platform = "TWITTER" | "YOUTUBE" | "XIAOHONGSHU" | "REDDIT";

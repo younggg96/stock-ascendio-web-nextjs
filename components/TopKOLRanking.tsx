@@ -63,7 +63,7 @@ export default function TopKOLRanking({ kols, onUpdate }: TopKOLRankingProps) {
             { value: "all", label: "All" },
             { value: "twitter", label: "X" },
             { value: "reddit", label: "Reddit" },
-            { value: "xiaohongshu", label: "小红书" },
+            { value: "rednote", label: "Rednote" },
             { value: "youtube", label: "YouTube" },
           ]}
           value={filterPlatform}

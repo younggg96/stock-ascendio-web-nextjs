@@ -104,7 +104,7 @@ const mockTrackedStocks: TrackedStock[] = [
         kolId: "kol4",
         kolName: "AI Investor",
         kolUsername: "@aiinvestor",
-        kolPlatform: "xiaohongshu",
+        kolPlatform: "rednote",
         sentiment: "bullish",
         opinion:
           "AI chip demand continues to explode. NVDA is the biggest beneficiary. Data center business growth exceeds expectations.",

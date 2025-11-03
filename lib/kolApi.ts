@@ -1,6 +1,6 @@
 // KOL types and API functions
 
-export type Platform = "twitter" | "reddit" | "xiaohongshu" | "youtube";
+export type Platform = "twitter" | "reddit" | "rednote" | "youtube";
 
 export interface KOL {
   id: string;
@@ -49,9 +49,9 @@ export const platformConfig: Record<
     icon: "/logo/reddit.svg",
     color: "text-[#FF4500]",
   },
-  xiaohongshu: {
-    name: "小红书",
-    icon: "/logo/xiaohongshu.svg",
+  rednote: {
+    name: "Rednote",
+    icon: "/logo/rednote.svg",
     color: "text-[#FF2442]",
   },
   youtube: {

@@ -1,7 +1,7 @@
 // Unified post interface for all platforms
 export interface UnifiedPost {
   id: string;
-  platform: "x" | "reddit" | "youtube" | "xiaohongshu";
+  platform: "x" | "reddit" | "youtube" | "rednote";
   author: string;
   authorId: string;
   avatarUrl: string;
@@ -146,7 +146,7 @@ export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
 export function xiaohongshuNoteToUnifiedPost(note: any): UnifiedPost {
   return {
     id: note.note_id,
-    platform: "xiaohongshu",
+    platform: "rednote",
     author: note.username,
     authorId: note.user_id,
     avatarUrl: note.user_avatar_url,

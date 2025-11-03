@@ -24,6 +24,7 @@ const nextConfig = {
       "sns-img-bd.xhscdn.com",
       "sns-img-hw.xhscdn.com",
       "ci.xiaohongshu.com",
+      "ci.rednote.com",
       "sns-avatar-qc.xhscdn.com",
       // Finnhub (Company Logos)
       "static.finnhub.io",

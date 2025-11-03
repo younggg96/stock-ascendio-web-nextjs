@@ -142,7 +142,7 @@ export async function updateTheme(
 export async function updateNotificationSettings(
   userId: string,
   settings: {
-    notification_method?: "EMAIL" | "SMS" | "BOTH" | null;
+    notification_method?: "EMAIL" | "MESSAGE" | null;
     notification_is_live?: boolean;
     notification_interval_hours?: number | null;
   }

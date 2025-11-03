@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const XIAOHONGSHU_API_URL =
-  "https://zidrvkezo4hsh3liwq6as55zoy0vicjp.lambda-url.us-east-1.on.aws/platform/xiaohongshu";
+  "https://zidrvkezo4hsh3liwq6as55zoy0vicjp.lambda-url.us-east-1.on.aws/platform/rednote";
 
 export interface XiaohongshuNote {
   note_id: string;
@@ -21,7 +21,7 @@ export interface XiaohongshuNote {
   ai_reasoning: string;
   ai_analysis: string;
   ai_tags: string[];
-  ai_sentiment: 'negative' | 'neutral' | 'positive' | '' | string;
+  ai_sentiment: "negative" | "neutral" | "positive" | "" | string;
   is_market_related: boolean;
 }
 

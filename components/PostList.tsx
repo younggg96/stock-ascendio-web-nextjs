@@ -26,7 +26,7 @@ import { RotateCcw } from "lucide-react";
 import { MultiSelectOption } from "./ui/multi-select";
 import { FilterSheet, DateRange, Sentiment } from "./FilterSheet";
 
-type Platform = "x" | "reddit" | "youtube" | "xiaohongshu";
+type Platform = "x" | "reddit" | "youtube" | "rednote";
 
 const PostTabOption = [
   {
@@ -82,12 +82,12 @@ const PlatformTabOption = [
     ),
   },
   {
-    value: "xiaohongshu",
-    label: "小红书",
+    value: "rednote",
+    label: "Rednote",
     icon: (
       <Image
-        src="/logo/xiaohongshu.svg"
-        alt="小红书"
+        src="/logo/rednote.svg"
+        alt="Rednote"
         width={16}
         height={16}
         className="w-4 h-4"
@@ -112,7 +112,7 @@ export default function PostList() {
     x: [],
     reddit: [],
     youtube: [],
-    xiaohongshu: [],
+    rednote: [],
   });
 
   // Track loading state for each platform
@@ -122,7 +122,7 @@ export default function PostList() {
     x: false,
     reddit: false,
     youtube: false,
-    xiaohongshu: false,
+    rednote: false,
   });
 
   // Track which platforms have been loaded
@@ -139,7 +139,7 @@ export default function PostList() {
     x: null,
     reddit: null,
     youtube: null,
-    xiaohongshu: null,
+    rednote: null,
   });
 
   // Track hasMore for each platform
@@ -149,7 +149,7 @@ export default function PostList() {
     x: true,
     reddit: true,
     youtube: true,
-    xiaohongshu: true,
+    rednote: true,
   });
 
   // Get current platform data
@@ -359,7 +359,7 @@ export default function PostList() {
       x: "/api/tweets",
       reddit: "/api/reddit",
       youtube: "/api/youtube",
-      xiaohongshu: "/api/xiaohongshu",
+      rednote: "/api/rednote",
     };
     return endpoints[platform];
   };
@@ -375,7 +375,7 @@ export default function PostList() {
         return data.posts?.map(redditPostToUnifiedPost) || [];
       case "youtube":
         return data.videos?.map(youtubeVideoToUnifiedPost) || [];
-      case "xiaohongshu":
+      case "rednote":
         return data.notes?.map(xiaohongshuNoteToUnifiedPost) || [];
       default:
         return [];
@@ -669,7 +669,7 @@ export default function PostList() {
                   publishedAt={post.platformData?.publishedAt}
                 />
               );
-            case "xiaohongshu":
+            case "rednote":
               return (
                 <XiaohongshuContent
                   title={post.title}
