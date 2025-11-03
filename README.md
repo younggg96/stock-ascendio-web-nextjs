@@ -31,6 +31,18 @@ A modern stock market analysis and tracking platform built with Next.js 14, Type
 - 🔍 Stock search functionality
 - 📱 Fully responsive design
 
+### 📲 Progressive Web App (PWA)
+
+- ✨ **可安装应用** - 将应用添加到主屏幕，像原生应用一样使用
+- 🔄 **离线支持** - Service Worker 自动缓存，离线也能访问
+- 🚀 **快速加载** - 智能缓存策略优化加载速度
+- 📱 **原生体验** - 独立窗口模式，无浏览器地址栏
+- 🎯 **应用快捷方式** - Dashboard、Stocks、KOL Tracker 快速访问
+- 🍎 **iOS 支持** - 完美支持 iOS Safari 的添加到主屏幕功能
+- 🤖 **Android 支持** - 完整的 Android PWA 安装体验
+
+详细配置说明请查看：[PWA.md](./PWA.md)
+
 ## Tech Stack
 
 - **Framework:** Next.js 14 (App Router)
@@ -39,6 +51,7 @@ A modern stock market analysis and tracking platform built with Next.js 14, Type
 - **Charts:** Chart.js
 - **Icons:** Material Symbols Outlined
 - **Fonts:** Manrope (Google Fonts)
+- **PWA:** @ducanh2912/next-pwa (Progressive Web App support)
 
 ## 📊 获取真实股票数据
 
@@ -94,6 +107,16 @@ pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Generate PWA Icons
+
+If you need to regenerate PWA icons:
+
+```bash
+npm run generate-icons
+```
+
+This will create all required icon sizes from `public/icon.svg`.
 
 ### Build
 

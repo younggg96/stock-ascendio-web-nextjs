@@ -19,6 +19,19 @@ export const metadata: Metadata = {
     "The Future of Investing is Here. Sign up for early access or updates.",
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [
+      { url: "/icons/icon-152x152.png", sizes: "152x152", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Ascendio AI",
+  },
+  formatDetection: {
+    telephone: false,
   },
   openGraph: {
     title: "Ascendio AI - Investment Platform",
@@ -39,6 +52,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover"
+        />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link
+          rel="apple-touch-icon"
+          sizes="152x152"
+          href="/icons/icon-152x152.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="192x192"
+          href="/icons/icon-192x192.png"
+        />
+      </head>
       <body className={`${manrope.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
