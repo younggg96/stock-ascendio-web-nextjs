@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import LogoIcon from "./LogoIcon";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
@@ -76,15 +76,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           }`}
         >
           <Link href="/" className="flex items-center justify-center gap-1">
-            <Image
-              src="/logo.svg"
-              alt="Ascendio AI Logo"
-              width={20}
-              height={20}
-              className="cursor-pointer"
-              priority
-              unoptimized
-            />
+            <LogoIcon size={20} className="cursor-pointer" />
             {!isCollapsed && (
               <span className="text-gray-900 dark:text-white text-base font-bold">
                 Ascendio

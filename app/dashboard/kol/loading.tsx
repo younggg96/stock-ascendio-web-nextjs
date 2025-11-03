@@ -3,75 +3,100 @@
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import SectionCard from "@/components/SectionCard";
+import { Star, TrendingUp } from "lucide-react";
 
 export default function KOLTrackerLoading() {
   return (
-    <div className="flex h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-white font-display transition-colors duration-300 overflow-hidden">
+    <div className="flex h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-white font-display transition-colors duration-300">
       <Sidebar isOpen={false} onClose={() => {}} />
 
       <main className="flex-1 flex flex-col min-w-0">
         <Header title="KOL Tracker" onMenuClick={() => {}} />
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-2 space-y-2">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
-              {/* My Tracked KOLs Skeleton */}
-              <SectionCard
-                title="My Tracked KOLs"
-                useSectionHeader
-                sectionHeaderSubtitle="Manage and track your selected KOLs"
-              >
-                <div className="px-4 pb-4 space-y-3">
-                  {Array.from({ length: 3 }).map((_, i) => (
+        <div className="flex-1 p-2 overflow-y-auto">
+          <div className="space-y-2">
+            {/* Unified KOL Section with Tab Switcher Skeleton */}
+            <SectionCard
+              useSectionHeader
+              headerExtra={
+                <div className="flex gap-2">
+                  {/* Tab Skeleton */}
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-200 dark:bg-white/10">
+                    <TrendingUp className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                    <div className="h-3 bg-gray-300 dark:bg-white/20 rounded w-20 animate-pulse"></div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-white/5">
+                    <Star className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                    <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-20 animate-pulse"></div>
+                  </div>
+                </div>
+              }
+            >
+              <div className="px-4 pb-4 space-y-3">
+                {/* Platform Filter Skeleton */}
+                <div className="flex gap-2 mb-3">
+                  {["All", "X", "Reddit", "Rednote", "YouTube"].map((label) => (
                     <div
-                      key={i}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-card-dark"
+                      key={label}
+                      className="h-8 bg-gray-200 dark:bg-white/10 rounded px-3 py-1.5 animate-pulse"
                     >
-                      {/* Avatar */}
-                      <div className="w-10 h-10 bg-gray-300 dark:bg-white/10 rounded-full animate-pulse flex-shrink-0"></div>
-                      {/* Info */}
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-300 dark:bg-white/10 rounded w-24 animate-pulse"></div>
-                        <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-32 animate-pulse"></div>
-                      </div>
-                      {/* Actions */}
-                      <div className="flex gap-2">
-                        <div className="w-8 h-8 bg-gray-300 dark:bg-white/10 rounded animate-pulse"></div>
-                        <div className="w-8 h-8 bg-gray-300 dark:bg-white/10 rounded animate-pulse"></div>
-                      </div>
+                      <div className="h-3 w-12 bg-gray-300 dark:bg-white/20 rounded"></div>
                     </div>
                   ))}
                 </div>
-              </SectionCard>
 
-              {/* Top KOL Ranking Skeleton */}
-              <SectionCard
-                title="Top KOL Ranking"
-                useSectionHeader
-                sectionHeaderSubtitle="Discover top-ranked KOLs across all platforms"
-              >
-                <div className="px-4 pb-4 space-y-2">
-                  {Array.from({ length: 5 }).map((_, i) => (
+                {/* Table Skeleton */}
+                <div className="border border-border-light dark:border-border-dark rounded-lg overflow-hidden">
+                  {/* Table Header */}
+                  <div className="bg-gray-50 dark:bg-white/5 border-b border-border-light dark:border-border-dark">
+                    <div className="flex items-center px-4 py-3 gap-4">
+                      <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-12 animate-pulse"></div>
+                      <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-24 animate-pulse"></div>
+                      <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-20 animate-pulse"></div>
+                      <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-20 animate-pulse"></div>
+                      <div className="flex-1"></div>
+                      <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-12 animate-pulse"></div>
+                    </div>
+                  </div>
+
+                  {/* Table Rows */}
+                  {Array.from({ length: 8 }).map((_, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                      className="border-b border-border-light dark:border-border-dark last:border-b-0"
                     >
-                      {/* Rank */}
-                      <div className="w-6 h-6 bg-gray-300 dark:bg-white/10 rounded animate-pulse flex-shrink-0"></div>
-                      {/* Avatar */}
-                      <div className="w-9 h-9 bg-gray-300 dark:bg-white/10 rounded-full animate-pulse flex-shrink-0"></div>
-                      {/* Info */}
-                      <div className="flex-1 space-y-1.5">
-                        <div className="h-3.5 bg-gray-300 dark:bg-white/10 rounded w-28 animate-pulse"></div>
-                        <div className="h-2.5 bg-gray-300 dark:bg-white/10 rounded w-20 animate-pulse"></div>
+                      <div className="flex items-center px-4 py-3 gap-4">
+                        {/* Rank */}
+                        <div className="w-6 h-6 bg-gray-300 dark:bg-white/10 rounded-full animate-pulse flex-shrink-0"></div>
+
+                        {/* Name & Username */}
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-3.5 bg-gray-300 dark:bg-white/10 rounded w-28 animate-pulse"></div>
+                          <div className="h-2.5 bg-gray-300 dark:bg-white/10 rounded w-20 animate-pulse"></div>
+                        </div>
+
+                        {/* Platform */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-4 h-4 bg-gray-300 dark:bg-white/10 rounded animate-pulse"></div>
+                          <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-12 animate-pulse"></div>
+                        </div>
+
+                        {/* Followers */}
+                        <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-16 animate-pulse"></div>
+
+                        {/* Description (hidden on mobile) */}
+                        <div className="hidden md:block flex-1 max-w-[200px]">
+                          <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-full animate-pulse"></div>
+                        </div>
+
+                        {/* Action Button */}
+                        <div className="w-8 h-8 bg-gray-300 dark:bg-white/10 rounded animate-pulse"></div>
                       </div>
-                      {/* Score */}
-                      <div className="h-6 bg-gray-300 dark:bg-white/10 rounded-full w-12 animate-pulse"></div>
                     </div>
                   ))}
                 </div>
-              </SectionCard>
-            </div>
+              </div>
+            </SectionCard>
           </div>
         </div>
       </main>

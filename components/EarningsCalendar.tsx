@@ -789,7 +789,7 @@ export default function EarningsCalendar({
 
       {/* Modal 显示选中日期的所有财报 */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="w-[95vw] lg:w-[80vw] max-w-[95vw] h-fit max-h-[85vh] !p-0 !gap-0">
+        <DialogContent className="w-[95vw] lg:w-[95vw] xl:w-[80vw] !max-w-[95vw] h-fit max-h-[85vh] !p-0 !gap-0">
           <DialogHeader className="px-6 py-4 border-b border-gray-200 dark:border-white/10">
             <DialogTitle>
               {selectedDate && formatEarningsDate(selectedDate)}

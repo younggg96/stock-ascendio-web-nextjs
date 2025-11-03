@@ -25,7 +25,7 @@ interface CompanyLogoProps {
   bgColor?: string;
   /** Text color for fallback */
   textColor?: string;
-  /** Whether to use unoptimized image loading */
+  /** Whether to use unoptimized image loading (默认false以启用缓存优化) */
   unoptimized?: boolean;
   /** Additional container classes */
   className?: string;
@@ -135,6 +135,9 @@ export default function CompanyLogo({
           className={cn("object-contain w-full h-full", imageClassName)}
           unoptimized={unoptimized}
           onError={() => setHasError(true)}
+          priority={false}
+          loading="lazy"
+          quality={85}
         />
       ) : (
         <span
