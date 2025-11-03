@@ -126,7 +126,7 @@ export type BillingCycle = "MONTHLY" | "YEARLY";
 export type NotificationMethod = "EMAIL" | "MESSAGE";
 export type PaymentMethod = "CREDIT_CARD" | "PAYPAL" | "ALIPAY" | "WECHAT";
 export type PaymentMethodType = "CREDIT_CARD" | "PAYPAL" | "ALIPAY" | "WECHAT";
-export type Platform = "TWITTER" | "YOUTUBE" | "XIAOHONGSHU" | "REDDIT";
+export type Platform = "TWITTER" | "YOUTUBE" | "REDNOTE" | "REDDIT";
 export type Theme = "LIGHT" | "DARK" | "SYSTEM";
 
 // Helper types

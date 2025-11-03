@@ -9,46 +9,36 @@ import { useAuth } from "@/hooks";
 interface PostActionsProps {
   postId: string;
   postUrl: string;
+  liked?: boolean;
+  favorited?: boolean;
   likesCount?: number;
+  favoritesCount?: number;
 }
 
 export default function PostActions({
   postId,
   postUrl,
+  liked: initialLiked = false,
+  favorited: initialFavorited = false,
   likesCount = 0,
+  favoritesCount = 0,
 }: PostActionsProps) {
   const { user } = useAuth();
-  const [liked, setLiked] = useState(false);
-  const [favorited, setFavorited] = useState(false);
+  const [liked, setLiked] = useState(initialLiked);
+  const [favorited, setFavorited] = useState(initialFavorited);
   const [isLiking, setIsLiking] = useState(false);
   const [isFavoriting, setIsFavoriting] = useState(false);
   const [localLikesCount, setLocalLikesCount] = useState(likesCount);
+  const [localFavoritesCount, setLocalFavoritesCount] =
+    useState(favoritesCount);
 
-  // Check if post is already liked/favorited
+  // Update state when props change
   useEffect(() => {
-    if (!user) return;
-
-    const checkStatus = async () => {
-      try {
-        // Check like status
-        // const likeRes = await fetch(`/api/posts/like?postId=${postId}`);
-        // if (likeRes.ok) {
-        //   const likeData = await likeRes.json();
-        //   setLiked(likeData.liked);
-        // }
-        // Check favorite status
-        // const favRes = await fetch(`/api/posts/favorite?postId=${postId}`);
-        // if (favRes.ok) {
-        //   const favData = await favRes.json();
-        //   setFavorited(favData.favorited);
-        // }
-      } catch (error) {
-        console.error("Error checking post status:", error);
-      }
-    };
-
-    checkStatus();
-  }, [postId, user]);
+    setLiked(initialLiked);
+    setFavorited(initialFavorited);
+    setLocalLikesCount(likesCount);
+    setLocalFavoritesCount(favoritesCount);
+  }, [initialLiked, initialFavorited, likesCount, favoritesCount]);
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -116,6 +106,7 @@ export default function PostActions({
         if (!response.ok) throw new Error("Failed to unfavorite");
 
         setFavorited(false);
+        setLocalFavoritesCount((prev) => Math.max(0, prev - 1));
         toast.success("Removed from favorites");
       } else {
         // Favorite
@@ -128,6 +119,7 @@ export default function PostActions({
         if (!response.ok) throw new Error("Failed to favorite");
 
         setFavorited(true);
+        setLocalFavoritesCount((prev) => prev + 1);
         toast.success("Added to favorites");
       }
     } catch (error) {
@@ -165,7 +157,7 @@ export default function PostActions({
       {/* Like Button */}
       <Button
         variant="ghost"
-        size="sm"
+        size="xs"
         onClick={handleLike}
         disabled={isLiking}
         className={`h-7 gap-1.5 text-xs ${
@@ -181,7 +173,7 @@ export default function PostActions({
       {/* Favorite Button */}
       <Button
         variant="ghost"
-        size="sm"
+        size="xs"
         onClick={handleFavorite}
         disabled={isFavoriting}
         className={`h-7 gap-1.5 text-xs ${
@@ -193,12 +185,13 @@ export default function PostActions({
         <Bookmark
           className={`w-3.5 h-3.5 ${favorited ? "fill-current" : ""}`}
         />
+        <span>{localFavoritesCount > 0 ? localFavoritesCount : ""}</span>
       </Button>
 
       {/* Share Button */}
       <Button
         variant="ghost"
-        size="sm"
+        size="xs"
         onClick={handleShare}
         className="h-7 gap-1.5 text-xs text-gray-600 dark:text-white/60 hover:text-primary dark:hover:text-primary"
       >

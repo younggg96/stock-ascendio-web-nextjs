@@ -14,21 +14,23 @@ import ExpandableText from "../ExpandableText";
 import AIAnalysis from "../AIAnalysis";
 import Tags from "../Tags";
 import PostActions from "../PostActions";
-import { XiaohongshuContentProps } from "./types";
+import { RednoteContentProps } from "./types";
 
-export default function XiaohongshuContent({
-  title,
+export default function RednoteContent({
   fullText,
   url,
   id,
-  mediaUrls,
   aiSummary,
   aiAnalysis,
   aiTags,
   sentiment,
   onFormatText,
   likesCount,
-}: XiaohongshuContentProps) {
+  userLiked,
+  userFavorited,
+  totalLikes,
+  totalFavorites,
+}: RednoteContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const summary = aiSummary || "";
@@ -61,9 +63,16 @@ export default function XiaohongshuContent({
       </div>
 
       {/* Post Actions */}
-      <PostActions postId={id} postUrl={url} likesCount={likesCount} />
+      <PostActions
+        postId={id}
+        postUrl={url}
+        liked={userLiked}
+        favorited={userFavorited}
+        likesCount={totalLikes || likesCount}
+        favoritesCount={totalFavorites}
+      />
 
-      {/* Xiaohongshu Modal */}
+      {/* Rednote Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-[600px] w-[95vw] max-h-[90vh] overflow-hidden p-0 bg-white dark:bg-card-dark rounded-2xl">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700">

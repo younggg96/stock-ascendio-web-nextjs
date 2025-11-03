@@ -16,6 +16,11 @@ export interface YouTubeVideo {
   ai_sentiment: "negative" | "neutral" | "positive" | string | null;
   ai_tags: string[] | null;
   is_market_related: boolean | null;
+  // User interaction data
+  user_liked?: boolean;
+  user_favorited?: boolean;
+  total_likes?: number;
+  total_favorites?: number;
   // Legacy fields for backward compatibility
   video_id?: string;
   channel_id?: string;
@@ -46,6 +51,11 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServerSupabaseClient();
 
+    // Get current user (may be null if not authenticated)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     // Build query
     let query = supabase
       .from("social_posts")
@@ -70,6 +80,65 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch YouTube videos: ${error.message}`);
     }
 
+    // Get post IDs for batch queries
+    const postIds = (data || []).map((post) => post.post_id);
+
+    // Batch query for likes and favorites counts
+    const [likesCountResult, favoritesCountResult] = await Promise.all([
+      supabase
+        .from("user_post_likes")
+        .select("post_id", { count: "exact", head: false })
+        .in("post_id", postIds),
+      supabase
+        .from("user_post_favorites")
+        .select("post_id", { count: "exact", head: false })
+        .in("post_id", postIds),
+    ]);
+
+    // Get user's likes and favorites if authenticated
+    let userLikes: Set<string> = new Set();
+    let userFavorites: Set<string> = new Set();
+
+    if (user) {
+      const [userLikesResult, userFavoritesResult] = await Promise.all([
+        supabase
+          .from("user_post_likes")
+          .select("post_id")
+          .eq("user_id", user.id)
+          .in("post_id", postIds),
+        supabase
+          .from("user_post_favorites")
+          .select("post_id")
+          .eq("user_id", user.id)
+          .in("post_id", postIds),
+      ]);
+
+      userLikes = new Set(
+        (userLikesResult.data || []).map((item) => item.post_id)
+      );
+      userFavorites = new Set(
+        (userFavoritesResult.data || []).map((item) => item.post_id)
+      );
+    }
+
+    // Count likes and favorites per post
+    const likesCountMap = new Map<string, number>();
+    const favoritesCountMap = new Map<string, number>();
+
+    (likesCountResult.data || []).forEach((item) => {
+      likesCountMap.set(
+        item.post_id,
+        (likesCountMap.get(item.post_id) || 0) + 1
+      );
+    });
+
+    (favoritesCountResult.data || []).forEach((item) => {
+      favoritesCountMap.set(
+        item.post_id,
+        (favoritesCountMap.get(item.post_id) || 0) + 1
+      );
+    });
+
     // Transform data to match expected format
     const videos: YouTubeVideo[] = (data || []).map((post) => ({
       ...post,
@@ -78,14 +147,19 @@ export async function GET(request: NextRequest) {
       channel_id: post.creator_id,
       channel_name: post.creator_name,
       channel_avatar_url: post.creator_avatar_url || "",
-      title: post.content.split("\n")[0] || "",
+      title: post.title || post.content.split("\n")[0] || "",
       description: post.content,
-      view_count: 0,
+      view_count: post.platform_metadata?.view_count || 0,
       like_count: post.likes_count || 0,
-      comment_count: 0,
+      comment_count: post.comments_count || 0,
       video_url: post.content_url,
       thumbnail_url: post.media_urls?.[0] || "",
-      duration: "0:00",
+      duration: post.platform_metadata?.duration_seconds?.toString() || "0",
+      // Add user interaction data
+      user_liked: userLikes.has(post.post_id),
+      user_favorited: userFavorites.has(post.post_id),
+      total_likes: likesCountMap.get(post.post_id) || 0,
+      total_favorites: favoritesCountMap.get(post.post_id) || 0,
     }));
 
     const response: YouTubeVideosResponse = {

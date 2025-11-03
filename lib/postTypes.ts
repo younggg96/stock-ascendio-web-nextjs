@@ -20,6 +20,11 @@ export interface UnifiedPost {
   aiTags: string[];
   sentiment: "bullish" | "bearish" | "neutral";
   isMarketRelated: boolean;
+  // User interaction data
+  userLiked?: boolean;
+  userFavorited?: boolean;
+  totalLikes?: number;
+  totalFavorites?: number;
   // Platform-specific data
   platformData?: {
     // For Reddit
@@ -60,7 +65,7 @@ function mapSentiment(apiSentiment: string): "bullish" | "bearish" | "neutral" {
 // Conversion functions
 export function tweetToUnifiedPost(tweet: any): UnifiedPost {
   return {
-    id: tweet.tweet_id,
+    id: tweet.post_id,
     platform: "x",
     author: tweet.screen_name,
     authorId: tweet.user_id,
@@ -77,6 +82,10 @@ export function tweetToUnifiedPost(tweet: any): UnifiedPost {
     aiTags: tweet.ai_tags || [],
     sentiment: mapSentiment(tweet.ai_sentiment),
     isMarketRelated: tweet.is_market_related,
+    userLiked: tweet.user_liked,
+    userFavorited: tweet.user_favorited,
+    totalLikes: tweet.total_likes,
+    totalFavorites: tweet.total_favorites,
   };
 }
 
@@ -100,6 +109,10 @@ export function redditPostToUnifiedPost(post: any): UnifiedPost {
     aiTags: post.ai_tags || [],
     sentiment: mapSentiment(post.ai_sentiment),
     isMarketRelated: post.is_market_related,
+    userLiked: post.user_liked,
+    userFavorited: post.user_favorited,
+    totalLikes: post.total_likes,
+    totalFavorites: post.total_favorites,
     platformData: {
       subreddit: post.subreddit,
       score: post.score,
@@ -111,7 +124,7 @@ export function redditPostToUnifiedPost(post: any): UnifiedPost {
 
 export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
   return {
-    id: video.video_id,
+    id: video.post_id,
     platform: "youtube",
     author: video.channel_name,
     authorId: video.channel_id,
@@ -121,7 +134,7 @@ export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
     url: video.video_url,
     createdAt: video.published_at,
     likes: video.like_count,
-    comments: video.comment_count,
+    comments: video.comment_count || 0,
     mediaUrls: video.thumbnail_url ? [video.thumbnail_url] : [],
     videoUrl: video.video_url,
     aiSummary: video.ai_summary,
@@ -130,6 +143,10 @@ export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
     aiTags: video.ai_tags || [],
     sentiment: mapSentiment(video.ai_sentiment),
     isMarketRelated: video.is_market_related,
+    userLiked: video.user_liked,
+    userFavorited: video.user_favorited,
+    totalLikes: video.total_likes,
+    totalFavorites: video.total_favorites,
     platformData: {
       viewCount: video.view_count,
       likeCount: video.like_count,
@@ -143,9 +160,9 @@ export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
   };
 }
 
-export function xiaohongshuNoteToUnifiedPost(note: any): UnifiedPost {
+export function RednoteNoteToUnifiedPost(note: any): UnifiedPost {
   return {
-    id: note.note_id,
+    id: note.post_id,
     platform: "rednote",
     author: note.username,
     authorId: note.user_id,
@@ -155,7 +172,7 @@ export function xiaohongshuNoteToUnifiedPost(note: any): UnifiedPost {
     url: note.note_url,
     createdAt: note.created_at,
     likes: note.like_count,
-    comments: note.comment_count,
+    comments: note.comment_count || 0,
     shares: note.share_count,
     mediaUrls: note.image_urls || [],
     videoUrl: note.video_url,
@@ -165,5 +182,9 @@ export function xiaohongshuNoteToUnifiedPost(note: any): UnifiedPost {
     aiTags: note.ai_tags || [],
     sentiment: mapSentiment(note.ai_sentiment),
     isMarketRelated: note.is_market_related,
+    userLiked: note.user_liked,
+    userFavorited: note.user_favorited,
+    totalLikes: note.total_likes,
+    totalFavorites: note.total_favorites,
   };
 }

@@ -10,7 +10,7 @@ import {
   TwitterContent,
   RedditContent,
   YouTubeContent,
-  XiaohongshuContent,
+  RednoteContent,
 } from "./content";
 import Image from "next/image";
 import {
@@ -18,7 +18,7 @@ import {
   tweetToUnifiedPost,
   redditPostToUnifiedPost,
   youtubeVideoToUnifiedPost,
-  xiaohongshuNoteToUnifiedPost,
+  RednoteNoteToUnifiedPost,
 } from "@/lib/postTypes";
 import { SwitchTab } from "./ui/switch-tab";
 import { Button } from "./ui/button";
@@ -376,7 +376,7 @@ export default function PostList() {
       case "youtube":
         return data.videos?.map(youtubeVideoToUnifiedPost) || [];
       case "rednote":
-        return data.notes?.map(xiaohongshuNoteToUnifiedPost) || [];
+        return data.notes?.map(RednoteNoteToUnifiedPost) || [];
       default:
         return [];
     }
@@ -620,7 +620,7 @@ export default function PostList() {
                   title={post.title}
                   fullText={post.content}
                   url={post.url}
-                  id={post.id}
+                  id={post.id.split("_")[1]}
                   mediaUrls={post.mediaUrls}
                   aiSummary={post.aiSummary}
                   aiAnalysis={post.aiAnalysis}
@@ -628,6 +628,10 @@ export default function PostList() {
                   sentiment={post.sentiment}
                   onFormatText={formatTweetText}
                   likesCount={post.likes}
+                  userLiked={post.userLiked}
+                  userFavorited={post.userFavorited}
+                  totalLikes={post.totalLikes}
+                  totalFavorites={post.totalFavorites}
                 />
               );
             case "reddit":
@@ -648,6 +652,10 @@ export default function PostList() {
                   permalink={post.platformData?.permalink}
                   topComments={post.platformData?.topComments}
                   likesCount={post.likes}
+                  userLiked={post.userLiked}
+                  userFavorited={post.userFavorited}
+                  totalLikes={post.totalLikes}
+                  totalFavorites={post.totalFavorites}
                 />
               );
             case "youtube":
@@ -672,11 +680,15 @@ export default function PostList() {
                   channelThumbnailUrl={post.platformData?.channelThumbnailUrl}
                   publishedAt={post.platformData?.publishedAt}
                   likesCount={post.likes}
+                  userLiked={post.userLiked}
+                  userFavorited={post.userFavorited}
+                  totalLikes={post.totalLikes}
+                  totalFavorites={post.totalFavorites}
                 />
               );
             case "rednote":
               return (
-                <XiaohongshuContent
+                <RednoteContent
                   title={post.title}
                   fullText={post.content}
                   url={post.url}
@@ -688,6 +700,10 @@ export default function PostList() {
                   sentiment={post.sentiment}
                   onFormatText={formatTweetText}
                   likesCount={post.likes}
+                  userLiked={post.userLiked}
+                  userFavorited={post.userFavorited}
+                  totalLikes={post.totalLikes}
+                  totalFavorites={post.totalFavorites}
                 />
               );
             default:

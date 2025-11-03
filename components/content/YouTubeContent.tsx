@@ -42,10 +42,17 @@ export default function YouTubeContent({
   channelThumbnailUrl,
   publishedAt,
   likesCount,
+  userLiked,
+  userFavorited,
+  totalLikes,
+  totalFavorites,
 }: YouTubeContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const summary = aiSummary || "";
+
+  // Extract video ID from post_id (format: youtube_VIDEO_ID)
+  const videoId = id.startsWith("youtube_") ? id.substring(8) : id;
 
   // Format numbers with K/M suffix
   const formatNumber = (num?: number) => {
@@ -110,12 +117,6 @@ export default function YouTubeContent({
               <span>{formatNumber(commentCount)}</span>
             </div>
           )}
-          {duration && (
-            <div className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              <span>{formatDuration(duration)}</span>
-            </div>
-          )}
         </div>
 
         {/* Summary */}
@@ -147,12 +148,15 @@ export default function YouTubeContent({
       <PostActions
         postId={id}
         postUrl={url}
-        likesCount={likesCount || likeCount}
+        liked={userLiked}
+        favorited={userFavorited}
+        likesCount={totalLikes}
+        favoritesCount={totalFavorites}
       />
 
       {/* YouTube Embed Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-[600px] w-[95vw] max-h-[90vh] overflow-hidden p-0 bg-white dark:bg-card-dark rounded-2xl">
+        <DialogContent className="max-w-[600px] w-[95vw] h-fit max-h-[90vh] overflow-hidden !p-0 bg-white dark:bg-card-dark rounded-2xl">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700">
             <DialogTitle className="text-gray-900 dark:text-white">
               YouTube Video
@@ -160,7 +164,7 @@ export default function YouTubeContent({
           </DialogHeader>
           <div className="overflow-y-auto p-2 max-h-[calc(90vh-80px)] bg-white dark:bg-card-dark rounded-2xl">
             <iframe
-              src={`https://www.youtube.com/embed/${id}`}
+              src={`https://www.youtube.com/embed/${videoId}`}
               width="100%"
               height={500}
               frameBorder="0"

@@ -19,11 +19,10 @@ const nextConfig = {
       "i.ytimg.com",
       "yt3.ggpht.com",
       "img.youtube.com",
-      // Xiaohongshu (小红书)
+      // Rednote (小红书)
       "sns-img-qc.xhscdn.com",
       "sns-img-bd.xhscdn.com",
       "sns-img-hw.xhscdn.com",
-      "ci.xiaohongshu.com",
       "ci.rednote.com",
       "sns-avatar-qc.xhscdn.com",
       // Finnhub (Company Logos)
@@ -85,6 +84,21 @@ const nextConfig = {
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        // CSP for Twitter embeds
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value:
+              "frame-src 'self' https://platform.twitter.com https://x.com https://twitter.com https://www.youtube.com https://embed.reddit.com; " +
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://platform.twitter.com; " +
+              "style-src 'self' 'unsafe-inline' https://platform.twitter.com; " +
+              "img-src 'self' data: https: blob:; " +
+              "font-src 'self' data: https:;",
           },
         ],
       },

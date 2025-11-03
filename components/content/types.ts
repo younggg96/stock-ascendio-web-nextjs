@@ -20,6 +20,11 @@ export interface BaseContentProps {
   sentiment?: "bullish" | "bearish" | "neutral";
   onFormatText: (text: string) => React.ReactNode;
   likesCount?: number;
+  // User interaction data
+  userLiked?: boolean;
+  userFavorited?: boolean;
+  totalLikes?: number;
+  totalFavorites?: number;
 }
 
 export interface TwitterContentProps extends BaseContentProps {
@@ -44,6 +49,6 @@ export interface YouTubeContentProps extends BaseContentProps {
   publishedAt?: string;
 }
 
-export interface XiaohongshuContentProps extends BaseContentProps {
-  // Xiaohongshu-specific props can be added here
+export interface RednoteContentProps extends BaseContentProps {
+  // Rednote-specific props can be added here
 }

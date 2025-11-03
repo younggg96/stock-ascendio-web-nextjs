@@ -25,6 +25,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify post exists in social_posts table
+    const { data: postExists, error: postCheckError } = await supabase
+      .from("social_posts")
+      .select("post_id")
+      .eq("post_id", postId)
+      .single();
+
+    if (postCheckError || !postExists) {
+      console.error("Post not found:", postId, postCheckError);
+      return NextResponse.json(
+        { error: "Post not found", postId },
+        { status: 404 }
+      );
+    }
+
     // Insert like
     const { data, error } = await supabase
       .from("user_post_likes")

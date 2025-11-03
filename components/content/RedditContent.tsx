@@ -40,6 +40,10 @@ export default function RedditContent({
   permalink,
   topComments = [],
   likesCount,
+  userLiked,
+  userFavorited,
+  totalLikes,
+  totalFavorites,
 }: RedditContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { theme } = useTheme();
@@ -300,25 +304,31 @@ export default function RedditContent({
       </div>
 
       {/* Post Actions */}
-      <PostActions postId={id} postUrl={url} likesCount={likesCount || score} />
+      <PostActions
+        postId={id}
+        postUrl={url}
+        liked={userLiked}
+        favorited={userFavorited}
+        likesCount={totalLikes || likesCount || score}
+        favoritesCount={totalFavorites}
+      />
 
       {/* Reddit Embed Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-[600px] w-[95vw] max-h-[90vh] overflow-hidden p-0 bg-white dark:bg-card-dark rounded-2xl">
+        <DialogContent className="max-w-[600px] w-[95vw] h-fit max-h-[90vh] overflow-hidden !p-0 bg-white dark:bg-card-dark rounded-2xl">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700">
             <DialogTitle className="text-gray-900 dark:text-white">
-              {title}
+              Post Details
             </DialogTitle>
           </DialogHeader>
-          <div className="overflow-y-auto p-2 max-h-[calc(90vh-80px)] bg-white dark:bg-card-dark rounded-2xl">
+          <div className="overflow-y-auto p-2 h-fit max-h-[calc(90vh-80px)] bg-white dark:bg-card-dark rounded-2xl">
             <iframe
               key={theme}
               src={getEmbedUrl()}
               width="100%"
               height={600}
               frameBorder="0"
-              className="rounded-xl bg-white dark:bg-card-dark"
-              style={{ border: "none" }}
+              className="bg-white dark:bg-card-dark"
               sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
             />
           </div>
