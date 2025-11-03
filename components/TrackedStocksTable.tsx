@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useState, Fragment, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import CompanyLogo from "./CompanyLogo";
 import {
   Table,
@@ -33,6 +34,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { useMultipleQuotes } from "@/hooks/useStockData";
 
 interface TrackedStocksTableProps {
   stocks: TrackedStock[];
@@ -43,8 +45,28 @@ export default function TrackedStocksTable({
   stocks,
   onUpdate,
 }: TrackedStocksTableProps) {
+  const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedStock, setExpandedStock] = useState<string | null>(null);
+
+  // Get all stock symbols
+  const symbols = useMemo(() => stocks.map((stock) => stock.symbol), [stocks]);
+
+  // Fetch real-time quotes for all tracked stocks
+  const {
+    data: realtimeQuotes,
+    loading: quotesLoading,
+    error: quotesError,
+  } = useMultipleQuotes(symbols, 30000); // Refresh every 30 seconds
+
+  // Create a map for quick lookup
+  const quotesMap = useMemo(() => {
+    const map = new Map();
+    realtimeQuotes.forEach((quote) => {
+      map.set(quote.symbol, quote);
+    });
+    return map;
+  }, [realtimeQuotes]);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -61,6 +83,15 @@ export default function TrackedStocksTable({
     } finally {
       setDeletingId(null);
     }
+  };
+
+  // Navigate to stock detail page
+  const handleStockClick = (symbol: string, e: React.MouseEvent) => {
+    // Don't navigate if clicking on delete button
+    if ((e.target as HTMLElement).closest("button")) {
+      return;
+    }
+    router.push(`/dashboard/stock/${symbol}`);
   };
 
   // Toggle expanded row
@@ -86,10 +117,18 @@ export default function TrackedStocksTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[200px]">Stock</TableHead>
-            <TableHead className="text-right">Price</TableHead>
+            <TableHead className="text-right">
+              Price
+              {quotesLoading && realtimeQuotes.length > 0 && (
+                <span className="ml-2 text-[10px] text-gray-400">
+                  Updating...
+                </span>
+              )}
+            </TableHead>
             <TableHead className="text-right">Change</TableHead>
             <TableHead className="text-right">Sentiment</TableHead>
             <TableHead className="text-center">KOLs</TableHead>
+            <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -98,14 +137,17 @@ export default function TrackedStocksTable({
             const overallSentiment = getOverallSentiment(stock.opinions);
             const sentimentStyle = sentimentConfig[overallSentiment];
 
+            // Get real-time quote for this stock
+            const realtimeQuote = quotesMap.get(stock.symbol);
+
             return (
               <Fragment key={stock.id}>
                 {/* Main Row */}
                 <TableRow
                   className={`${
                     !stock.isTracking ? "opacity-50" : ""
-                  } cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5`}
-                  onClick={() => toggleExpanded(stock.id)}
+                  } cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors`}
+                  onClick={(e) => handleStockClick(stock.symbol, e)}
                 >
                   {/* Stock */}
                   <TableCell>
@@ -136,9 +178,15 @@ export default function TrackedStocksTable({
                     </div>
                   </TableCell>
 
-                  {/* Price */}
+                  {/* Price - Use real-time data if available */}
                   <TableCell className="text-right">
-                    {stock.currentPrice !== undefined ? (
+                    {realtimeQuote ? (
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                        ${realtimeQuote.price.toFixed(2)}
+                      </span>
+                    ) : quotesLoading ? (
+                      <div className="w-16 h-4 bg-gray-200 dark:bg-white/10 rounded animate-pulse ml-auto"></div>
+                    ) : stock.currentPrice !== undefined ? (
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
                         {formatPrice(stock.currentPrice)}
                       </span>
@@ -147,9 +195,27 @@ export default function TrackedStocksTable({
                     )}
                   </TableCell>
 
-                  {/* Change */}
+                  {/* Change - Use real-time data if available */}
                   <TableCell className="text-right">
-                    {stock.changePercent !== undefined ? (
+                    {realtimeQuote ? (
+                      <div
+                        className={`inline-flex items-center gap-0.5 text-xs font-medium ${
+                          realtimeQuote.change >= 0
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        {realtimeQuote.change >= 0 ? (
+                          <TrendingUp className="w-3 h-3" />
+                        ) : (
+                          <TrendingDown className="w-3 h-3" />
+                        )}
+                        {realtimeQuote.change >= 0 ? "+" : ""}
+                        {realtimeQuote.changePercent.toFixed(2)}%
+                      </div>
+                    ) : quotesLoading ? (
+                      <div className="w-12 h-4 bg-gray-200 dark:bg-white/10 rounded animate-pulse ml-auto"></div>
+                    ) : stock.changePercent !== undefined ? (
                       <div
                         className={`inline-flex items-center gap-0.5 text-xs font-medium ${
                           stock.changePercent >= 0
@@ -214,6 +280,19 @@ export default function TrackedStocksTable({
                     ) : (
                       <span className="text-xs text-gray-400">0</span>
                     )}
+                  </TableCell>
+
+                  {/* Actions */}
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDelete(stock.id, e)}
+                      disabled={deletingId === stock.id}
+                      className="h-7 w-7 p-0 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               </Fragment>

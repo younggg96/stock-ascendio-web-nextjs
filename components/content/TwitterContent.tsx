@@ -13,6 +13,7 @@ import {
 import ContentWithModal from "../ContentWithModal";
 import AIAnalysis from "../AIAnalysis";
 import Tags from "../Tags";
+import PostActions from "../PostActions";
 import { TwitterContentProps } from "./types";
 
 export default function TwitterContent({
@@ -25,6 +26,7 @@ export default function TwitterContent({
   aiTags,
   sentiment,
   onFormatText,
+  likesCount,
 }: TwitterContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { theme } = useTheme();
@@ -68,6 +70,9 @@ export default function TwitterContent({
         {/* AI Analysis */}
         <AIAnalysis aiAnalysis={aiAnalysis} sentiment={sentiment} />
       </div>
+
+      {/* Post Actions */}
+      <PostActions postId={id} postUrl={url} likesCount={likesCount} />
 
       {/* Twitter Embed Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

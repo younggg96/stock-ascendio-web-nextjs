@@ -19,6 +19,7 @@ import ContentWithModal from "../ContentWithModal";
 import ExpandableText from "../ExpandableText";
 import AIAnalysis from "../AIAnalysis";
 import Tags from "../Tags";
+import PostActions from "../PostActions";
 import { YouTubeContentProps } from "./types";
 
 export default function YouTubeContent({
@@ -40,6 +41,7 @@ export default function YouTubeContent({
   channelName,
   channelThumbnailUrl,
   publishedAt,
+  likesCount,
 }: YouTubeContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -140,6 +142,13 @@ export default function YouTubeContent({
         {/* AI Analysis */}
         <AIAnalysis aiAnalysis={aiAnalysis} sentiment={sentiment} />
       </div>
+
+      {/* Post Actions */}
+      <PostActions
+        postId={id}
+        postUrl={url}
+        likesCount={likesCount || likeCount}
+      />
 
       {/* YouTube Embed Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

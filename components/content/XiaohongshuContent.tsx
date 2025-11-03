@@ -13,6 +13,7 @@ import ContentWithModal from "../ContentWithModal";
 import ExpandableText from "../ExpandableText";
 import AIAnalysis from "../AIAnalysis";
 import Tags from "../Tags";
+import PostActions from "../PostActions";
 import { XiaohongshuContentProps } from "./types";
 
 export default function XiaohongshuContent({
@@ -26,6 +27,7 @@ export default function XiaohongshuContent({
   aiTags,
   sentiment,
   onFormatText,
+  likesCount,
 }: XiaohongshuContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -57,6 +59,9 @@ export default function XiaohongshuContent({
         {/* AI Analysis */}
         <AIAnalysis aiAnalysis={aiAnalysis} sentiment={sentiment} />
       </div>
+
+      {/* Post Actions */}
+      <PostActions postId={id} postUrl={url} likesCount={likesCount} />
 
       {/* Xiaohongshu Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

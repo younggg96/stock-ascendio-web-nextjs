@@ -19,6 +19,7 @@ export interface BaseContentProps {
   aiTags?: string[];
   sentiment?: "bullish" | "bearish" | "neutral";
   onFormatText: (text: string) => React.ReactNode;
+  likesCount?: number;
 }
 
 export interface TwitterContentProps extends BaseContentProps {

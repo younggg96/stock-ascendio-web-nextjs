@@ -528,6 +528,7 @@ export default function PostList() {
       scrollable
       contentClassName="space-y-0 px-4 pb-0 mt-2"
       onScroll={handleScroll}
+      className="h-full flex flex-col"
       headerExtra={
         <div className="flex flex-col gap-2">
           <SwitchTab
@@ -576,6 +577,7 @@ export default function PostList() {
           />
         </div>
       }
+      headerClassName="!pb-0"
     >
       {isLoading &&
         [...Array(10)].map((_, i) => <CardSkeleton key={i} lines={10} />)}
@@ -625,6 +627,7 @@ export default function PostList() {
                   aiTags={post.aiTags}
                   sentiment={post.sentiment}
                   onFormatText={formatTweetText}
+                  likesCount={post.likes}
                 />
               );
             case "reddit":
@@ -644,6 +647,7 @@ export default function PostList() {
                   score={post.platformData?.score}
                   permalink={post.platformData?.permalink}
                   topComments={post.platformData?.topComments}
+                  likesCount={post.likes}
                 />
               );
             case "youtube":
@@ -667,6 +671,7 @@ export default function PostList() {
                   channelName={post.platformData?.channelName}
                   channelThumbnailUrl={post.platformData?.channelThumbnailUrl}
                   publishedAt={post.platformData?.publishedAt}
+                  likesCount={post.likes}
                 />
               );
             case "rednote":
@@ -682,6 +687,7 @@ export default function PostList() {
                   aiTags={post.aiTags}
                   sentiment={post.sentiment}
                   onFormatText={formatTweetText}
+                  likesCount={post.likes}
                 />
               );
             default:

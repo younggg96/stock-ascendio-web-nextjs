@@ -20,6 +20,7 @@ export interface MarketIndex {
   value: string;
   change: number;
   changePercent: number;
+  chartData?: number[];
 }
 
 export interface ChartData {
@@ -239,14 +240,22 @@ export async function fetchMultipleQuotes(
 }
 
 /**
- * Fetch market indices
+ * Fetch market indices with chart data
  * Returns only successfully fetched indices, skips failed ones
  */
 export async function fetchMarketIndices(): Promise<MarketIndex[]> {
   const indices = Object.entries(INDEX_SYMBOLS);
   const promises = indices.map(async ([name, symbol]) => {
     try {
-      const quote = await fetchStockQuote(symbol);
+      // Fetch both quote and intraday chart data
+      const [quote, chartData] = await Promise.all([
+        fetchStockQuote(symbol),
+        fetchChartData(symbol, "15m", "1d").catch(() => []),
+      ]);
+
+      // Extract prices for sparkline (last 20 points)
+      const prices = chartData.slice(-20).map((d) => d.value);
+
       return {
         name,
         value: quote.price.toLocaleString("en-US", {
@@ -255,6 +264,7 @@ export async function fetchMarketIndices(): Promise<MarketIndex[]> {
         }),
         change: quote.change,
         changePercent: quote.changePercent,
+        chartData: prices.length > 0 ? prices : undefined,
       };
     } catch (error) {
       console.error(`Failed to fetch index ${name}:`, error);

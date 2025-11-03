@@ -10,6 +10,7 @@ interface SectionCardProps {
   headerExtra?: ReactNode;
   headerRightExtra?: ReactNode;
   headerBorder?: boolean;
+  headerClassName?: string;
 
   // SectionHeader props (optional, 使用这些会替换默认的简单 header)
   useSectionHeader?: boolean;
@@ -34,6 +35,7 @@ export default function SectionCard({
   titleSize = "md",
   icon,
   showLiveIndicator = false,
+  headerClassName = "",
   headerExtra,
   headerRightExtra,
   headerBorder = false,
@@ -75,7 +77,7 @@ export default function SectionCard({
     >
       {/* Header */}
       {useSectionHeader && sectionHeaderIcon ? (
-        <div className={headerPaddingClasses[padding]}>
+        <div className={`${headerPaddingClasses[padding]} ${headerClassName}`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
             <div className="flex items-start gap-2">
               <div className="w-7 h-7 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -102,7 +104,7 @@ export default function SectionCard({
         </div>
       ) : (
         <div
-          className={`flex items-center justify-between ${
+          className={`flex items-center justify-between ${headerClassName} ${
             headerBorder
               ? `border-b border-border-light dark:border-border-dark ${headerBottomClasses.withBorder}`
               : headerBottomClasses.withoutBorder

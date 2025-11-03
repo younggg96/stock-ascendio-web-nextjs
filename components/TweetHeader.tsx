@@ -44,25 +44,26 @@ export default function TweetHeader({
           {screenName.substring(0, 2).toUpperCase()}
         </div>
       )}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 flex items-center gap-3">
         <p className="font-bold text-sm text-gray-900 dark:text-white">
           {screenName}{" "}
-          <span className="text-white/50 font-normal">
+          <span className="text-gray-500 dark:text-white/50 font-normal">
             @{screenName.toLowerCase()} · {onFormatDate(createdAt)}
           </span>
         </p>
+        <Button
+          variant={isTracked ? "default" : "outline"}
+          size="xs"
+          onClick={handleTrackToggle}
+          className={
+            isTracked
+              ? "bg-primary hover:bg-primary/30 text-gray-300 text-grey-300 dark:text-white"
+              : "border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-white/50"
+          }
+        >
+          {isTracked ? "Tracked" : "Track"}
+        </Button>
       </div>
-      <Button
-        variant={isTracked ? "default" : "outline"}
-        size="xs"
-        onClick={handleTrackToggle}
-        className={isTracked ? 
-          "bg-primary/40 hover:bg-primary/30 text-gray-300" : 
-          "border-gray-300 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/10"
-        }
-      >
-        {isTracked ? "Tracked" : "Track"}
-      </Button>
     </div>
   );
 }
