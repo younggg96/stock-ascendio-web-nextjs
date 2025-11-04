@@ -41,7 +41,7 @@ export default function SectionCard({
   headerExtra,
   headerRightExtra,
   headerBorder = false,
-  useSectionHeader = false,
+  useSectionHeader = true,
   sectionHeaderIcon,
   sectionHeaderSubtitle,
   sectionHeaderAction,
@@ -79,74 +79,77 @@ export default function SectionCard({
       } ${className}`}
     >
       {/* Header */}
-      {useSectionHeader && sectionHeaderIcon ? (
-        <div className={`${headerPaddingClasses[padding]} ${headerClassName}`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
-            <div className="flex items-start gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
-                {(() => {
-                  const Icon = sectionHeaderIcon;
-                  return <Icon className="w-3.5 h-3.5 text-primary" />;
-                })()}
+      {useSectionHeader &&
+        (sectionHeaderIcon ? (
+          <div
+            className={`${headerPaddingClasses[padding]} ${headerClassName}`}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+              <div className="flex items-start gap-2">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  {(() => {
+                    const Icon = sectionHeaderIcon;
+                    return <Icon className="w-3.5 h-3.5 text-primary" />;
+                  })()}
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
+                    {title}
+                  </h3>
+                  {sectionHeaderSubtitle && (
+                    <p className="text-[11px] sm:text-xs text-gray-600 dark:text-white/60">
+                      {sectionHeaderSubtitle}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
-                  {title}
-                </h3>
-                {sectionHeaderSubtitle && (
-                  <p className="text-[11px] sm:text-xs text-gray-600 dark:text-white/60">
-                    {sectionHeaderSubtitle}
-                  </p>
-                )}
-              </div>
+              {sectionHeaderAction && (
+                <div className="w-full sm:w-auto">{sectionHeaderAction}</div>
+              )}
             </div>
-            {sectionHeaderAction && (
-              <div className="w-full sm:w-auto">{sectionHeaderAction}</div>
-            )}
           </div>
-        </div>
-      ) : (
-        <div
-          className={`flex items-center justify-between ${headerClassName} ${
-            headerBorder
-              ? `border-b border-border-light dark:border-border-dark ${headerBottomClasses.withBorder}`
-              : headerBottomClasses.withoutBorder
-          } ${headerPaddingClasses[padding]}`}
-        >
-          <div className="flex items-center gap-2">
-            {icon && icon}
-            {title && (
-              <h2
-                className={`${titleSizeClasses[titleSize]} font-bold text-gray-900 dark:text-white`}
-              >
-                {title}
-              </h2>
-            )}
-            {headerExtra && (
-              <div className="w-full sm:w-auto">{headerExtra}</div>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            {headerRightExtra && (
-              <div className="w-full sm:w-auto">{headerRightExtra}</div>
-            )}
-            {showLiveIndicator && (
-              <span
-                className={cn(
-                  liveIndicatorClassName,
-                  "text-primary text-xs font-bold flex items-center gap-1"
-                )}
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+        ) : (
+          <div
+            className={`flex items-center justify-between ${headerClassName} ${
+              headerBorder
+                ? `border-b border-border-light dark:border-border-dark ${headerBottomClasses.withBorder}`
+                : headerBottomClasses.withoutBorder
+            } ${headerPaddingClasses[padding]}`}
+          >
+            <div className="flex items-center gap-2">
+              {icon && icon}
+              {title && (
+                <h2
+                  className={`${titleSizeClasses[titleSize]} font-bold text-gray-900 dark:text-white`}
+                >
+                  {title}
+                </h2>
+              )}
+              {headerExtra && (
+                <div className="w-full sm:w-auto">{headerExtra}</div>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              {headerRightExtra && (
+                <div className="w-full sm:w-auto">{headerRightExtra}</div>
+              )}
+              {showLiveIndicator && (
+                <span
+                  className={cn(
+                    liveIndicatorClassName,
+                    "text-primary text-xs font-bold flex items-center gap-1"
+                  )}
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                  </span>
+                  LIVE
                 </span>
-                LIVE
-              </span>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        ))}
 
       {/* Content */}
       {scrollable ? (

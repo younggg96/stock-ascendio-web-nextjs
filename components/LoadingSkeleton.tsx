@@ -107,3 +107,33 @@ export function SkeletonGrid({ count, children }: SkeletonGridProps) {
     </>
   );
 }
+
+// 个人信息骨架屏
+export function ProfileInfoSkeleton() {
+  return (
+    <div className="space-y-4 px-4 pb-4 animate-pulse">
+      {/* Avatar Skeleton */}
+      <div className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-300 dark:bg-white/10"></div>
+      </div>
+
+      {/* Email Skeleton */}
+      <div className="space-y-1.5">
+        <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-24 mb-2"></div>
+        <div className="h-9 bg-gray-200 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10"></div>
+      </div>
+
+      {/* Username Skeleton */}
+      <div className="space-y-1.5">
+        <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-20 mb-2"></div>
+        <div className="h-9 bg-gray-200 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10"></div>
+      </div>
+
+      {/* Phone Skeleton */}
+      <div className="space-y-1.5">
+        <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-28 mb-2"></div>
+        <div className="h-9 bg-gray-200 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10"></div>
+      </div>
+    </div>
+  );
+}

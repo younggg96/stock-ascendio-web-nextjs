@@ -6,13 +6,14 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Newspaper,
+  // Newspaper,
   Users,
   Settings,
   ChevronLeft,
   ChevronRight,
   X,
   TrendingUp,
+  User,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { Button } from "./ui/button";
@@ -26,6 +27,7 @@ const navItems = [
   // { icon: Newspaper, title: "News", href: "/dashboard/news" },
   { icon: TrendingUp, title: "Stocks", href: "/dashboard/stocks" },
   { icon: Users, title: "KOL Tracker", href: "/dashboard/kol" },
+  { icon: User, title: "Profile", href: "/dashboard/profile" },
   { icon: Settings, title: "Settings", href: "/dashboard/settings" },
 ];
 

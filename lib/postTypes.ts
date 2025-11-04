@@ -25,6 +25,9 @@ export interface UnifiedPost {
   userFavorited?: boolean;
   totalLikes?: number;
   totalFavorites?: number;
+  favoriteId?: string; // Favorite record ID
+  likedAt?: string; // When user liked this post
+  favoritedAt?: string; // When user favorited this post
   // Platform-specific data
   platformData?: {
     // For Reddit
@@ -221,5 +224,8 @@ export function socialPostToUnifiedPost(post: any): UnifiedPost {
     userFavorited: post.user_favorited,
     totalLikes: post.total_likes,
     totalFavorites: post.total_favorites,
+    favoriteId: post.favorite_id,
+    likedAt: post.liked_at,
+    favoritedAt: post.created_at, // Use the created_at from the join table
   };
 }

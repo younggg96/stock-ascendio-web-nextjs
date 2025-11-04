@@ -4,14 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { CardSkeleton } from "./LoadingSkeleton";
 import { EmptyState, ErrorState } from "./EmptyState";
 import SectionCard from "./SectionCard";
-import { Separator } from "@/components/ui/separator";
-import TweetHeader from "./TweetHeader";
-import {
-  TwitterContent,
-  RedditContent,
-  YouTubeContent,
-  RednoteContent,
-} from "./content";
 import Image from "next/image";
 import {
   UnifiedPost,
@@ -26,6 +18,7 @@ import { Button } from "./ui/button";
 import { RotateCcw } from "lucide-react";
 import { MultiSelectOption } from "./ui/multi-select";
 import { FilterSheet, DateRange, Sentiment } from "./FilterSheet";
+import PostFeedList from "./PostFeedList";
 
 type Platform = "x" | "reddit" | "youtube" | "rednote";
 
@@ -205,7 +198,6 @@ export default function PostList() {
     currentPosts.forEach((post) => {
       if (post.aiTags) {
         post.aiTags.forEach((tag) => {
-          console.log(tag);
           uniqueTagsSet.add(tag);
         });
       }
@@ -644,123 +636,11 @@ export default function PostList() {
         />
       )}
 
-      {filteredPosts.map((post, index) => {
-        if (!!!post.isMarketRelated) return null;
-
-        const renderContent = () => {
-          switch (selectedPlatform) {
-            case "x":
-              return (
-                <TwitterContent
-                  title={post.title}
-                  fullText={post.content}
-                  url={post.url}
-                  id={post.id.split("_")[1]}
-                  mediaUrls={post.mediaUrls}
-                  aiSummary={post.aiSummary}
-                  aiAnalysis={post.aiAnalysis}
-                  aiTags={post.aiTags}
-                  sentiment={post.sentiment}
-                  onFormatText={formatTweetText}
-                  likesCount={post.likes}
-                  userLiked={post.userLiked}
-                  userFavorited={post.userFavorited}
-                  totalLikes={post.totalLikes}
-                  totalFavorites={post.totalFavorites}
-                />
-              );
-            case "reddit":
-              return (
-                <RedditContent
-                  title={post.title}
-                  fullText={post.content}
-                  url={post.url}
-                  id={post.id}
-                  mediaUrls={post.mediaUrls}
-                  aiSummary={post.aiSummary}
-                  aiAnalysis={post.aiAnalysis}
-                  aiTags={post.aiTags}
-                  sentiment={post.sentiment}
-                  onFormatText={formatTweetText}
-                  subreddit={post.platformData?.subreddit}
-                  score={post.platformData?.score}
-                  permalink={post.platformData?.permalink}
-                  topComments={post.platformData?.topComments}
-                  likesCount={post.likes}
-                  userLiked={post.userLiked}
-                  userFavorited={post.userFavorited}
-                  totalLikes={post.totalLikes}
-                  totalFavorites={post.totalFavorites}
-                />
-              );
-            case "youtube":
-              return (
-                <YouTubeContent
-                  title={post.title}
-                  fullText={post.content}
-                  url={post.url}
-                  id={post.id}
-                  mediaUrls={post.mediaUrls}
-                  aiSummary={post.aiSummary}
-                  aiAnalysis={post.aiAnalysis}
-                  aiTags={post.aiTags}
-                  sentiment={post.sentiment}
-                  onFormatText={formatTweetText}
-                  viewCount={post.platformData?.viewCount}
-                  likeCount={post.platformData?.likeCount}
-                  commentCount={post.platformData?.commentCount}
-                  duration={post.platformData?.duration}
-                  thumbnailUrl={post.platformData?.thumbnailUrl}
-                  channelName={post.platformData?.channelName}
-                  channelThumbnailUrl={post.platformData?.channelThumbnailUrl}
-                  publishedAt={post.platformData?.publishedAt}
-                  likesCount={post.likes}
-                  userLiked={post.userLiked}
-                  userFavorited={post.userFavorited}
-                  totalLikes={post.totalLikes}
-                  totalFavorites={post.totalFavorites}
-                />
-              );
-            case "rednote":
-              return (
-                <RednoteContent
-                  title={post.title}
-                  fullText={post.content}
-                  url={post.url}
-                  id={post.id}
-                  mediaUrls={post.mediaUrls}
-                  aiSummary={post.aiSummary}
-                  aiAnalysis={post.aiAnalysis}
-                  aiTags={post.aiTags}
-                  sentiment={post.sentiment}
-                  onFormatText={formatTweetText}
-                  likesCount={post.likes}
-                  userLiked={post.userLiked}
-                  userFavorited={post.userFavorited}
-                  totalLikes={post.totalLikes}
-                  totalFavorites={post.totalFavorites}
-                />
-              );
-            default:
-              return null;
-          }
-        };
-
-        return (
-          <div key={post.id}>
-            <TweetHeader
-              screenName={post.author}
-              createdAt={post.createdAt}
-              profileImageUrl={post.avatarUrl}
-              onFormatDate={formatDate}
-            />
-
-            {renderContent()}
-
-            {index < filteredPosts.length - 1 && <Separator className="my-2" />}
-          </div>
-        );
-      })}
+      <PostFeedList
+        posts={filteredPosts}
+        formatDate={formatDate}
+        formatText={formatTweetText}
+      />
 
       {/* Loading More Indicator */}
       {loadingMore && (
