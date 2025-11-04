@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
+import DashboardLayout from "@/components/DashboardLayout";
 import EarningsCalendar from "@/components/EarningsCalendar";
 import SectionCard from "@/components/SectionCard";
 import FinancialJuiceNews from "@/components/FinancialJuiceNews";
@@ -30,7 +29,6 @@ interface NewsPageClientProps {
 
 export default function NewsPageClient({ category }: NewsPageClientProps) {
   const router = useRouter();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(category);
   const [isPending, startTransition] = useTransition();
   const isMobile = useIsMobile();
@@ -51,56 +49,44 @@ export default function NewsPageClient({ category }: NewsPageClientProps) {
   };
 
   return (
-    <div className="flex h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-white font-display transition-colors duration-300">
-      <Sidebar
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-      />
+    <DashboardLayout title="Market News">
+      <div className="flex-1 p-2 overflow-y-auto">
+        {/* Main News Content */}
+        <div className="space-y-2">
+          {/* News Categories with SectionCard */}
+          <SectionCard
+            showLiveIndicator
+            headerBorder
+            padding="md"
+            scrollable
+            maxHeight="calc(100vh - 180px)"
+            contentClassName="space-y-0 px-4 pb-4 mt-2"
+            headerExtra={
+              <SwitchTab
+                options={newsCategories}
+                value={activeTab}
+                onValueChange={handleTabChange}
+                size="md"
+                variant="pills"
+                className="w-auto"
+                disabled={isPending}
+              />
+            }
+          >
+            {/* Market Tab Content - FinancialJuice News */}
+            {activeTab === "market" && (
+              <div className="h-[calc(100vh-240px)]">
+                <FinancialJuiceNews width="100%" height="100%" />
+              </div>
+            )}
 
-      <main className="flex-1 flex flex-col">
-        <Header
-          title="Market News"
-          onMenuClick={() => setIsMobileMenuOpen(true)}
-        />
-
-        <div className="flex-1 p-2 overflow-y-auto">
-          {/* Main News Content */}
-          <div className="space-y-2">
-            {/* News Categories with SectionCard */}
-            <SectionCard
-              showLiveIndicator
-              headerBorder
-              padding="md"
-              scrollable
-              maxHeight="calc(100vh - 180px)"
-              contentClassName="space-y-0 px-4 pb-4 mt-2"
-              headerExtra={
-                <SwitchTab
-                  options={newsCategories}
-                  value={activeTab}
-                  onValueChange={handleTabChange}
-                  size="md"
-                  variant="pills"
-                  className="w-auto"
-                  disabled={isPending}
-                />
-              }
-            >
-              {/* Market Tab Content - FinancialJuice News */}
-              {activeTab === "market" && (
-                <div className="h-[calc(100vh-240px)]">
-                  <FinancialJuiceNews width="100%" height="100%" />
-                </div>
-              )}
-
-              {/* Earnings Tab Content */}
-              {activeTab === "earnings" && (
-                <EarningsCalendar compact={isMobile} />
-              )}
-            </SectionCard>
-          </div>
+            {/* Earnings Tab Content */}
+            {activeTab === "earnings" && (
+              <EarningsCalendar compact={isMobile} />
+            )}
+          </SectionCard>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

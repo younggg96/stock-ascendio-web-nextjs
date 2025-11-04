@@ -2,162 +2,265 @@
 
 import Link from "next/link";
 import LogoIcon from "./LogoIcon";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  // Newspaper,
-  Users,
   Settings,
-  ChevronLeft,
-  ChevronRight,
-  X,
   TrendingUp,
-  User,
+  Users,
+  Heart,
+  Star,
+  ChevronDown,
+  FolderOpen,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { Button } from "./ui/button";
+import {
+  Sidebar as SidebarPrimitive,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarProvider,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
-const navItems = [
+const mainNavItems = [
   {
     icon: LayoutDashboard,
     title: "Home",
     href: "/dashboard",
   },
-  // { icon: Newspaper, title: "News", href: "/dashboard/news" },
-  { icon: TrendingUp, title: "Stocks", href: "/dashboard/stocks" },
-  { icon: Users, title: "KOL Tracker", href: "/dashboard/kol" },
-  { icon: User, title: "Profile", href: "/dashboard/profile" },
-  { icon: Settings, title: "Settings", href: "/dashboard/settings" },
+  {
+    icon: TrendingUp,
+    title: "Stocks",
+    href: "/dashboard/stocks",
+  },
 ];
 
-interface SidebarProps {
-  isOpen?: boolean;
-  onClose?: () => void;
+const collectionItems = [
+  {
+    icon: Users,
+    title: "KOL Tracker",
+    href: "/dashboard/kol",
+  },
+  {
+    icon: Heart,
+    title: "Liked Posts",
+    href: "/dashboard/liked",
+  },
+  {
+    icon: Star,
+    title: "Favorite Posts",
+    href: "/dashboard/favorites",
+  },
+];
+
+const bottomNavItems = [
+  {
+    icon: Settings,
+    title: "Settings",
+    href: "/dashboard/settings",
+  },
+];
+
+interface AppSidebarProps {
+  onNavigate?: () => void;
 }
 
-export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+function AppSidebar({ onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
+  const [isCollectionsOpen, setIsCollectionsOpen] = useState(true);
+  const { state, toggleSidebar } = useSidebar();
 
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+  const isActive = (href: string) => {
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
     }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
+    return pathname.startsWith(href) && href !== "#";
+  };
 
   return (
-    <>
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`bg-white dark:bg-card-dark flex flex-col p-2.5 border-r border-border-light dark:border-border-dark transition-all duration-300 
-        ${isCollapsed ? "w-[60px]" : "w-[200px]"}
-        lg:relative lg:translate-x-0
-        fixed inset-y-0 left-0 z-50 lg:z-auto
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
-      >
-        {/* Logo and Toggle */}
-        <div
-          className={`flex items-center mb-5 mt-2 ${
-            isCollapsed ? "justify-center" : "justify-between px-1.5"
-          }`}
-        >
-          <Link href="/" className="flex items-center justify-center gap-1">
-            <LogoIcon size={20} className="cursor-pointer" />
-            {!isCollapsed && (
-              <span className="text-gray-900 dark:text-white text-base font-bold">
-                Ascendio
-              </span>
-            )}
+    <SidebarPrimitive
+      variant="sidebar"
+      collapsible="icon"
+      className="border-r border-border-light dark:border-border-dark"
+    >
+      <SidebarHeader>
+        <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-full"
+            onClick={onNavigate}
+          >
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
+              <LogoIcon size={20} />
+            </div>
+            <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
+              <span className="font-bold text-sm">Ascendio</span>
+            </div>
           </Link>
-
-          {/* Close button for mobile */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={onClose}
-            className="lg:hidden flex items-center justify-center text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 transition-colors"
-            title="Close menu"
+            onClick={toggleSidebar}
+            className="h-8 w-8 rounded-lg hidden lg:flex group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center"
           >
-            <X className="w-3 h-3" />
+            {state === "expanded" ? (
+              <PanelLeftClose className="h-4 w-4" />
+            ) : (
+              <PanelLeft className="h-4 w-4" />
+            )}
+            <span className="sr-only">Toggle Sidebar</span>
           </Button>
-
-          {/* Collapse button for desktop */}
-          {!isCollapsed && (
-            <button
-              onClick={() => setIsCollapsed(true)}
-              className="hidden lg:flex items-center justify-center text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 transition-colors"
-              title="Collapse sidebar"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          )}
         </div>
+      </SidebarHeader>
 
-        {/* Collapse button when collapsed (desktop only) */}
-        {isCollapsed && (
-          <button
-            onClick={() => setIsCollapsed(false)}
-            className="hidden lg:flex items-center justify-center h-9 w-9 mx-auto mb-3 text-gray-500 dark:text-white/50 hover:text-gray-700 dark:hover:text-white/70 hover:bg-gray-200 dark:hover:bg-white/5 rounded-lg transition-all duration-200"
-            title="Expand sidebar"
+      <SidebarContent>
+        {/* Main Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.href)}
+                    onClick={onNavigate}
+                  >
+                    <Link href={item.href}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Collections */}
+        {state === "expanded" ? (
+          <Collapsible
+            open={isCollectionsOpen}
+            onOpenChange={setIsCollectionsOpen}
+            className="group/collapsible"
           >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex h-9 my-1 w-full items-center justify-between gap-2 overflow-hidden rounded-md p-2 text-xs text-gray-600 dark:text-white/90 outline-none transition-colors hover:bg-gray-200 dark:hover:bg-white/5 [&>svg]:size-4 [&>svg]:shrink-0">
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="h-4 w-4" />
+                    <span>Collections</span>
+                  </div>
+                  <ChevronDown
+                    className={`transition-transform duration-200 ${
+                      isCollectionsOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu className="flex flex-col !gap-1 pl-2">
+                    {collectionItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive(item.href)}
+                          onClick={onNavigate}
+                        >
+                          <Link href={item.href}>
+                            <item.icon />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        ) : (
+          <SidebarGroup className="mt-2">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {collectionItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.href)}
+                      onClick={onNavigate}
+                    >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )}
 
-        {/* Navigation */}
-        <nav className="flex flex-col gap-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            // Check if current path matches this nav item
-            const isActive =
-              item.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(item.href) && item.href !== "#";
+        {/* Bottom Navigation */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {bottomNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.href)}
+                    onClick={onNavigate}
+                  >
+                    <Link href={item.href}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
-            return (
-              <Link
-                key={item.title}
-                href={item.href}
-                title={item.title}
-                onClick={onClose}
-                className={`flex items-center gap-2 h-9 rounded-lg transition-all duration-200 ${
-                  isCollapsed ? "justify-center w-9 mx-auto lg:flex" : "px-2.5"
-                } ${
-                  isActive
-                    ? "bg-primary/15 text-primary"
-                    : "text-gray-600 dark:text-white/50 hover:bg-gray-200 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white/70"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {!isCollapsed && (
-                  <span className="text-xs font-medium">{item.title}</span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* User Profile Menu */}
-        <div className="mt-auto">
-          <UserMenu isCollapsed={isCollapsed} />
-        </div>
-      </aside>
-    </>
+      <SidebarFooter>
+        <UserMenu isCollapsed={state === "collapsed"} />
+      </SidebarFooter>
+    </SidebarPrimitive>
   );
 }
+
+interface SidebarWrapperProps {
+  children: React.ReactNode;
+}
+
+export function SidebarWrapper({ children }: SidebarWrapperProps) {
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <AppSidebar />
+      {children}
+    </SidebarProvider>
+  );
+}
+
+export default AppSidebar;

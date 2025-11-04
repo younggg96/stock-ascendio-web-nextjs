@@ -15,7 +15,6 @@ export interface UnifiedPost {
   mediaUrls: string[];
   videoUrl?: string;
   aiSummary: string;
-  aiReasoning: string;
   aiAnalysis: string;
   aiTags: string[];
   sentiment: "bullish" | "bearish" | "neutral";
@@ -80,7 +79,6 @@ export function tweetToUnifiedPost(tweet: any): UnifiedPost {
     comments: 0,
     mediaUrls: tweet.media_urls || [],
     aiSummary: tweet.ai_summary,
-    aiReasoning: tweet.ai_reasoning,
     aiAnalysis: tweet.ai_analysis,
     aiTags: tweet.ai_tags || [],
     sentiment: mapSentiment(tweet.ai_sentiment),
@@ -107,7 +105,6 @@ export function redditPostToUnifiedPost(post: any): UnifiedPost {
     comments: post.num_comments,
     mediaUrls: [],
     aiSummary: post.ai_summary,
-    aiReasoning: post.ai_reasoning,
     aiAnalysis: post.ai_analysis,
     aiTags: post.ai_tags || [],
     sentiment: mapSentiment(post.ai_sentiment),
@@ -141,7 +138,6 @@ export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
     mediaUrls: video.thumbnail_url ? [video.thumbnail_url] : [],
     videoUrl: video.video_url,
     aiSummary: video.ai_summary,
-    aiReasoning: video.ai_reasoning,
     aiAnalysis: video.ai_analysis,
     aiTags: video.ai_tags || [],
     sentiment: mapSentiment(video.ai_sentiment),
@@ -180,7 +176,6 @@ export function RednoteNoteToUnifiedPost(note: any): UnifiedPost {
     mediaUrls: note.image_urls || [],
     videoUrl: note.video_url,
     aiSummary: note.ai_summary,
-    aiReasoning: note.ai_reasoning,
     aiAnalysis: note.ai_analysis,
     aiTags: note.ai_tags || [],
     sentiment: mapSentiment(note.ai_sentiment),
@@ -215,7 +210,6 @@ export function socialPostToUnifiedPost(post: any): UnifiedPost {
     comments: 0,
     mediaUrls: post.media_urls || [],
     aiSummary: post.ai_summary || "",
-    aiReasoning: "",
     aiAnalysis: "",
     aiTags: post.ai_tags || [],
     sentiment: mapSentiment(post.ai_sentiment || "neutral"),

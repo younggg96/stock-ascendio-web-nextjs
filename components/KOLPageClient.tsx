@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import Sidebar from "@/components/Sidebar";
-import Header from "@/components/Header";
+import DashboardLayout from "@/components/DashboardLayout";
 import SectionCard from "@/components/SectionCard";
 import KOLTrackerTable from "@/components/KOLTrackerTable";
 import TopKOLRanking from "@/components/TopKOLRanking";
@@ -18,7 +17,6 @@ interface KOLPageClientProps {
 
 export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
   const [kols, setKols] = useState<KOL[]>(initialKOLs);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"tracked" | "ranking">("ranking");
 
@@ -97,49 +95,37 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
   );
 
   return (
-    <div className="flex h-screen bg-background-light dark:bg-background-dark text-gray-900 dark:text-white font-display transition-colors duration-300">
-      <Sidebar
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-      />
-
-      <main className="flex-1 flex flex-col min-w-0">
-        <Header
-          title="KOL Tracker"
-          onMenuClick={() => setIsMobileMenuOpen(true)}
-        />
-
-        <div className="flex-1 p-2 overflow-y-auto">
-          <div className="space-y-2">
-            {/* Unified KOL Table with Tab Switcher */}
-            <SectionCard
-              useSectionHeader
-              headerExtra={
-                <SwitchTab
-                  options={tabOptions}
-                  value={activeTab}
-                  onValueChange={(value) =>
-                    setActiveTab(value as "tracked" | "ranking")
-                  }
-                  size="md"
-                  variant="pills"
+    <DashboardLayout title="KOL Tracker">
+      <div className="flex-1 p-2 overflow-y-auto">
+        <div className="space-y-2">
+          {/* Unified KOL Table with Tab Switcher */}
+          <SectionCard
+            useSectionHeader
+            headerExtra={
+              <SwitchTab
+                options={tabOptions}
+                value={activeTab}
+                onValueChange={(value) =>
+                  setActiveTab(value as "tracked" | "ranking")
+                }
+                size="md"
+                variant="pills"
+              />
+            }
+          >
+            <div className="px-4 pb-4">
+              {activeTab === "tracked" ? (
+                <KOLTrackerTable
+                  kols={convertedTrackedKOLs}
+                  onUpdate={refreshTracked}
                 />
-              }
-            >
-              <div className="px-4 pb-4">
-                {activeTab === "tracked" ? (
-                  <KOLTrackerTable
-                    kols={convertedTrackedKOLs}
-                    onUpdate={refreshTracked}
-                  />
-                ) : (
-                  <TopKOLRanking kols={kols} onUpdate={loadKOLs} />
-                )}
-              </div>
-            </SectionCard>
-          </div>
+              ) : (
+                <TopKOLRanking kols={kols} onUpdate={loadKOLs} />
+              )}
+            </div>
+          </SectionCard>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

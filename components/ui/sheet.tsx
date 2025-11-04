@@ -54,7 +54,7 @@ const SheetContent = React.forwardRef<
     <SheetPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-50 gap-4 bg-white dark:bg-card-dark pt-8 px-4 sm:p-6 shadow-lg",
+        "fixed z-50 gap-4 bg-white dark:bg-card-dark pt-8 !p-0 sm:p-6 shadow-lg",
         sheetVariants.side[side],
         className
       )}
@@ -74,13 +74,7 @@ const SheetHeader = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-1",
-      className
-    )}
-    {...props}
-  />
+  <div className={cn("flex flex-col space-y-1", className)} {...props} />
 );
 SheetHeader.displayName = "SheetHeader";
 
@@ -137,4 +131,3 @@ export {
   SheetTitle,
   SheetDescription,
 };
-
