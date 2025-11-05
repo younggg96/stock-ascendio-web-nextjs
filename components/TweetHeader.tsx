@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { trackKOL, untrackKOL } from "@/lib/trackedKolApi";
 import type { Platform } from "@/lib/supabase/database.types";
@@ -31,6 +31,11 @@ export default function TweetHeader({
 }: TweetHeaderProps) {
   const [isTracking, setIsTracking] = useState(initialTracked);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update state when initialTracked prop changes
+  useEffect(() => {
+    setIsTracking(initialTracked);
+  }, [initialTracked]);
 
   const handleTrackToggle = async () => {
     // If no kolId or platform, just toggle state locally
