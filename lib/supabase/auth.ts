@@ -111,6 +111,46 @@ export async function signIn(params: SignInParams): Promise<AuthResponse> {
 }
 
 /**
+ * Sign in with Google OAuth
+ */
+export async function signInWithGoogle(): Promise<AuthResponse> {
+  try {
+    const supabase = createClient();
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message,
+        errorCode: error.name,
+      };
+    }
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error: any) {
+    console.error("Google sign in error:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to sign in with Google",
+      errorCode: error.name,
+    };
+  }
+}
+
+/**
  * Sign out current user
  */
 export async function signOut(): Promise<AuthResponse> {

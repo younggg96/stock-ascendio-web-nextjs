@@ -3,12 +3,16 @@
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signUp, signIn, getErrorMessage } from "@/lib/supabase/auth";
+import {
+  signUp,
+  signIn,
+  signInWithGoogle,
+  getErrorMessage,
+} from "@/lib/supabase/auth";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { PasswordInput } from "./ui/password-input";
-import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 type AuthMode = "login" | "signup";
@@ -24,6 +28,7 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -69,6 +74,24 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
         toast.error(getErrorMessage(result.errorCode, result.error));
         setIsLoading(false);
       }
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    console.log("handleGoogleSignIn");
+    try {
+      const result = await signInWithGoogle();
+
+      if (!result.success) {
+        toast.error(getErrorMessage(result.errorCode, result.error));
+        setIsGoogleLoading(false);
+      }
+      // If successful, the user will be redirected to Google's OAuth page
+      // No need to reset loading state as the page will redirect
+    } catch (error: any) {
+      toast.error("Failed to initiate Google sign in");
+      setIsGoogleLoading(false);
     }
   };
 
@@ -236,17 +259,18 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
+              size="lg"
               disabled={isLoading}
-              className="w-full h-12 mt-2 rounded-lg bg-gradient-to-r from-primary to-primary/90 text-white dark:text-background-dark text-sm font-bold tracking-wide hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
             >
               {isLoading
                 ? "Processing..."
                 : mode === "login"
                 ? "Login"
                 : "Create Account"}
-            </button>
+            </Button>
           </form>
 
           {/* Divider */}
@@ -261,9 +285,12 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
           {/* Social Login */}
           <div className="flex flex-col gap-3">
             <Button
+              type="button"
               variant="outline"
               size="lg"
-              className="w-full hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading || isLoading}
+              className="w-full hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <Image
                 src="/logo/google.svg"
@@ -272,7 +299,9 @@ export default function AuthForm({ mode, onModeChange }: AuthFormProps) {
                 height={24}
                 className="object-contain w-5 h-5"
               />
-              <span>Continue with Google</span>
+              <span>
+                {isGoogleLoading ? "Connecting..." : "Continue with Google"}
+              </span>
             </Button>
           </div>
         </div>

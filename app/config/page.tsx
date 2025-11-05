@@ -35,6 +35,7 @@ import sp500Data from "@/data/sp500.constituents.wikilogo.json";
 import SectionCard from "@/components/SectionCard";
 import CompanyLogo from "@/components/CompanyLogo";
 import ThemeToggle from "@/components/ThemeToggle";
+import LoadingSpinner from "@/components/LoadingSpinner";
 import type {
   NotificationMethod,
   Platform,
@@ -236,13 +237,7 @@ export default function ConfigPage() {
 
   // Show loading state while auth is loading
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-background-dark dark:via-background-dark dark:to-primary/5 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-white/60">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen showCard />;
   }
 
   // Redirect to auth if not authenticated (after loading is complete)

@@ -7,6 +7,7 @@ import TradingViewChart from "@/components/TradingViewChart";
 import { useStockQuote } from "@/hooks/useStockData";
 import { useTheme } from "next-themes";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Button } from "@/components/ui/button";
 
 interface StockPageProps {
   params: {
@@ -69,7 +70,7 @@ export default function StockPage({ params }: StockPageProps) {
       <div className="flex-1 p-2 overflow-y-auto">
         {/* Back button */}
         <div className="mb-2">
-          <button
+          <Button
             onClick={() => {
               if (canGoBack) {
                 router.back();
@@ -77,11 +78,13 @@ export default function StockPage({ params }: StockPageProps) {
                 router.push("/dashboard");
               }
             }}
-            className="flex items-center gap-2 text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5"
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm font-medium">{backLabel}</span>
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-2">
