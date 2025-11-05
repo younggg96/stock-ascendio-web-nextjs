@@ -20,9 +20,9 @@ export interface SocialPost {
   // User interaction data
   user_liked?: boolean;
   user_favorited?: boolean;
+  user_tracked?: boolean;
   total_likes?: number;
   total_favorites?: number;
-  is_tracking?: boolean; // Whether user is tracking this creator/KOL
 }
 
 export interface SubscribedPostsResponse {
@@ -201,9 +201,9 @@ export async function GET(request: NextRequest) {
       creator_trending_score: post.creators?.trending_score || 0,
       user_liked: userLikes.has(post.post_id),
       user_favorited: userFavorites.has(post.post_id),
+      user_tracked: true, // All posts in this API are from tracked KOLs
       total_likes: likesCountMap.get(post.post_id) || 0,
       total_favorites: favoritesCountMap.get(post.post_id) || 0,
-      is_tracking: true, // All posts in this API are from tracked KOLs
     }));
 
     const response: SubscribedPostsResponse = {

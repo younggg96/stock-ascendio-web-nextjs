@@ -30,9 +30,9 @@ export interface UnifiedPost {
   // User interaction data
   userLiked?: boolean;
   userFavorited?: boolean;
+  userTracked?: boolean;
   totalLikes?: number;
   totalFavorites?: number;
-  isTracking?: boolean; // Whether user is tracking this creator/KOL
   favoriteId?: string; // Favorite record ID
   likedAt?: string; // When user liked this post
   favoritedAt?: string; // When user favorited this post
@@ -94,9 +94,9 @@ export function tweetToUnifiedPost(tweet: any): UnifiedPost {
     isMarketRelated: tweet.is_market_related,
     userLiked: tweet.user_liked,
     userFavorited: tweet.user_favorited,
+    userTracked: tweet.user_tracked,
     totalLikes: tweet.total_likes,
     totalFavorites: tweet.total_favorites,
-    isTracking: tweet.is_tracking,
   };
 }
 
@@ -121,9 +121,9 @@ export function redditPostToUnifiedPost(post: any): UnifiedPost {
     isMarketRelated: post.is_market_related,
     userLiked: post.user_liked,
     userFavorited: post.user_favorited,
+    userTracked: post.user_tracked,
     totalLikes: post.total_likes,
     totalFavorites: post.total_favorites,
-    isTracking: post.is_tracking,
     platformData: {
       subreddit: post.subreddit,
       score: post.score,
@@ -155,9 +155,9 @@ export function youtubeVideoToUnifiedPost(video: any): UnifiedPost {
     isMarketRelated: video.is_market_related,
     userLiked: video.user_liked,
     userFavorited: video.user_favorited,
+    userTracked: video.user_tracked,
     totalLikes: video.total_likes,
     totalFavorites: video.total_favorites,
-    isTracking: video.is_tracking,
     platformData: {
       viewCount: video.view_count,
       likeCount: video.like_count,
@@ -194,9 +194,9 @@ export function RednoteNoteToUnifiedPost(note: any): UnifiedPost {
     isMarketRelated: note.is_market_related,
     userLiked: note.user_liked,
     userFavorited: note.user_favorited,
+    userTracked: note.user_tracked,
     totalLikes: note.total_likes,
     totalFavorites: note.total_favorites,
-    isTracking: note.is_tracking,
   };
 }
 
@@ -237,9 +237,9 @@ export function socialPostToUnifiedPost(post: any): UnifiedPost {
     isMarketRelated: post.is_market_related ?? false,
     userLiked: post.user_liked,
     userFavorited: post.user_favorited,
+    userTracked: post.user_tracked,
     totalLikes: post.total_likes,
     totalFavorites: post.total_favorites,
-    isTracking: post.is_tracking,
     favoriteId: post.favorite_id,
     likedAt: post.liked_at,
     favoritedAt: post.created_at, // Use the created_at from the join table

@@ -45,17 +45,28 @@ export async function GET(request: NextRequest) {
       const posts = data.map((item: any) => item.social_posts).filter(Boolean);
       const postIds = posts.map((post: any) => post.post_id);
 
-      // Batch query for likes and favorites counts
-      const [likesCountResult, favoritesCountResult] = await Promise.all([
-        supabase
-          .from("user_post_likes")
-          .select("post_id", { count: "exact", head: false })
-          .in("post_id", postIds),
-        supabase
-          .from("user_post_favorites")
-          .select("post_id", { count: "exact", head: false })
-          .in("post_id", postIds),
-      ]);
+      // Get unique creator IDs
+      const creatorIds = Array.from(
+        new Set(posts.map((post: any) => post.creator_id))
+      );
+
+      // Batch query for likes, favorites counts, and tracked creators
+      const [likesCountResult, favoritesCountResult, userTrackedResult] =
+        await Promise.all([
+          supabase
+            .from("user_post_likes")
+            .select("post_id", { count: "exact", head: false })
+            .in("post_id", postIds),
+          supabase
+            .from("user_post_favorites")
+            .select("post_id", { count: "exact", head: false })
+            .in("post_id", postIds),
+          supabase
+            .from("user_kol_entries")
+            .select("kol_id")
+            .eq("user_id", user.id)
+            .in("kol_id", creatorIds),
+        ]);
 
       // Get user's favorites
       const userFavoritesResult = await supabase
@@ -66,6 +77,9 @@ export async function GET(request: NextRequest) {
 
       const userFavorites = new Set(
         (userFavoritesResult.data || []).map((item) => item.post_id)
+      );
+      const userTrackedCreators = new Set(
+        (userTrackedResult.data || []).map((item) => item.kol_id)
       );
 
       // Count likes and favorites per post
@@ -103,6 +117,7 @@ export async function GET(request: NextRequest) {
         creator_trending_score: item.social_posts.creators?.trending_score || 0,
         user_liked: true, // All posts in this list are liked by the user
         user_favorited: userFavorites.has(item.social_posts.post_id),
+        user_tracked: userTrackedCreators.has(item.social_posts.creator_id),
         total_likes: likesCountMap.get(item.social_posts.post_id) || 0,
         total_favorites: favoritesCountMap.get(item.social_posts.post_id) || 0,
         liked_at: item.created_at, // Include when user liked this post
@@ -134,17 +149,28 @@ export async function GET(request: NextRequest) {
       const posts = data.map((item: any) => item.social_posts).filter(Boolean);
       const postIds = posts.map((post: any) => post.post_id);
 
-      // Batch query for likes and favorites counts
-      const [likesCountResult, favoritesCountResult] = await Promise.all([
-        supabase
-          .from("user_post_likes")
-          .select("post_id", { count: "exact", head: false })
-          .in("post_id", postIds),
-        supabase
-          .from("user_post_favorites")
-          .select("post_id", { count: "exact", head: false })
-          .in("post_id", postIds),
-      ]);
+      // Get unique creator IDs
+      const creatorIds = Array.from(
+        new Set(posts.map((post: any) => post.creator_id))
+      );
+
+      // Batch query for likes, favorites counts, and tracked creators
+      const [likesCountResult, favoritesCountResult, userTrackedResult] =
+        await Promise.all([
+          supabase
+            .from("user_post_likes")
+            .select("post_id", { count: "exact", head: false })
+            .in("post_id", postIds),
+          supabase
+            .from("user_post_favorites")
+            .select("post_id", { count: "exact", head: false })
+            .in("post_id", postIds),
+          supabase
+            .from("user_kol_entries")
+            .select("kol_id")
+            .eq("user_id", user.id)
+            .in("kol_id", creatorIds),
+        ]);
 
       // Get user's likes
       const userLikesResult = await supabase
@@ -155,6 +181,9 @@ export async function GET(request: NextRequest) {
 
       const userLikes = new Set(
         (userLikesResult.data || []).map((item) => item.post_id)
+      );
+      const userTrackedCreators = new Set(
+        (userTrackedResult.data || []).map((item) => item.kol_id)
       );
 
       // Count likes and favorites per post
@@ -192,6 +221,7 @@ export async function GET(request: NextRequest) {
         creator_trending_score: item.social_posts.creators?.trending_score || 0,
         user_liked: userLikes.has(item.social_posts.post_id),
         user_favorited: true, // All posts in this list are favorited by the user
+        user_tracked: userTrackedCreators.has(item.social_posts.creator_id),
         total_likes: likesCountMap.get(item.social_posts.post_id) || 0,
         total_favorites: favoritesCountMap.get(item.social_posts.post_id) || 0,
         favorite_notes: item.notes, // Include user's notes for this favorite

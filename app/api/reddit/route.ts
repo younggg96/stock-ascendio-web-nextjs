@@ -27,9 +27,9 @@ export interface RedditPost {
   // User interaction data
   user_liked?: boolean;
   user_favorited?: boolean;
+  user_tracked?: boolean;
   total_likes?: number;
   total_favorites?: number;
-  is_tracking?: boolean; // Whether user is tracking this creator/KOL
   // Legacy fields for backward compatibility
   user_id?: string;
   username?: string;
@@ -94,9 +94,8 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch Reddit posts: ${error.message}`);
     }
 
-    // Get post IDs and creator IDs for batch queries
+    // Get post IDs for batch queries
     const postIds = (data || []).map((post) => post.post_id);
-    const creatorIds = (data || []).map((post) => post.creator_id);
 
     // Batch query for likes and favorites counts
     const [likesCountResult, favoritesCountResult] = await Promise.all([
@@ -113,10 +112,15 @@ export async function GET(request: NextRequest) {
     // Get user's likes, favorites, and tracked KOLs if authenticated
     let userLikes: Set<string> = new Set();
     let userFavorites: Set<string> = new Set();
-    let trackedCreators: Set<string> = new Set();
+    let userTrackedCreators: Set<string> = new Set();
 
     if (user) {
-      const [userLikesResult, userFavoritesResult, trackedKOLsResult] =
+      // Get unique creator IDs from posts
+      const creatorIds = Array.from(
+        new Set((data || []).map((post) => post.creator_id))
+      );
+
+      const [userLikesResult, userFavoritesResult, userTrackedResult] =
         await Promise.all([
           supabase
             .from("user_post_likes")
@@ -132,7 +136,6 @@ export async function GET(request: NextRequest) {
             .from("user_kol_entries")
             .select("kol_id")
             .eq("user_id", user.id)
-            .eq("platform", "REDDIT")
             .in("kol_id", creatorIds),
         ]);
 
@@ -142,8 +145,8 @@ export async function GET(request: NextRequest) {
       userFavorites = new Set(
         (userFavoritesResult.data || []).map((item) => item.post_id)
       );
-      trackedCreators = new Set(
-        (trackedKOLsResult.data || []).map((item) => item.kol_id)
+      userTrackedCreators = new Set(
+        (userTrackedResult.data || []).map((item) => item.kol_id)
       );
     }
 
@@ -194,9 +197,9 @@ export async function GET(request: NextRequest) {
       // Add user interaction data
       user_liked: userLikes.has(post.post_id),
       user_favorited: userFavorites.has(post.post_id),
+      user_tracked: userTrackedCreators.has(post.creator_id),
       total_likes: likesCountMap.get(post.post_id) || 0,
       total_favorites: favoritesCountMap.get(post.post_id) || 0,
-      is_tracking: trackedCreators.has(post.creator_id),
     }));
 
     const response: RedditPostsResponse = {

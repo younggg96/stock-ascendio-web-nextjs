@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import LogoIcon from "./LogoIcon";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -86,6 +86,7 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(true);
   const { state, toggleSidebar, isInitialized } = useSidebar();
+  const [isMounted, setIsMounted] = useState(false);
 
   const { isMobile, isTablet } = useBreakpoints();
   const isActive = (href: string) => {
@@ -94,6 +95,10 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
     }
     return pathname.startsWith(href) && href !== "#";
   };
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <SidebarPrimitive
@@ -122,11 +127,13 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
             className="h-8 w-8 rounded-lg hidden lg:flex group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center"
             suppressHydrationWarning
           >
-            {isInitialized && state === "expanded" ? (
-              <PanelLeftClose className="h-4 w-4" />
-            ) : (
-              <PanelLeft className="h-4 w-4" />
-            )}
+            <span suppressHydrationWarning>
+              {isMounted && isInitialized && state === "expanded" ? (
+                <PanelLeftClose className="h-4 w-4" />
+              ) : (
+                <PanelLeft className="h-4 w-4" />
+              )}
+            </span>
             <span className="sr-only">Toggle Sidebar</span>
           </Button>
         </div>
@@ -159,7 +166,7 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
         </SidebarGroup>
 
         {/* Collections */}
-        {!isInitialized || state === "expanded" ? (
+        {!isMounted || !isInitialized || state === "expanded" ? (
           <Collapsible
             open={isCollectionsOpen}
             onOpenChange={setIsCollectionsOpen}
@@ -250,7 +257,11 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
       <SidebarFooter>
         <UserMenu
           isCollapsed={
-            isInitialized && state === "collapsed" && !isMobile && !isTablet
+            isMounted &&
+            isInitialized &&
+            state === "collapsed" &&
+            !isMobile &&
+            !isTablet
           }
         />
       </SidebarFooter>

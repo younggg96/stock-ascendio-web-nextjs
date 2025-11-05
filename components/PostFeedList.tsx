@@ -186,6 +186,7 @@ export default function PostFeedList({
               onFormatDate={onFormatDate}
               kolId={post.authorId}
               platform={mapPlatform(post.platform)}
+              initialTracked={post.userTracked}
             />
 
             {renderPostContent(post)}

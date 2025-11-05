@@ -77,6 +77,11 @@ export default function SectionCard({
   };
 
   const handleLiveToggle = (live: boolean) => {
+    if (live) {
+      toast.success("Live updates enabled");
+    } else {
+      toast.info("Live updates disabled");
+    }
     onLiveToggle?.(live);
   };
 
