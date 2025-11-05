@@ -56,10 +56,15 @@ export async function GET(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Build query
+    // Build query with full creator info
     let query = supabase
       .from("social_posts")
-      .select("*", { count: "exact" })
+      .select(
+        "*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score)",
+        {
+          count: "exact",
+        }
+      )
       .eq("platform", "YOUTUBE")
       .order("published_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -140,13 +145,23 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform data to match expected format
-    const videos: YouTubeVideo[] = (data || []).map((post) => ({
+    const videos: YouTubeVideo[] = (data || []).map((post: any) => ({
       ...post,
+      // Extract creator info from JOIN
+      creator_name: post.creators?.display_name || "",
+      creator_avatar_url: post.creators?.avatar_url || "",
+      creator_username: post.creators?.username || "",
+      creator_verified: post.creators?.verified || false,
+      creator_bio: post.creators?.bio || null,
+      creator_followers_count: post.creators?.followers_count || 0,
+      creator_category: post.creators?.category || null,
+      creator_influence_score: post.creators?.influence_score || 0,
+      creator_trending_score: post.creators?.trending_score || 0,
       // Add legacy field mappings for backward compatibility
       video_id: post.post_id,
       channel_id: post.creator_id,
-      channel_name: post.creator_name,
-      channel_avatar_url: post.creator_avatar_url || "",
+      channel_name: post.creators?.display_name || "",
+      channel_avatar_url: post.creators?.avatar_url || "",
       title: post.title || post.content.split("\n")[0] || "",
       description: post.content,
       view_count: post.platform_metadata?.view_count || 0,

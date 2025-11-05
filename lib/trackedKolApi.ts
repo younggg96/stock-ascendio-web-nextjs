@@ -9,6 +9,13 @@ export interface TrackedKOL {
   updated_at: string;
   creator_name?: string;
   creator_avatar_url?: string;
+  creator_username?: string;
+  creator_verified?: boolean;
+  creator_bio?: string | null;
+  creator_followers_count?: number;
+  creator_category?: string | null;
+  creator_influence_score?: number;
+  creator_trending_score?: number;
   posts_count?: number;
   latest_post_date?: string;
 }

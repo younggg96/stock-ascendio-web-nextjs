@@ -1,49 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-/**
- * Custom hook to detect if the current viewport is mobile size
- * @param breakpoint - The breakpoint in pixels (default: 768)
- * @returns boolean indicating if the viewport is mobile size
- */
-export function useIsMobile(breakpoint: number = 768): boolean {
-  // Initialize with undefined to avoid hydration mismatch
-  const [isMobile, setIsMobile] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return window.innerWidth < breakpoint;
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    // Check if window is defined (client-side only)
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < breakpoint);
-    };
-
-    // Check on mount
-    checkMobile();
-
-    // Add event listener for window resize
-    window.addEventListener("resize", checkMobile);
-
-    // Cleanup
-    return () => window.removeEventListener("resize", checkMobile);
-  }, [breakpoint]);
-
-  return isMobile;
-}
-
 /**
  * Custom hook to get the current window width
  * @returns current window width in pixels
  */
-export function useWindowWidth(): number {
+function useWindowWidth(): number {
   const [width, setWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
   );

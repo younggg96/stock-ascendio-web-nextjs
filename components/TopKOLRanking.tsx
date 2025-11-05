@@ -21,7 +21,7 @@ import {
 import { Star, StarOff, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useBreakpoints } from "@/hooks";
 
 interface TopKOLRankingProps {
   kols: KOL[];
@@ -29,7 +29,7 @@ interface TopKOLRankingProps {
 }
 
 export default function TopKOLRanking({ kols, onUpdate }: TopKOLRankingProps) {
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoints();
   const [filterPlatform, setFilterPlatform] = useState<Platform | "all">("all");
 
   // Filter and sort KOLs by followers

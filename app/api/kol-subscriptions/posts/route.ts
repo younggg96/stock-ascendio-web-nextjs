@@ -98,11 +98,16 @@ export async function GET(request: NextRequest) {
       ? [platform]
       : [...new Set(subscriptions.map((sub) => sub.platform))];
 
-    // 第二步：查询这些 KOL 的帖子
+    // 第二步：查询这些 KOL 的帖子（包含完整 creator 信息）
     let postsQuery = supabase
       .from("social_posts")
-      .select("*", { count: "exact" })
-      .in("creator_name", kolIds)
+      .select(
+        "*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score)",
+        {
+          count: "exact",
+        }
+      )
+      .in("creator_id", kolIds)
       .in("platform", platformFilter)
       .order("published_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -181,8 +186,18 @@ export async function GET(request: NextRequest) {
     });
 
     // 组装响应数据
-    const enrichedPosts: SocialPost[] = (posts || []).map((post) => ({
+    const enrichedPosts: SocialPost[] = (posts || []).map((post: any) => ({
       ...post,
+      // Extract creator info from JOIN
+      creator_name: post.creators?.display_name || "",
+      creator_avatar_url: post.creators?.avatar_url || "",
+      creator_username: post.creators?.username || "",
+      creator_verified: post.creators?.verified || false,
+      creator_bio: post.creators?.bio || null,
+      creator_followers_count: post.creators?.followers_count || 0,
+      creator_category: post.creators?.category || null,
+      creator_influence_score: post.creators?.influence_score || 0,
+      creator_trending_score: post.creators?.trending_score || 0,
       user_liked: userLikes.has(post.post_id),
       user_favorited: userFavorites.has(post.post_id),
       total_likes: likesCountMap.get(post.post_id) || 0,

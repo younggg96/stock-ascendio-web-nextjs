@@ -30,8 +30,13 @@ export default function TwitterContent({
   totalFavorites,
 }: TwitterContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
   const [iframeHeight, setIframeHeight] = useState<number>(500);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Listen for iframe resize messages from Twitter
   useEffect(() => {
@@ -91,16 +96,18 @@ export default function TwitterContent({
             </DialogTitle>
           </DialogHeader>
           <div className="overflow-y-auto p-2 h-fit max-h-[calc(90vh-80px)] bg-white dark:bg-card-dark rounded-2xl">
-            <iframe
-              key={theme}
-              src={`https://platform.twitter.com/embed/Tweet.html?id=${id}&theme=${
-                theme === "light" ? "light" : "dark"
-              }`}
-              width="100%"
-              height={iframeHeight}
-              frameBorder="0"
-              className="rounded-xl"
-            />
+            {mounted && (
+              <iframe
+                key={theme}
+                src={`https://platform.twitter.com/embed/Tweet.html?id=${id}&theme=${
+                  theme === "light" ? "light" : "dark"
+                }`}
+                width="100%"
+                height={iframeHeight}
+                frameBorder="0"
+                className="rounded-xl"
+              />
+            )}
           </div>
           <DialogFooter className="px-6 pt-4 pb-4 border-t border-gray-200 dark:border-gray-700">
             <a

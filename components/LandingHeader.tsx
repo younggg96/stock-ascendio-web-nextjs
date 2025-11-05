@@ -9,15 +9,24 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useAuth, useUserProfile } from "@/hooks";
 import { Button } from "./ui/button";
+import { useEffect, useState } from "react";
 
 export default function LandingHeader() {
   const { theme } = useTheme();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { profile } = useUserProfile();
   const router = useRouter();
-  const textColorClass =
-    theme === "dark" ? "text-white" : "text-gray-900 dark:text-white";
+  const [mounted, setMounted] = useState(false);
   const isAuthRoute = usePathname() === "/auth";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const textColorClass =
+    mounted && theme === "dark"
+      ? "text-white"
+      : "text-gray-900 dark:text-white";
 
   // Get initials for avatar fallback
   const getInitials = () => {

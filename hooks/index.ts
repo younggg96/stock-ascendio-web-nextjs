@@ -5,12 +5,7 @@ export {
   useMarketIndices,
   useChartData,
 } from "./useStockData";
-export {
-  useIsMobile,
-  useWindowWidth,
-  useBreakpoints,
-  Breakpoints,
-} from "./useIsMobile";
+export { useBreakpoints, Breakpoints } from "./useBreakpoints";
 export { useAuth, type UseAuthReturn } from "./useAuth";
 export { useUserProfile } from "./useUserProfile";
 export { useTrackedKOLs } from "./useTrackedKOLs";

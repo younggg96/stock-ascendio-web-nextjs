@@ -53,10 +53,12 @@ export async function GET(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Build query
+    // Build query with full creator info
     let query = supabase
       .from("social_posts")
-      .select("*", { count: "exact" })
+      .select(
+        "*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score)"
+      )
       .eq("platform", "TWITTER")
       .order("published_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -137,18 +139,28 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform data to match expected format (with legacy field mapping)
-    const tweets: Tweet[] = (data || []).map((post) => ({
+    const tweets: Tweet[] = (data || []).map((post: any) => ({
       ...post,
+      // Extract creator info from JOIN
+      creator_name: post.creators?.display_name || "",
+      creator_avatar_url: post.creators?.avatar_url || "",
+      creator_username: post.creators?.username || "",
+      creator_verified: post.creators?.verified || false,
+      creator_bio: post.creators?.bio || null,
+      creator_followers_count: post.creators?.followers_count || 0,
+      creator_category: post.creators?.category || null,
+      creator_influence_score: post.creators?.influence_score || 0,
+      creator_trending_score: post.creators?.trending_score || 0,
       // Add legacy field mappings for backward compatibility
       tweet_id: post.post_id,
-      screen_name: post.creator_name,
+      screen_name: post.creators?.display_name || "",
       user_id: post.creator_id,
       created_at: post.published_at,
       num_likes: post.likes_count || 0,
       fetched_at: post.published_at,
       tweet_url: post.content_url,
       full_text: post.content,
-      profile_image_url: post.creator_avatar_url || "",
+      profile_image_url: post.creators?.avatar_url || "",
       // Add user interaction data
       user_liked: userLikes.has(post.post_id),
       user_favorited: userFavorites.has(post.post_id),

@@ -5,6 +5,14 @@ export interface UnifiedPost {
   author: string;
   authorId: string;
   avatarUrl: string;
+  // Creator info from creators table
+  authorUsername?: string;
+  authorVerified?: boolean;
+  authorBio?: string | null;
+  authorFollowersCount?: number;
+  authorCategory?: string | null;
+  authorInfluenceScore?: number;
+  authorTrendingScore?: number;
   title?: string; // For Reddit and YouTube
   content: string;
   url: string;
@@ -203,6 +211,14 @@ export function socialPostToUnifiedPost(post: any): UnifiedPost {
     author: post.creator_name,
     authorId: post.creator_id,
     avatarUrl: post.creator_avatar_url || "",
+    // Creator info from creators table
+    authorUsername: post.creator_username,
+    authorVerified: post.creator_verified,
+    authorBio: post.creator_bio,
+    authorFollowersCount: post.creator_followers_count,
+    authorCategory: post.creator_category,
+    authorInfluenceScore: post.creator_influence_score,
+    authorTrendingScore: post.creator_trending_score,
     content: post.content,
     url: post.content_url,
     createdAt: post.published_at,
@@ -210,7 +226,7 @@ export function socialPostToUnifiedPost(post: any): UnifiedPost {
     comments: 0,
     mediaUrls: post.media_urls || [],
     aiSummary: post.ai_summary || "",
-    aiAnalysis: "",
+    aiAnalysis: post.ai_analysis || "",
     aiTags: post.ai_tags || [],
     sentiment: mapSentiment(post.ai_sentiment || "neutral"),
     isMarketRelated: post.is_market_related ?? false,

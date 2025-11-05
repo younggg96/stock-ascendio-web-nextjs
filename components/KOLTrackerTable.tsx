@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useBreakpoints } from "@/hooks";
 import {
   Table,
   TableBody,
@@ -35,14 +35,12 @@ import {
   Platform,
   platformConfig,
   formatFollowers,
-  createKOL,
   updateKOL,
-  deleteKOL,
   CreateKOLInput,
 } from "@/lib/kolApi";
 import { trackKOL, untrackKOL } from "@/lib/trackedKolApi";
 import type { Platform as DBPlatform } from "@/lib/supabase/database.types";
-import { Pencil, Trash2, Plus, Star, StarOff } from "lucide-react";
+import { Trash2, Plus, Star } from "lucide-react";
 import { toast } from "sonner";
 
 interface KOLTrackerTableProps {
@@ -54,7 +52,7 @@ export default function KOLTrackerTable({
   kols,
   onUpdate,
 }: KOLTrackerTableProps) {
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoints();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -439,7 +437,7 @@ export default function KOLTrackerTable({
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
                 }
-                placeholder="@username or u/username"
+                placeholder="@username"
                 className="h-8 text-xs"
               />
             </div>
@@ -515,7 +513,7 @@ export default function KOLTrackerTable({
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
                 }
-                placeholder="@username or u/username"
+                placeholder="@username"
                 className="h-8 text-xs"
               />
             </div>

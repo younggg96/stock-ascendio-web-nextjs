@@ -150,7 +150,6 @@ export default function SectionCard({
             </div>
           </div>
         ))}
-
       {/* Content */}
       {scrollable ? (
         <div

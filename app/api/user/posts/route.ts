@@ -22,14 +22,14 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     if (type === "liked") {
-      // Get user's liked posts
+      // Get user's liked posts with full creator info
       const { data, error } = await supabase
         .from("user_post_likes")
         .select(
           `
           post_id,
           created_at,
-          social_posts (*)
+          social_posts (*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score))
         `
         )
         .eq("user_id", user.id)
@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
       if (error) {
         throw error;
       }
+      console.log(data);
 
       // Get post IDs for batch queries
       const posts = data.map((item: any) => item.social_posts).filter(Boolean);
@@ -88,6 +89,18 @@ export async function GET(request: NextRequest) {
       // Enhance posts with interaction data and include like timestamp
       const enhancedPosts = data.map((item: any) => ({
         ...item.social_posts,
+        // Extract creator info from JOIN
+        creator_name: item.social_posts.creators?.display_name || "",
+        creator_avatar_url: item.social_posts.creators?.avatar_url || "",
+        creator_username: item.social_posts.creators?.username || "",
+        creator_verified: item.social_posts.creators?.verified || false,
+        creator_bio: item.social_posts.creators?.bio || null,
+        creator_followers_count:
+          item.social_posts.creators?.followers_count || 0,
+        creator_category: item.social_posts.creators?.category || null,
+        creator_influence_score:
+          item.social_posts.creators?.influence_score || 0,
+        creator_trending_score: item.social_posts.creators?.trending_score || 0,
         user_liked: true, // All posts in this list are liked by the user
         user_favorited: userFavorites.has(item.social_posts.post_id),
         total_likes: likesCountMap.get(item.social_posts.post_id) || 0,
@@ -97,7 +110,7 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({ posts: enhancedPosts, count: data.length });
     } else if (type === "favorited") {
-      // Get user's favorited posts
+      // Get user's favorited posts with full creator info
       const { data, error } = await supabase
         .from("user_post_favorites")
         .select(
@@ -106,7 +119,7 @@ export async function GET(request: NextRequest) {
           post_id,
           notes,
           created_at,
-          social_posts (*)
+          social_posts (*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score))
         `
         )
         .eq("user_id", user.id)
@@ -165,6 +178,18 @@ export async function GET(request: NextRequest) {
       // Enhance posts with interaction data and include favorite notes
       const enhancedPosts = data.map((item: any) => ({
         ...item.social_posts,
+        // Extract creator info from JOIN
+        creator_name: item.social_posts.creators?.display_name || "",
+        creator_avatar_url: item.social_posts.creators?.avatar_url || "",
+        creator_username: item.social_posts.creators?.username || "",
+        creator_verified: item.social_posts.creators?.verified || false,
+        creator_bio: item.social_posts.creators?.bio || null,
+        creator_followers_count:
+          item.social_posts.creators?.followers_count || 0,
+        creator_category: item.social_posts.creators?.category || null,
+        creator_influence_score:
+          item.social_posts.creators?.influence_score || 0,
+        creator_trending_score: item.social_posts.creators?.trending_score || 0,
         user_liked: userLikes.has(item.social_posts.post_id),
         user_favorited: true, // All posts in this list are favorited by the user
         total_likes: likesCountMap.get(item.social_posts.post_id) || 0,

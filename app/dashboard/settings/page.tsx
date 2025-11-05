@@ -58,7 +58,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ProfileInfoSkeleton } from "@/components/LoadingSkeleton";
 
 const settingsTabs = [
-  { value: "profile", icon: User, label: "Personal Info" },
+  { value: "account", icon: User, label: "Account" },
   { value: "billing", icon: CreditCard, label: "Billing" },
   { value: "notifications", icon: Bell, label: "Notifications" },
   { value: "preferences", icon: Settings, label: "Preferences" },
@@ -136,7 +136,7 @@ function SettingsContent() {
     refresh: refreshProfile,
   } = useUserProfile();
 
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("account");
   const [mounted, setMounted] = useState(false);
 
   // Profile editing state
@@ -385,16 +385,16 @@ function SettingsContent() {
 
               {/* Tab Content Area */}
               <div className="flex-1 min-w-0">
-                {/* Personal Info Tab */}
-                <TabsContent value="profile" className="mt-0">
+                {/* Account Info Tab */}
+                <TabsContent value="account" className="mt-0">
                   <SectionCard
-                    title="Personal Information"
+                    title="Account Information"
                     useSectionHeader
                     sectionHeaderIcon={User}
                     sectionHeaderSubtitle={
                       isEditing
-                        ? "Update your personal details"
-                        : "View your personal details"
+                        ? "Update your account details"
+                        : "View your account details"
                     }
                     sectionHeaderAction={
                       !isEditing && !profileLoading ? (
@@ -443,7 +443,7 @@ function SettingsContent() {
                                 </div>
                               )}
                               <DialogTrigger asChild>
-                                <button className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-white dark:bg-card-dark rounded-full flex items-center justify-center shadow-md border-2 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:scale-110 transition-all duration-200 cursor-pointer">
+                                <button className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-white dark:bg-card-dark rounded-full flex items-center justify-center shadow-md border-2 border-gray-200 dark:border-white/10 hover:scale-110 transition-all duration-200 cursor-pointer">
                                   <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-600 dark:text-white/70" />
                                 </button>
                               </DialogTrigger>

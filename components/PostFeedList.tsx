@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { UnifiedPost } from "@/lib/postTypes";
 import TweetHeader from "./TweetHeader";
 import {
@@ -22,7 +22,18 @@ export default function PostFeedList({
   formatDate,
   formatText,
 }: PostFeedListProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const defaultFormatDate = (dateString: string) => {
+    if (!mounted) {
+      // Return a static format during SSR to prevent hydration mismatch
+      return new Date(dateString).toLocaleDateString();
+    }
+
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);

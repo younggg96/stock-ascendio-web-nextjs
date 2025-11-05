@@ -8,7 +8,7 @@ import SectionCard from "@/components/SectionCard";
 import FinancialJuiceNews from "@/components/FinancialJuiceNews";
 import { TrendingUp, Calendar } from "lucide-react";
 import { SwitchTab } from "@/components/ui/switch-tab";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useBreakpoints } from "@/hooks";
 
 const newsCategories = [
   {
@@ -31,7 +31,7 @@ export default function NewsPageClient({ category }: NewsPageClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(category);
   const [isPending, startTransition] = useTransition();
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoints();
 
   // 同步 URL 参数和本地状态
   useEffect(() => {

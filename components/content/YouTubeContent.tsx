@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ExternalLink,
   Eye,
@@ -48,6 +48,11 @@ export default function YouTubeContent({
   totalFavorites,
 }: YouTubeContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const summary = aiSummary || "";
 
@@ -81,6 +86,11 @@ export default function YouTubeContent({
   // Format published date
   const formatPublishedDate = (dateStr?: string) => {
     if (!dateStr) return "";
+    if (!mounted) {
+      // Return a static format during SSR to prevent hydration mismatch
+      return new Date(dateStr).toLocaleDateString();
+    }
+
     const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();

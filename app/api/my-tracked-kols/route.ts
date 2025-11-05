@@ -81,24 +81,35 @@ export async function GET(request: NextRequest) {
     // 获取每个 KOL 的额外信息（从 social_posts 表）
     const enrichedKOLs = await Promise.all(
       (trackedKOLs || []).map(async (kol) => {
-        // 获取该 KOL 的帖子统计信息
+        // 获取该 KOL 的帖子统计信息和 creator 详细信息
         const { data: posts, count } = await supabase
           .from("social_posts")
-          .select("creator_name, creator_avatar_url, published_at", {
-            count: "exact",
-            head: false,
-          })
-          .eq("creator_name", kol.kol_id)
+          .select(
+            "published_at, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score)",
+            {
+              count: "exact",
+              head: false,
+            }
+          )
+          .eq("creator_id", kol.kol_id)
           .eq("platform", kol.platform)
           .order("published_at", { ascending: false })
           .limit(1);
 
-        const latestPost = posts?.[0];
+        const latestPost: any = posts?.[0];
+        const creatorInfo = latestPost?.creators;
 
         return {
           ...kol,
-          creator_name: latestPost?.creator_name || kol.kol_id,
-          creator_avatar_url: latestPost?.creator_avatar_url || null,
+          creator_name: creatorInfo?.display_name || kol.kol_id,
+          creator_avatar_url: creatorInfo?.avatar_url || null,
+          creator_username: creatorInfo?.username || "",
+          creator_verified: creatorInfo?.verified || false,
+          creator_bio: creatorInfo?.bio || null,
+          creator_followers_count: creatorInfo?.followers_count || 0,
+          creator_category: creatorInfo?.category || null,
+          creator_influence_score: creatorInfo?.influence_score || 0,
+          creator_trending_score: creatorInfo?.trending_score || 0,
           posts_count: count || 0,
           latest_post_date: latestPost?.published_at || null,
         } as TrackedKOL;
@@ -189,20 +200,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 获取 KOL 的额外信息
+    // 获取 KOL 的详细信息
     const { data: kolInfo } = await supabase
       .from("social_posts")
-      .select("creator_name, creator_avatar_url")
-      .eq("creator_name", body.kol_id)
+      .select(
+        "creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score)"
+      )
+      .eq("creator_id", body.kol_id)
       .eq("platform", body.platform)
       .limit(1)
       .single();
 
+    const creators: any = kolInfo?.creators;
+
     return NextResponse.json(
       {
         ...newTracking,
-        creator_name: kolInfo?.creator_name || body.kol_id,
-        creator_avatar_url: kolInfo?.creator_avatar_url || null,
+        creator_name: creators?.display_name || body.kol_id,
+        creator_avatar_url: creators?.avatar_url || null,
+        creator_username: creators?.username || "",
+        creator_verified: creators?.verified || false,
+        creator_bio: creators?.bio || null,
+        creator_followers_count: creators?.followers_count || 0,
+        creator_category: creators?.category || null,
+        creator_influence_score: creators?.influence_score || 0,
+        creator_trending_score: creators?.trending_score || 0,
       },
       { status: 201 }
     );

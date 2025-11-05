@@ -2,16 +2,25 @@
 
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 export default function Footer() {
   const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const textColorClass =
-    theme === "dark"
+    mounted && theme === "dark"
       ? "text-white/50 hover:text-white"
       : "text-gray-600 dark:text-white/50 hover:text-gray-900 dark:hover:text-white";
 
   const copyrightColorClass =
-    theme === "dark" ? "text-white/50" : "text-gray-600 dark:text-white/50";
+    mounted && theme === "dark"
+      ? "text-white/50"
+      : "text-gray-600 dark:text-white/50";
 
   return (
     <footer className="relative z-10 w-full px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">

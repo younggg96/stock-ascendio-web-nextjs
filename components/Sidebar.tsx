@@ -10,11 +10,11 @@ import {
   TrendingUp,
   Users,
   Heart,
-  Star,
   ChevronDown,
   FolderOpen,
   PanelLeftClose,
   PanelLeft,
+  BookmarkIcon,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { Button } from "./ui/button";
@@ -37,7 +37,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
+import { useBreakpoints } from "@/hooks";
 
 const mainNavItems = [
   {
@@ -64,7 +64,7 @@ const collectionItems = [
     href: "/dashboard/liked",
   },
   {
-    icon: Star,
+    icon: BookmarkIcon,
     title: "Favorite Posts",
     href: "/dashboard/favorites",
   },
@@ -85,8 +85,9 @@ interface AppSidebarProps {
 function AppSidebar({ onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(true);
-  const { state, toggleSidebar } = useSidebar();
+  const { state, toggleSidebar, isInitialized } = useSidebar();
 
+  const { isMobile, isTablet } = useBreakpoints();
   const isActive = (href: string) => {
     if (href === "/dashboard") {
       return pathname === "/dashboard";
@@ -119,8 +120,9 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
             size="icon"
             onClick={toggleSidebar}
             className="h-8 w-8 rounded-lg hidden lg:flex group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center"
+            suppressHydrationWarning
           >
-            {state === "expanded" ? (
+            {isInitialized && state === "expanded" ? (
               <PanelLeftClose className="h-4 w-4" />
             ) : (
               <PanelLeft className="h-4 w-4" />
@@ -133,7 +135,6 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
       <SidebarContent>
         {/* Main Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNavItems.map((item) => (
@@ -155,7 +156,7 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
         </SidebarGroup>
 
         {/* Collections */}
-        {state === "expanded" ? (
+        {!isInitialized || state === "expanded" ? (
           <Collapsible
             open={isCollectionsOpen}
             onOpenChange={setIsCollectionsOpen}
@@ -198,7 +199,7 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
             </SidebarGroup>
           </Collapsible>
         ) : (
-          <SidebarGroup className="mt-2">
+          <SidebarGroup className="mt-1">
             <SidebarGroupContent>
               <SidebarMenu>
                 {collectionItems.map((item) => (
@@ -244,7 +245,11 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter>
-        <UserMenu isCollapsed={state === "collapsed"} />
+        <UserMenu
+          isCollapsed={
+            isInitialized && state === "collapsed" && !isMobile && !isTablet
+          }
+        />
       </SidebarFooter>
     </SidebarPrimitive>
   );

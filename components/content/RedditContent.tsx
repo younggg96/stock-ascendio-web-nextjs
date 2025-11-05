@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ExternalLink } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -46,7 +46,12 @@ export default function RedditContent({
   totalFavorites,
 }: RedditContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const summary = aiSummary || "";
 
@@ -112,6 +117,11 @@ export default function RedditContent({
   };
 
   const formatTimeAgo = (timestamp: number) => {
+    if (!mounted) {
+      // Return a static format during SSR to prevent hydration mismatch
+      return new Date(timestamp * 1000).toLocaleDateString();
+    }
+
     const now = Math.floor(Date.now() / 1000);
     const diff = now - timestamp;
 
@@ -221,17 +231,35 @@ export default function RedditContent({
                       Top Reddit Comments ({topComments.length})
                     </h4>
                   </div>
-                  <button
+                  <div
                     onClick={(e) => {
-                      e.stopPropagation();
-                      translateAllComments();
+                      if (!isTranslatingComments) {
+                        e.stopPropagation();
+                        translateAllComments();
+                      }
                     }}
-                    disabled={isTranslatingComments}
-                    className={`flex items-center gap-1 text-xs transition-colors mr-2 ${
+                    onKeyDown={(e) => {
+                      if (
+                        !isTranslatingComments &&
+                        (e.key === "Enter" || e.key === " ")
+                      ) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        translateAllComments();
+                      }
+                    }}
+                    role="button"
+                    tabIndex={isTranslatingComments ? -1 : 0}
+                    aria-label={areCommentsTranslated ? "显示原文" : "翻译全部"}
+                    className={`flex items-center gap-1 text-xs transition-colors mr-2 cursor-pointer ${
                       areCommentsTranslated
                         ? "text-primary"
                         : "text-gray-600 dark:text-gray-400 hover:text-primary"
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    } ${
+                      isTranslatingComments
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
                     title={areCommentsTranslated ? "显示原文" : "翻译全部"}
                   >
                     <svg
@@ -249,7 +277,7 @@ export default function RedditContent({
                         d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
                       />
                     </svg>
-                  </button>
+                  </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-2 pb-2">
@@ -322,15 +350,17 @@ export default function RedditContent({
             </DialogTitle>
           </DialogHeader>
           <div className="overflow-y-auto p-2 h-fit max-h-[calc(90vh-80px)] bg-white dark:bg-card-dark rounded-2xl">
-            <iframe
-              key={theme}
-              src={getEmbedUrl()}
-              width="100%"
-              height={600}
-              frameBorder="0"
-              className="bg-white dark:bg-card-dark"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-            />
+            {mounted && (
+              <iframe
+                key={theme}
+                src={getEmbedUrl()}
+                width="100%"
+                height={600}
+                frameBorder="0"
+                className="bg-white dark:bg-card-dark"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              />
+            )}
           </div>
           <DialogFooter className="px-6 pt-4 pb-4 border-t border-gray-200 dark:border-gray-700">
             <a

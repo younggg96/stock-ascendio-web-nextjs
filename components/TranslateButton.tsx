@@ -68,20 +68,28 @@ export default function TranslateButton({
   };
 
   return (
-    <button
-      onClick={handleTranslate}
-      disabled={isTranslating}
-      className={`flex items-center gap-1 text-xs transition-colors ${
+    <div
+      onClick={isTranslating ? undefined : handleTranslate}
+      onKeyDown={(e) => {
+        if (!isTranslating && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          handleTranslate(e as any);
+        }
+      }}
+      role="button"
+      tabIndex={isTranslating ? -1 : 0}
+      aria-label={isTranslated ? "显示原文" : "翻译"}
+      className={`flex items-center gap-1 text-xs transition-colors cursor-pointer ${
         isTranslated
           ? "text-primary"
           : "text-gray-600 dark:text-gray-400 hover:text-primary"
-      } disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      } ${isTranslating ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
       title={isTranslated ? "显示原文" : "翻译"}
     >
       <Languages
         className={`w-3 h-3 ${isTranslating ? "animate-pulse" : ""}`}
       />
-    </button>
+    </div>
   );
 }
 

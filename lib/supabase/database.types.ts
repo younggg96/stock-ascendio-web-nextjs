@@ -116,13 +116,73 @@ export interface Database {
           created_at?: string;
         };
       };
+      creators: {
+        Row: {
+          id: string;
+          platform: Platform;
+          creator_id: string;
+          username: string | null;
+          display_name: string;
+          avatar_url: string | null;
+          bio: string | null;
+          followers_count: number;
+          verified: boolean;
+          category: string | null;
+          influence_score: number;
+          total_posts_count: number;
+          avg_engagement_rate: number;
+          last_post_at: string | null;
+          trending_score: number;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          platform: Platform;
+          creator_id: string;
+          username?: string | null;
+          display_name: string;
+          avatar_url?: string | null;
+          bio?: string | null;
+          followers_count?: number;
+          verified?: boolean;
+          category?: string | null;
+          influence_score?: number;
+          total_posts_count?: number;
+          avg_engagement_rate?: number;
+          last_post_at?: string | null;
+          trending_score?: number;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          platform?: Platform;
+          creator_id?: string;
+          username?: string | null;
+          display_name?: string;
+          avatar_url?: string | null;
+          bio?: string | null;
+          followers_count?: number;
+          verified?: boolean;
+          category?: string | null;
+          influence_score?: number;
+          total_posts_count?: number;
+          avg_engagement_rate?: number;
+          last_post_at?: string | null;
+          trending_score?: number;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       social_posts: {
         Row: {
           post_id: string;
           platform: Platform;
           creator_id: string;
-          creator_name: string;
-          creator_avatar_url: string | null;
           content: string;
           content_url: string;
           published_at: string;
@@ -138,8 +198,6 @@ export interface Database {
           post_id: string;
           platform: Platform;
           creator_id: string;
-          creator_name: string;
-          creator_avatar_url?: string | null;
           content: string;
           content_url: string;
           published_at: string;
@@ -155,8 +213,6 @@ export interface Database {
           post_id?: string;
           platform?: Platform;
           creator_id?: string;
-          creator_name?: string;
-          creator_avatar_url?: string | null;
           content?: string;
           content_url?: string;
           published_at?: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import {
   Accordion,
@@ -20,6 +20,10 @@ export default function AIAnalysis({
   sentiment = "neutral",
 }: AIAnalysisProps) {
   const [displayText, setDisplayText] = useState(aiAnalysis || "");
+
+  useEffect(() => {
+    setDisplayText(aiAnalysis || "");
+  }, [aiAnalysis]);
 
   if (!aiAnalysis) return null;
 
