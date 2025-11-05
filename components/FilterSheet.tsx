@@ -150,7 +150,7 @@ export function FilterSheet({
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full xs:max-w-md flex flex-col p-0"
+        className="w-full xs:max-w-md flex flex-col !py-6 !px-4"
       >
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>

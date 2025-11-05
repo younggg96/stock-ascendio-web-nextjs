@@ -19,6 +19,10 @@ import { RotateCcw } from "lucide-react";
 import { MultiSelectOption } from "./ui/multi-select";
 import { FilterSheet, DateRange, Sentiment } from "./FilterSheet";
 import PostFeedList from "./PostFeedList";
+import LiveButton from "./LiveButton";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type Platform = "x" | "reddit" | "youtube" | "rednote";
 
@@ -90,7 +94,7 @@ const PlatformTabOption = [
   },
 ];
 
-export default function PostList() {
+export default function PostList({ className }: { className?: string }) {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("x");
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
@@ -98,6 +102,7 @@ export default function PostList() {
   const [selectedSentiments, setSelectedSentiments] = useState<Sentiment[]>([]);
   const [timeRange, setTimeRange] = useState<string>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [isLive, setIsLive] = useState(false);
 
   // Cache posts data for each platform
   const [platformPosts, setPlatformPosts] = useState<
@@ -544,7 +549,94 @@ export default function PostList() {
 
   const handleTabChange = (value: string) => {
     setSelectedTab(value);
+    // Disable live mode when switching away from "all"
+    if (value !== "all" && isLive) {
+      setIsLive(false);
+    }
   };
+
+  // Handle live toggle
+  const handleLiveToggle = useCallback((live: boolean) => {
+    setIsLive(live);
+    if (live) {
+      toast.success("Live updates enabled");
+    } else {
+      toast.info("Live updates disabled");
+    }
+  }, []);
+
+  // Real-time subscription for new posts (only when live and tab is "all")
+  useEffect(() => {
+    if (!isLive || selectedTab !== "all") {
+      return;
+    }
+
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel("all-new-posts")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "social_posts",
+        },
+        (payload) => {
+          try {
+            // Convert the new post to UnifiedPost format
+            const newPost = socialPostToUnifiedPost(payload.new as any);
+
+            if (!newPost || !newPost.isMarketRelated) {
+              return;
+            }
+
+            // Determine which platform this post belongs to
+            let platform: Platform;
+            if (newPost.platform === "x") platform = "x";
+            else if (newPost.platform === "reddit") platform = "reddit";
+            else if (newPost.platform === "youtube") platform = "youtube";
+            else if (newPost.platform === "rednote") platform = "rednote";
+            else {
+              return;
+            }
+
+            // Add new post to the beginning of the corresponding platform array
+            setPlatformPosts((prev) => {
+              const platformPostsList = prev[platform];
+
+              // Check if post already exists
+              if (platformPostsList.some((p) => p.id === newPost.id)) {
+                return prev;
+              }
+
+              return {
+                ...prev,
+                [platform]: [newPost, ...platformPostsList],
+              };
+            });
+
+            // Show toast notification
+            toast.success(
+              `New ${platform.toUpperCase()} post from ${newPost.author}`,
+              {
+                duration: 3000,
+              }
+            );
+          } catch (error) {
+            console.error("Error processing new post:", error);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log("Subscription status:", status);
+      });
+
+    // Cleanup function
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isLive, selectedTab]);
 
   return (
     <SectionCard
@@ -552,9 +644,9 @@ export default function PostList() {
       headerBorder
       padding="md"
       scrollable
-      contentClassName="space-y-0 px-4 pb-0 mt-2"
+      contentClassName="space-y-0 px-4 pb-0 pt-2 mt-2"
       onScroll={handleScroll}
-      className="h-full flex flex-col"
+      className={cn("h-full flex flex-col", className)}
       headerExtra={
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-6">
           <SwitchTab
@@ -605,9 +697,15 @@ export default function PostList() {
       }
       headerClassName="!pb-0 !pt-2"
       liveIndicatorClassName="!mb-2"
+      onLiveToggle={handleLiveToggle}
     >
-      {isLoading &&
-        [...Array(10)].map((_, i) => <CardSkeleton key={i} lines={10} />)}
+      {isLoading && (
+        <div className="flex flex-col gap-2">
+          {[...Array(10)].map((_, i) => (
+            <CardSkeleton key={i} lines={10} />
+          ))}
+        </div>
+      )}
 
       {filteredPosts.length === 0 && !isLoading && !currentError && (
         <EmptyState

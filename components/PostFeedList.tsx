@@ -10,6 +10,18 @@ import {
   RednoteContent,
 } from "./content";
 import { Separator } from "./ui/separator";
+import type { Platform } from "@/lib/supabase/database.types";
+
+// Helper function to map post platform to database Platform type
+const mapPlatform = (platform: string): Platform | undefined => {
+  const platformMap: Record<string, Platform> = {
+    x: "TWITTER",
+    reddit: "REDDIT",
+    youtube: "YOUTUBE",
+    rednote: "REDNOTE",
+  };
+  return platformMap[platform];
+};
 
 interface PostFeedListProps {
   posts: UnifiedPost[];
@@ -172,6 +184,8 @@ export default function PostFeedList({
               createdAt={post.createdAt}
               profileImageUrl={post.avatarUrl}
               onFormatDate={onFormatDate}
+              kolId={post.authorId}
+              platform={mapPlatform(post.platform)}
             />
 
             {renderPostContent(post)}

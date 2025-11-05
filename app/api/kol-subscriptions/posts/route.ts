@@ -22,6 +22,7 @@ export interface SocialPost {
   user_favorited?: boolean;
   total_likes?: number;
   total_favorites?: number;
+  is_tracking?: boolean; // Whether user is tracking this creator/KOL
 }
 
 export interface SubscribedPostsResponse {
@@ -202,6 +203,7 @@ export async function GET(request: NextRequest) {
       user_favorited: userFavorites.has(post.post_id),
       total_likes: likesCountMap.get(post.post_id) || 0,
       total_favorites: favoritesCountMap.get(post.post_id) || 0,
+      is_tracking: true, // All posts in this API are from tracked KOLs
     }));
 
     const response: SubscribedPostsResponse = {

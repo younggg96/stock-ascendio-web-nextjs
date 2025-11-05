@@ -135,6 +135,9 @@ function AppSidebar({ onNavigate }: AppSidebarProps) {
       <SidebarContent>
         {/* Main Navigation */}
         <SidebarGroup>
+          <SidebarGroupLabel className="sr-only">
+            <span>HomeStocks</span>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNavItems.map((item) => (

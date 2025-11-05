@@ -21,6 +21,7 @@ export interface Tweet {
   user_favorited?: boolean;
   total_likes?: number;
   total_favorites?: number;
+  is_tracking?: boolean; // Whether user is tracking this creator/KOL
   // Legacy fields for backward compatibility
   tweet_id?: string;
   screen_name?: string;
@@ -79,8 +80,9 @@ export async function GET(request: NextRequest) {
       throw new Error(`Failed to fetch tweets: ${error.message}`);
     }
 
-    // Get post IDs for batch queries
+    // Get post IDs and creator IDs for batch queries
     const postIds = (data || []).map((post) => post.post_id);
+    const creatorIds = (data || []).map((post) => post.creator_id);
 
     // Batch query for likes and favorites counts
     const [likesCountResult, favoritesCountResult] = await Promise.all([
@@ -94,29 +96,40 @@ export async function GET(request: NextRequest) {
         .in("post_id", postIds),
     ]);
 
-    // Get user's likes and favorites if authenticated
+    // Get user's likes, favorites, and tracked KOLs if authenticated
     let userLikes: Set<string> = new Set();
     let userFavorites: Set<string> = new Set();
+    let trackedCreators: Set<string> = new Set();
 
     if (user) {
-      const [userLikesResult, userFavoritesResult] = await Promise.all([
-        supabase
-          .from("user_post_likes")
-          .select("post_id")
-          .eq("user_id", user.id)
-          .in("post_id", postIds),
-        supabase
-          .from("user_post_favorites")
-          .select("post_id")
-          .eq("user_id", user.id)
-          .in("post_id", postIds),
-      ]);
+      const [userLikesResult, userFavoritesResult, trackedKOLsResult] =
+        await Promise.all([
+          supabase
+            .from("user_post_likes")
+            .select("post_id")
+            .eq("user_id", user.id)
+            .in("post_id", postIds),
+          supabase
+            .from("user_post_favorites")
+            .select("post_id")
+            .eq("user_id", user.id)
+            .in("post_id", postIds),
+          supabase
+            .from("user_kol_entries")
+            .select("kol_id")
+            .eq("user_id", user.id)
+            .eq("platform", "TWITTER")
+            .in("kol_id", creatorIds),
+        ]);
 
       userLikes = new Set(
         (userLikesResult.data || []).map((item) => item.post_id)
       );
       userFavorites = new Set(
         (userFavoritesResult.data || []).map((item) => item.post_id)
+      );
+      trackedCreators = new Set(
+        (trackedKOLsResult.data || []).map((item) => item.kol_id)
       );
     }
 
@@ -166,6 +179,7 @@ export async function GET(request: NextRequest) {
       user_favorited: userFavorites.has(post.post_id),
       total_likes: likesCountMap.get(post.post_id) || 0,
       total_favorites: favoritesCountMap.get(post.post_id) || 0,
+      is_tracking: trackedCreators.has(post.creator_id),
     }));
 
     const response: TweetsResponse = {

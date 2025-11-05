@@ -1,6 +1,8 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import LiveButton from "./LiveButton";
+import { toast } from "sonner";
 
 interface SectionCardProps {
   // Header props
@@ -30,6 +32,7 @@ interface SectionCardProps {
   className?: string;
   padding?: "sm" | "md" | "lg" | "none";
   liveIndicatorClassName?: string;
+  onLiveToggle?: (live: boolean) => void;
 }
 
 export default function SectionCard({
@@ -53,6 +56,7 @@ export default function SectionCard({
   className = "",
   padding = "md",
   liveIndicatorClassName = "",
+  onLiveToggle,
 }: SectionCardProps) {
   const titleSizeClasses = {
     sm: "text-[16px]",
@@ -70,6 +74,10 @@ export default function SectionCard({
   const headerBottomClasses = {
     withBorder: "pb-4",
     withoutBorder: "pb-4",
+  };
+
+  const handleLiveToggle = (live: boolean) => {
+    onLiveToggle?.(live);
   };
 
   return (
@@ -134,18 +142,11 @@ export default function SectionCard({
                 <div className="w-full sm:w-auto">{headerRightExtra}</div>
               )}
               {showLiveIndicator && (
-                <span
-                  className={cn(
-                    liveIndicatorClassName,
-                    "text-primary text-xs font-bold flex items-center gap-1"
-                  )}
-                >
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                  </span>
-                  LIVE
-                </span>
+                <LiveButton
+                  isEnabled={true}
+                  onLiveToggle={handleLiveToggle}
+                  className={liveIndicatorClassName}
+                />
               )}
             </div>
           </div>

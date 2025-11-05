@@ -6,8 +6,8 @@ import PostList from "@/components/PostList";
 export default function Dashboard() {
   return (
     <DashboardLayout title="Home">
-      <div className="flex-1 gap-2 p-2 overflow-hidden">
-        <PostList />
+      <div className="h-full flex flex-col p-2">
+        <PostList className="flex-1" />
       </div>
     </DashboardLayout>
   );
