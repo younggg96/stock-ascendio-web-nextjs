@@ -223,7 +223,6 @@ export default function KOLTrackerTable({
             placeholder="Search tracked KOLs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-8 text-xs max-w-xs"
           />
           <Select
             value={filterPlatform}
@@ -231,7 +230,7 @@ export default function KOLTrackerTable({
               setFilterPlatform(value as Platform | "all")
             }
           >
-            <SelectTrigger className="w-full sm:w-[150px] h-8 text-xs">
+            <SelectTrigger className="w-full sm:w-[200px] text-xs">
               <SelectValue placeholder="All Platforms" />
             </SelectTrigger>
             <SelectContent>
@@ -245,8 +244,8 @@ export default function KOLTrackerTable({
         </div>
         <Button
           onClick={openAddDialog}
-          size="sm"
-          className="flex items-center gap-1.5 h-8 text-xs w-full sm:w-auto"
+          size="lg"
+          className="flex items-center gap-1.5 h-[40px] text-xs w-full sm:w-auto"
         >
           <Plus className="w-3.5 h-3.5" />
           Track New KOL
@@ -333,12 +332,11 @@ export default function KOLTrackerTable({
         </div>
       ) : (
         /* Desktop Table View */
-        <div className="border border-border-light dark:border-border-dark rounded-lg overflow-hidden">
+        <div className="border border-border-light dark:border-border-dark rounded-lg overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Username</TableHead>
                 <TableHead className="text-xs">Platform</TableHead>
                 <TableHead className="text-xs">Followers</TableHead>
                 <TableHead className="text-xs hidden md:table-cell">
@@ -364,9 +362,6 @@ export default function KOLTrackerTable({
                     <TableCell className="text-xs font-medium">
                       {kol.name}
                     </TableCell>
-                    <TableCell className="text-xs text-gray-600 dark:text-white/60">
-                      {kol.username}
-                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
                         <Image
@@ -389,15 +384,6 @@ export default function KOLTrackerTable({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          onClick={() => handleToggleTracking(kol)}
-                          className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-950/20"
-                          title="Stop tracking"
-                        >
-                          <Star className="w-3.5 h-3.5 fill-yellow-500" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="xs"

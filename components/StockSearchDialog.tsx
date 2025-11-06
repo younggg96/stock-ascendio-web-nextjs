@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import CompanyLogo from "./CompanyLogo";
+import SearchWithAutocomplete from "./SearchWithAutocomplete";
 import {
   Dialog,
   DialogContent,
@@ -9,18 +10,19 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Building2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Building2, X } from "lucide-react";
+import { TrackedStock } from "@/lib/trackedStockApi";
 
 interface StockSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (stock: StockSearchResult) => void;
+  trackedStocks?: TrackedStock[];
+  onDelete?: (stockId: string) => void;
 }
 
 interface StockSearchResult {
+  id: string;
   symbol: string;
   name: string;
   logo?: string;
@@ -30,48 +32,56 @@ interface StockSearchResult {
 // 热门股票列表
 const popularEquities: StockSearchResult[] = [
   {
+    id: "TSLA",
     symbol: "TSLA",
     name: "Tesla",
     logo: "https://logo.clearbit.com/tesla.com",
     type: "equity",
   },
   {
+    id: "NVDA",
     symbol: "NVDA",
     name: "NVIDIA",
     logo: "https://logo.clearbit.com/nvidia.com",
     type: "equity",
   },
   {
+    id: "AAPL",
     symbol: "AAPL",
     name: "Apple",
     logo: "https://logo.clearbit.com/apple.com",
     type: "equity",
   },
   {
+    id: "AMZN",
     symbol: "AMZN",
     name: "Amazon",
     logo: "https://logo.clearbit.com/amazon.com",
     type: "equity",
   },
   {
+    id: "MSFT",
     symbol: "MSFT",
     name: "Microsoft",
     logo: "https://logo.clearbit.com/microsoft.com",
     type: "equity",
   },
   {
+    id: "GOOGL",
     symbol: "GOOGL",
     name: "Google",
     logo: "https://logo.clearbit.com/google.com",
     type: "equity",
   },
   {
+    id: "META",
     symbol: "META",
     name: "Meta",
     logo: "https://logo.clearbit.com/meta.com",
     type: "equity",
   },
   {
+    id: "NFLX",
     symbol: "NFLX",
     name: "Netflix",
     logo: "https://logo.clearbit.com/netflix.com",
@@ -83,107 +93,139 @@ export default function StockSearchDialog({
   open,
   onOpenChange,
   onSelect,
+  trackedStocks = [],
+  onDelete,
 }: StockSearchDialogProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<StockSearchResult[]>([]);
-
-  // 搜索逻辑
-  useEffect(() => {
-    if (!searchTerm) {
-      setSearchResults([]);
-      return;
-    }
-
+  // 过滤函数：根据搜索词过滤股票
+  const filterStocks = (stocks: StockSearchResult[], searchTerm: string) => {
     const term = searchTerm.toUpperCase();
-    const filtered = popularEquities.filter(
+    return stocks.filter(
       (stock) =>
         stock.symbol.includes(term) ||
         stock.name.toUpperCase().includes(term.toUpperCase())
     );
-    setSearchResults(filtered);
-  }, [searchTerm]);
+  };
 
-  // 显示的列表：搜索结果或热门股票
-  const displayList = searchTerm ? searchResults : popularEquities;
+  // 渲染股票项
+  const renderStockItem = (
+    stock: StockSearchResult,
+    handleSelect: (stock: StockSearchResult) => void
+  ) => {
+    return (
+      <button
+        onClick={() => handleSelect(stock)}
+        className="w-full px-3 py-2.5 flex items-center gap-2.5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-100 dark:border-white/5 last:border-b-0"
+      >
+        {/* Logo */}
+        {stock.logo ? (
+          <CompanyLogo
+            logoUrl={stock.logo}
+            symbol={stock.symbol}
+            name={stock.name}
+            size="sm"
+            shape="rounded"
+            border="light"
+            unoptimized
+          />
+        ) : (
+          <div className="w-8 h-8 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
+            <Building2 className="w-4 h-4 text-gray-400" />
+          </div>
+        )}
 
-  const handleSelectStock = (stock: StockSearchResult) => {
-    onSelect(stock);
-    setSearchTerm("");
-    onOpenChange(false);
+        {/* Info */}
+        <div className="flex-1 text-left min-w-0">
+          <div className="font-semibold text-sm text-gray-900 dark:text-white">
+            {stock.symbol}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-white/50 truncate">
+            {stock.name}
+          </div>
+        </div>
+      </button>
+    );
+  };
+
+  const handleDelete = (stockId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(stockId);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] max-w-[500px] sm:max-w-[500px] !py-3 !px-0 gap-0 max-h-[85vh] sm:max-h-[600px]">
-        <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
-          <DialogTitle className="text-lg sm:text-xl">Add Stock</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="w-[90vw] max-w-[500px] sm:max-w-[500px] !p-0 gap-0 min-h-[500px] max-h-[85vh] sm:max-h-[600px]">
+        <DialogHeader>
+          <div className="px-6 pt-6 pb-2">
+            <DialogTitle className="mb-4">My Watchlist</DialogTitle>
 
-        {/* Search Bar */}
-        <div className="px-4 pb-3 sm:px-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
+            {/* Search with Autocomplete Component */}
+            <SearchWithAutocomplete
               placeholder="Search stocks..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-11 sm:h-10 bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-base sm:text-sm"
-              autoFocus
+              items={popularEquities}
+              popularItems={popularEquities}
+              onSelect={onSelect}
+              filterFunction={filterStocks}
+              renderItem={renderStockItem}
+              popularLabel="POPULAR STOCKS"
+              maxResults={8}
             />
           </div>
-        </div>
+        </DialogHeader>
 
-        {/* Results */}
-        <div className="max-h-[calc(85vh-120px)] sm:max-h-[440px] min-h-[400px] overflow-y-auto overscroll-contain">
-          {!searchTerm && (
-            <div className="px-4 py-2 sm:px-6 text-xs font-medium text-gray-500 dark:text-white/50 tracking-wide">
-              Popular stocks
-            </div>
-          )}
-
-          {displayList.length === 0 ? (
-            <div className="h-[400px] flex flex-col items-center justify-center text-center py-12 sm:py-8 text-gray-500 dark:text-white/50">
-              <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-base sm:text-sm">No stocks found</p>
+        {/* Tracked Stocks List */}
+        <div className="max-h-[calc(85vh-140px)] sm:max-h-[460px] overflow-y-auto">
+          {trackedStocks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center py-20 text-gray-500 dark:text-white/50">
+              <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="text-sm mb-1">No tracked stocks yet</p>
+              <p className="text-xs text-gray-400 dark:text-white/40">
+                Search and add stocks to start tracking
+              </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-white/5 min-h-[400px]">
-              {displayList.map((stock) => (
-                <button
-                  key={stock.symbol}
-                  onClick={() => handleSelectStock(stock)}
-                  className="w-full px-4 py-4 sm:px-6 sm:py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors"
+            <div>
+              {trackedStocks.map((stock) => (
+                <div
+                  key={stock.id}
+                  className="flex items-center gap-2.5 px-6 py-3 transition-colors border-b border-gray-100 dark:border-white/5 last:border-b-0 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  <div className="flex items-center gap-3 sm:gap-3">
-                    {/* Logo */}
-                    {stock.logo ? (
-                      <CompanyLogo
-                        logoUrl={stock.logo}
-                        symbol={stock.symbol}
-                        name={stock.name}
-                        size="md"
-                        shape="rounded"
-                        border="light"
-                        unoptimized
-                        className="w-10 h-10 sm:w-8 sm:h-8"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
-                        <Building2 className="w-5 h-5 sm:w-4 sm:h-4 text-gray-400" />
-                      </div>
-                    )}
+                  {/* Logo */}
+                  {stock.logo ? (
+                    <CompanyLogo
+                      logoUrl={stock.logo}
+                      symbol={stock.symbol}
+                      name={stock.companyName}
+                      size="sm"
+                      shape="rounded"
+                      border="light"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-700">
+                      <Building2 className="w-4 h-4 text-gray-400" />
+                    </div>
+                  )}
 
-                    {/* Info */}
-                    <div className="text-left">
-                      <div className="font-semibold text-base sm:text-sm text-gray-900 dark:text-white">
-                        {stock.symbol}
-                      </div>
-                      <div className="text-sm sm:text-xs text-gray-500 dark:text-white/50">
-                        {stock.name}
-                      </div>
+                  {/* Stock Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-gray-900 dark:text-white">
+                      {stock.symbol}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-white/50 truncate">
+                      {stock.companyName}
                     </div>
                   </div>
-                </button>
+
+                  {/* Delete Button */}
+                  <button
+                    onClick={(e) => handleDelete(stock.id, e)}
+                    className="p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded transition-colors flex-shrink-0"
+                  >
+                    <X className="w-4 h-4 text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/60" />
+                  </button>
+                </div>
               ))}
             </div>
           )}

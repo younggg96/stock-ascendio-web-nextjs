@@ -259,6 +259,65 @@ export interface Database {
           created_at?: string;
         };
       };
+      trending_tickers: {
+        Row: {
+          id: string;
+          ticker: string;
+          platform: Platform;
+          mention_count: number;
+          positive_mentions: number;
+          negative_mentions: number;
+          neutral_mentions: number;
+          sentiment_score: number;
+          engagement_score: number;
+          trending_score: number;
+          unique_authors_count: number;
+          top_post_ids: string[] | null;
+          related_topics: string[] | null;
+          first_seen_at: string | null;
+          last_seen_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          ticker: string;
+          platform: Platform;
+          mention_count?: number;
+          positive_mentions?: number;
+          negative_mentions?: number;
+          neutral_mentions?: number;
+          sentiment_score?: number;
+          engagement_score?: number;
+          trending_score?: number;
+          unique_authors_count?: number;
+          top_post_ids?: string[] | null;
+          related_topics?: string[] | null;
+          first_seen_at?: string | null;
+          last_seen_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          ticker?: string;
+          platform?: Platform;
+          mention_count?: number;
+          positive_mentions?: number;
+          negative_mentions?: number;
+          neutral_mentions?: number;
+          sentiment_score?: number;
+          engagement_score?: number;
+          trending_score?: number;
+          unique_authors_count?: number;
+          top_post_ids?: string[] | null;
+          related_topics?: string[] | null;
+          first_seen_at?: string | null;
+          last_seen_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }
@@ -310,3 +369,10 @@ export type UserPostFavoriteInsert =
   Database["public"]["Tables"]["user_post_favorites"]["Insert"];
 export type UserPostFavoriteUpdate =
   Database["public"]["Tables"]["user_post_favorites"]["Update"];
+
+export type TrendingTicker =
+  Database["public"]["Tables"]["trending_tickers"]["Row"];
+export type TrendingTickerInsert =
+  Database["public"]["Tables"]["trending_tickers"]["Insert"];
+export type TrendingTickerUpdate =
+  Database["public"]["Tables"]["trending_tickers"]["Update"];

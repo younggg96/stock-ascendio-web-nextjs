@@ -2,27 +2,18 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
 import SectionCard from "@/components/SectionCard";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 export default function StockTrackerLoading() {
   return (
-    <DashboardLayout title="Stock Tracker">
+    <DashboardLayout title="Stocks Monitor">
       <div className="flex-1 grid grid-cols-1 xl:grid-cols-3 gap-2 p-2 overflow-hidden">
         {/* Left Column - My Tracked Stocks */}
         <div className="xl:col-span-2 flex flex-col min-h-0">
           <SectionCard
-            title="My Watchlist"
+            title="Trending Stocks"
             useSectionHeader
-            scrollable
-            className="h-full flex flex-col"
+            padding="md"
             contentClassName="px-4 pb-4"
-            headerRightExtra={
-              <Button size="sm" className="h-8 gap-1.5 text-xs" disabled>
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Stock</span>
-              </Button>
-            }
           >
             {/* Table Skeleton */}
             <div className="rounded-md border border-border-light dark:border-border-dark overflow-hidden">
@@ -82,7 +73,7 @@ export default function StockTrackerLoading() {
         </div>
 
         {/* Right Column - Hot Stocks List */}
-        <div className="space-y-2 xl:col-span-1 overflow-y-auto">
+        <div className="space-y-2 xl:col-span-1">
           {/* HotStocksList Skeleton */}
           <div className="bg-white dark:bg-card-dark rounded-lg border border-border-light dark:border-border-dark p-4">
             <div className="h-4 w-28 bg-gray-300 dark:bg-white/10 rounded mb-3 animate-pulse"></div>

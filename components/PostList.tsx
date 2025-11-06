@@ -558,11 +558,6 @@ export default function PostList({ className }: { className?: string }) {
   // Handle live toggle
   const handleLiveToggle = useCallback((live: boolean) => {
     setIsLive(live);
-    if (live) {
-      toast.success("Live updates enabled");
-    } else {
-      toast.info("Live updates disabled");
-    }
   }, []);
 
   // Real-time subscription for new posts (only when live and tab is "all")

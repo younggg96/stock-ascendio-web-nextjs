@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import 'react-day-picker/dist/style.css';
+@import "react-day-picker/dist/style.css";
 
 :root {
   --background: #f7f8fa;
@@ -138,6 +138,44 @@ body {
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Custom scrollbar styles - thin and modern */
+  * {
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  }
+
+  .dark * {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 3px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+  }
+
+  .dark *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .dark *::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
   }
 }
 
