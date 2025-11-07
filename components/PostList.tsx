@@ -703,30 +703,34 @@ export default function PostList({ className }: { className?: string }) {
       )}
 
       {filteredPosts.length === 0 && !isLoading && !currentError && (
-        <EmptyState
-          title={
-            selectedAuthors.length > 0 ||
-            selectedTags.length > 0 ||
-            selectedSentiments.length > 0
-              ? "No posts match your filters"
-              : "No posts available"
-          }
-          description={
-            selectedAuthors.length > 0 ||
-            selectedTags.length > 0 ||
-            selectedSentiments.length > 0
-              ? "Try adjusting your filters or clear them to see more posts."
-              : "There are no posts to display at the moment."
-          }
-        />
+        <div className="flex items-center justify-center h-full min-h-[400px]">
+          <EmptyState
+            title={
+              selectedAuthors.length > 0 ||
+              selectedTags.length > 0 ||
+              selectedSentiments.length > 0
+                ? "No posts match your filters"
+                : "No posts available"
+            }
+            description={
+              selectedAuthors.length > 0 ||
+              selectedTags.length > 0 ||
+              selectedSentiments.length > 0
+                ? "Try adjusting your filters or clear them to see more posts."
+                : "There are no posts to display at the moment."
+            }
+          />
+        </div>
       )}
 
       {currentError && !isLoading && (
-        <ErrorState
-          title="Failed to load posts"
-          message={currentError}
-          retry={refreshCurrentPlatform}
-        />
+        <div className="flex items-center justify-center h-full min-h-[400px]">
+          <ErrorState
+            title="Failed to load posts"
+            message={currentError}
+            retry={refreshCurrentPlatform}
+          />
+        </div>
       )}
 
       <PostFeedList
