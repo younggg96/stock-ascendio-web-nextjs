@@ -22,14 +22,14 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     if (type === "liked") {
-      // Get user's liked posts with full creator info
+      // Get user's liked posts
       const { data, error } = await supabase
         .from("user_post_likes")
         .select(
           `
           post_id,
           created_at,
-          social_posts (*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score))
+          social_posts (*)
         `
         )
         .eq("user_id", user.id)
@@ -45,9 +45,26 @@ export async function GET(request: NextRequest) {
       const posts = data.map((item: any) => item.social_posts).filter(Boolean);
       const postIds = posts.map((post: any) => post.post_id);
 
-      // Get unique creator IDs
+      // Get unique creator IDs for manual join
       const creatorIds = Array.from(
         new Set(posts.map((post: any) => post.creator_id))
+      );
+
+      // Manually join creator data
+      const { data: creatorsData, error: creatorsError } = await supabase
+        .from("creators")
+        .select(
+          "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
+        )
+        .in("id", creatorIds);
+
+      if (creatorsError) {
+        console.error("Creators query error:", creatorsError);
+      }
+
+      // Create a map of creators by ID
+      const creatorsMap = new Map(
+        (creatorsData || []).map((creator) => [creator.id, creator])
       );
 
       // Batch query for likes, favorites counts, and tracked creators
@@ -101,31 +118,33 @@ export async function GET(request: NextRequest) {
       });
 
       // Enhance posts with interaction data and include like timestamp
-      const enhancedPosts = data.map((item: any) => ({
-        ...item.social_posts,
-        // Extract creator info from JOIN
-        creator_name: item.social_posts.creators?.display_name || "",
-        creator_avatar_url: item.social_posts.creators?.avatar_url || "",
-        creator_username: item.social_posts.creators?.username || "",
-        creator_verified: item.social_posts.creators?.verified || false,
-        creator_bio: item.social_posts.creators?.bio || null,
-        creator_followers_count:
-          item.social_posts.creators?.followers_count || 0,
-        creator_category: item.social_posts.creators?.category || null,
-        creator_influence_score:
-          item.social_posts.creators?.influence_score || 0,
-        creator_trending_score: item.social_posts.creators?.trending_score || 0,
-        user_liked: true, // All posts in this list are liked by the user
-        user_favorited: userFavorites.has(item.social_posts.post_id),
-        user_tracked: userTrackedCreators.has(item.social_posts.creator_id),
-        total_likes: likesCountMap.get(item.social_posts.post_id) || 0,
-        total_favorites: favoritesCountMap.get(item.social_posts.post_id) || 0,
-        liked_at: item.created_at, // Include when user liked this post
-      }));
+      const enhancedPosts = data.map((item: any) => {
+        const creator = creatorsMap.get(item.social_posts?.creator_id);
+        return {
+          ...item.social_posts,
+          // Extract creator info from manual join
+          creator_name: creator?.display_name || "",
+          creator_avatar_url: creator?.avatar_url || "",
+          creator_username: creator?.username || "",
+          creator_verified: creator?.verified || false,
+          creator_bio: creator?.bio || null,
+          creator_followers_count: creator?.followers_count || 0,
+          creator_category: creator?.category || null,
+          creator_influence_score: creator?.influence_score || 0,
+          creator_trending_score: creator?.trending_score || 0,
+          user_liked: true, // All posts in this list are liked by the user
+          user_favorited: userFavorites.has(item.social_posts.post_id),
+          user_tracked: userTrackedCreators.has(item.social_posts.creator_id),
+          total_likes: likesCountMap.get(item.social_posts.post_id) || 0,
+          total_favorites:
+            favoritesCountMap.get(item.social_posts.post_id) || 0,
+          liked_at: item.created_at, // Include when user liked this post
+        };
+      });
 
       return NextResponse.json({ posts: enhancedPosts, count: data.length });
     } else if (type === "favorited") {
-      // Get user's favorited posts with full creator info
+      // Get user's favorited posts
       const { data, error } = await supabase
         .from("user_post_favorites")
         .select(
@@ -134,7 +153,7 @@ export async function GET(request: NextRequest) {
           post_id,
           notes,
           created_at,
-          social_posts (*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score))
+          social_posts (*)
         `
         )
         .eq("user_id", user.id)
@@ -149,9 +168,26 @@ export async function GET(request: NextRequest) {
       const posts = data.map((item: any) => item.social_posts).filter(Boolean);
       const postIds = posts.map((post: any) => post.post_id);
 
-      // Get unique creator IDs
+      // Get unique creator IDs for manual join
       const creatorIds = Array.from(
         new Set(posts.map((post: any) => post.creator_id))
+      );
+
+      // Manually join creator data
+      const { data: creatorsData, error: creatorsError } = await supabase
+        .from("creators")
+        .select(
+          "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
+        )
+        .in("id", creatorIds);
+
+      if (creatorsError) {
+        console.error("Creators query error:", creatorsError);
+      }
+
+      // Create a map of creators by ID
+      const creatorsMap = new Map(
+        (creatorsData || []).map((creator) => [creator.id, creator])
       );
 
       // Batch query for likes, favorites counts, and tracked creators
@@ -205,28 +241,30 @@ export async function GET(request: NextRequest) {
       });
 
       // Enhance posts with interaction data and include favorite notes
-      const enhancedPosts = data.map((item: any) => ({
-        ...item.social_posts,
-        // Extract creator info from JOIN
-        creator_name: item.social_posts.creators?.display_name || "",
-        creator_avatar_url: item.social_posts.creators?.avatar_url || "",
-        creator_username: item.social_posts.creators?.username || "",
-        creator_verified: item.social_posts.creators?.verified || false,
-        creator_bio: item.social_posts.creators?.bio || null,
-        creator_followers_count:
-          item.social_posts.creators?.followers_count || 0,
-        creator_category: item.social_posts.creators?.category || null,
-        creator_influence_score:
-          item.social_posts.creators?.influence_score || 0,
-        creator_trending_score: item.social_posts.creators?.trending_score || 0,
-        user_liked: userLikes.has(item.social_posts.post_id),
-        user_favorited: true, // All posts in this list are favorited by the user
-        user_tracked: userTrackedCreators.has(item.social_posts.creator_id),
-        total_likes: likesCountMap.get(item.social_posts.post_id) || 0,
-        total_favorites: favoritesCountMap.get(item.social_posts.post_id) || 0,
-        favorite_notes: item.notes, // Include user's notes for this favorite
-        favorite_id: item.id, // Include favorite ID for potential updates
-      }));
+      const enhancedPosts = data.map((item: any) => {
+        const creator = creatorsMap.get(item.social_posts?.creator_id);
+        return {
+          ...item.social_posts,
+          // Extract creator info from manual join
+          creator_name: creator?.display_name || "",
+          creator_avatar_url: creator?.avatar_url || "",
+          creator_username: creator?.username || "",
+          creator_verified: creator?.verified || false,
+          creator_bio: creator?.bio || null,
+          creator_followers_count: creator?.followers_count || 0,
+          creator_category: creator?.category || null,
+          creator_influence_score: creator?.influence_score || 0,
+          creator_trending_score: creator?.trending_score || 0,
+          user_liked: userLikes.has(item.social_posts.post_id),
+          user_favorited: true, // All posts in this list are favorited by the user
+          user_tracked: userTrackedCreators.has(item.social_posts.creator_id),
+          total_likes: likesCountMap.get(item.social_posts.post_id) || 0,
+          total_favorites:
+            favoritesCountMap.get(item.social_posts.post_id) || 0,
+          favorite_notes: item.notes, // Include user's notes for this favorite
+          favorite_id: item.id, // Include favorite ID for potential updates
+        };
+      });
 
       return NextResponse.json({ posts: enhancedPosts, count: data.length });
     } else {

@@ -54,12 +54,12 @@ export async function GET(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Build query with full creator info
+    // Build query - First get posts only
     let query = supabase
       .from("social_posts")
-      .select(
-        "*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score)"
-      )
+      .select("*", {
+        count: "exact",
+      })
       .eq("platform", "TWITTER")
       .order("published_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -74,11 +74,31 @@ export async function GET(request: NextRequest) {
     }
 
     const { data, error, count } = await query;
-
     if (error) {
       console.error("Supabase Error:", error);
       throw new Error(`Failed to fetch tweets: ${error.message}`);
     }
+
+    // Manually join creator data
+    const creatorIds = Array.from(
+      new Set((data || []).map((post) => post.creator_id))
+    );
+
+    const { data: creatorsData, error: creatorsError } = await supabase
+      .from("creators")
+      .select(
+        "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
+      )
+      .in("creator_id", creatorIds);
+
+    if (creatorsError) {
+      console.error("Creators query error:", creatorsError);
+    }
+
+    // Create a map of creators by ID
+    const creatorsMap = new Map(
+      (creatorsData || []).map((creator) => [creator.id, creator])
+    );
 
     // Get post IDs for batch queries
     const postIds = (data || []).map((post) => post.post_id);
@@ -155,35 +175,40 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform data to match expected format (with legacy field mapping)
-    const tweets: Tweet[] = (data || []).map((post: any) => ({
-      ...post,
-      // Extract creator info from JOIN
-      creator_name: post.creators?.display_name || "",
-      creator_avatar_url: post.creators?.avatar_url || "",
-      creator_username: post.creators?.username || "",
-      creator_verified: post.creators?.verified || false,
-      creator_bio: post.creators?.bio || null,
-      creator_followers_count: post.creators?.followers_count || 0,
-      creator_category: post.creators?.category || null,
-      creator_influence_score: post.creators?.influence_score || 0,
-      creator_trending_score: post.creators?.trending_score || 0,
-      // Add legacy field mappings for backward compatibility
-      tweet_id: post.post_id,
-      screen_name: post.creators?.display_name || "",
-      user_id: post.creator_id,
-      created_at: post.published_at,
-      num_likes: post.likes_count || 0,
-      fetched_at: post.published_at,
-      tweet_url: post.content_url,
-      full_text: post.content,
-      profile_image_url: post.creators?.avatar_url || "",
-      // Add user interaction data
-      user_liked: userLikes.has(post.post_id),
-      user_favorited: userFavorites.has(post.post_id),
-      user_tracked: userTrackedCreators.has(post.creator_id),
-      total_likes: likesCountMap.get(post.post_id) || 0,
-      total_favorites: favoritesCountMap.get(post.post_id) || 0,
-    }));
+    const tweets: Tweet[] = (data || []).map((post: any) => {
+      const creator = creatorsMap.get(post.creator_id);
+
+      console.log("creator", creator);
+      return {
+        ...post,
+        // Extract creator info from manual join
+        creator_name: creator?.display_name || "",
+        creator_avatar_url: creator?.avatar_url || "",
+        creator_username: creator?.username || "",
+        creator_verified: creator?.verified || false,
+        creator_bio: creator?.bio || null,
+        creator_followers_count: creator?.followers_count || 0,
+        creator_category: creator?.category || null,
+        creator_influence_score: creator?.influence_score || 0,
+        creator_trending_score: creator?.trending_score || 0,
+        // Add legacy field mappings for backward compatibility
+        tweet_id: post.post_id,
+        screen_name: creator?.display_name || "",
+        user_id: post.creator_id,
+        created_at: post.published_at,
+        num_likes: post.likes_count || 0,
+        fetched_at: post.published_at,
+        tweet_url: post.content_url,
+        full_text: post.content,
+        profile_image_url: creator?.avatar_url || "",
+        // Add user interaction data
+        user_liked: userLikes.has(post.post_id),
+        user_favorited: userFavorites.has(post.post_id),
+        user_tracked: userTrackedCreators.has(post.creator_id),
+        total_likes: likesCountMap.get(post.post_id) || 0,
+        total_favorites: favoritesCountMap.get(post.post_id) || 0,
+      };
+    });
 
     const response: TweetsResponse = {
       count: count || 0,

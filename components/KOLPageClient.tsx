@@ -110,7 +110,7 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
                 limit={20}
                 showFilters={true}
                 enableInfiniteScroll={true}
-                maxHeight="calc(100vh - 250px)"
+                maxHeight="calc(100vh - 220px)"
               />
             )}
           </SectionCard>

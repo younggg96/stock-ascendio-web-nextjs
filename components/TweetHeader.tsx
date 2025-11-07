@@ -85,14 +85,14 @@ export default function TweetHeader({
           className="w-8 h-8 rounded-full flex-shrink-0"
         />
       ) : (
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-white text-xs font-bold flex-shrink-0">
           {screenName.substring(0, 2).toUpperCase()}
         </div>
       )}
       <div className="flex-1 min-w-0 flex items-center gap-3">
         <p className="font-bold text-sm text-gray-900 dark:text-white">
-          {screenName}{" "}
-          <span className="text-gray-500 dark:text-white/50 font-normal">
+          {screenName}
+          <span className="text-gray-500 dark:text-white/50 font-normal text-xs">
             @{screenName.toLowerCase()} · {onFormatDate(createdAt)}
           </span>
         </p>

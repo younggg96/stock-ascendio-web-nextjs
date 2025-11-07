@@ -99,15 +99,12 @@ export async function GET(request: NextRequest) {
       ? [platform]
       : [...new Set(subscriptions.map((sub) => sub.platform))];
 
-    // 第二步：查询这些 KOL 的帖子（包含完整 creator 信息）
+    // 第二步：查询这些 KOL 的帖子
     let postsQuery = supabase
       .from("social_posts")
-      .select(
-        "*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score)",
-        {
-          count: "exact",
-        }
-      )
+      .select("*", {
+        count: "exact",
+      })
       .in("creator_id", kolIds)
       .in("platform", platformFilter)
       .order("published_at", { ascending: false })
@@ -131,6 +128,27 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Manually join creator data
+    const creatorIds = Array.from(
+      new Set((posts || []).map((post) => post.creator_id))
+    );
+
+    const { data: creatorsData, error: creatorsError } = await supabase
+      .from("creators")
+      .select(
+        "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
+      )
+      .in("id", creatorIds);
+
+    if (creatorsError) {
+      console.error("Creators query error:", creatorsError);
+    }
+
+    // Create a map of creators by ID
+    const creatorsMap = new Map(
+      (creatorsData || []).map((creator) => [creator.id, creator])
+    );
 
     // 获取帖子 ID 列表，用于批量查询点赞和收藏
     const postIds = (posts || []).map((post) => post.post_id);
@@ -187,24 +205,27 @@ export async function GET(request: NextRequest) {
     });
 
     // 组装响应数据
-    const enrichedPosts: SocialPost[] = (posts || []).map((post: any) => ({
-      ...post,
-      // Extract creator info from JOIN
-      creator_name: post.creators?.display_name || "",
-      creator_avatar_url: post.creators?.avatar_url || "",
-      creator_username: post.creators?.username || "",
-      creator_verified: post.creators?.verified || false,
-      creator_bio: post.creators?.bio || null,
-      creator_followers_count: post.creators?.followers_count || 0,
-      creator_category: post.creators?.category || null,
-      creator_influence_score: post.creators?.influence_score || 0,
-      creator_trending_score: post.creators?.trending_score || 0,
-      user_liked: userLikes.has(post.post_id),
-      user_favorited: userFavorites.has(post.post_id),
-      user_tracked: true, // All posts in this API are from tracked KOLs
-      total_likes: likesCountMap.get(post.post_id) || 0,
-      total_favorites: favoritesCountMap.get(post.post_id) || 0,
-    }));
+    const enrichedPosts: SocialPost[] = (posts || []).map((post: any) => {
+      const creator = creatorsMap.get(post.creator_id);
+      return {
+        ...post,
+        // Extract creator info from manual join
+        creator_name: creator?.display_name || "",
+        creator_avatar_url: creator?.avatar_url || "",
+        creator_username: creator?.username || "",
+        creator_verified: creator?.verified || false,
+        creator_bio: creator?.bio || null,
+        creator_followers_count: creator?.followers_count || 0,
+        creator_category: creator?.category || null,
+        creator_influence_score: creator?.influence_score || 0,
+        creator_trending_score: creator?.trending_score || 0,
+        user_liked: userLikes.has(post.post_id),
+        user_favorited: userFavorites.has(post.post_id),
+        user_tracked: true, // All posts in this API are from tracked KOLs
+        total_likes: likesCountMap.get(post.post_id) || 0,
+        total_favorites: favoritesCountMap.get(post.post_id) || 0,
+      };
+    });
 
     const response: SubscribedPostsResponse = {
       count: count || 0,

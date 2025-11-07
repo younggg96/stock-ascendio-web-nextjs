@@ -78,26 +78,43 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get unique creator IDs for batch query
+    const creatorIds = (trackedKOLs || []).map((kol) => kol.kol_id);
+
+    // Batch query creators data
+    const { data: creatorsData, error: creatorsError } = await supabase
+      .from("creators")
+      .select(
+        "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
+      )
+      .in("id", creatorIds);
+
+    if (creatorsError) {
+      console.error("Creators query error:", creatorsError);
+    }
+
+    // Create a map of creators by ID
+    const creatorsMap = new Map(
+      (creatorsData || []).map((creator) => [creator.id, creator])
+    );
+
     // 获取每个 KOL 的额外信息（从 social_posts 表）
     const enrichedKOLs = await Promise.all(
       (trackedKOLs || []).map(async (kol) => {
-        // 获取该 KOL 的帖子统计信息和 creator 详细信息
+        // 获取该 KOL 的帖子统计信息
         const { data: posts, count } = await supabase
           .from("social_posts")
-          .select(
-            "published_at, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score)",
-            {
-              count: "exact",
-              head: false,
-            }
-          )
+          .select("published_at", {
+            count: "exact",
+            head: false,
+          })
           .eq("creator_id", kol.kol_id)
           .eq("platform", kol.platform)
           .order("published_at", { ascending: false })
           .limit(1);
 
         const latestPost: any = posts?.[0];
-        const creatorInfo = latestPost?.creators;
+        const creatorInfo = creatorsMap.get(kol.kol_id);
 
         return {
           ...kol,
@@ -201,30 +218,31 @@ export async function POST(request: NextRequest) {
     }
 
     // 获取 KOL 的详细信息
-    const { data: kolInfo } = await supabase
-      .from("social_posts")
+    const { data: creatorInfo, error: creatorError } = await supabase
+      .from("creators")
       .select(
-        "creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score)"
+        "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
       )
-      .eq("creator_id", body.kol_id)
-      .eq("platform", body.platform)
+      .eq("id", body.kol_id)
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    const creators: any = kolInfo?.creators;
+    if (creatorError) {
+      console.error("Creator query error:", creatorError);
+    }
 
     return NextResponse.json(
       {
         ...newTracking,
-        creator_name: creators?.display_name || body.kol_id,
-        creator_avatar_url: creators?.avatar_url || null,
-        creator_username: creators?.username || "",
-        creator_verified: creators?.verified || false,
-        creator_bio: creators?.bio || null,
-        creator_followers_count: creators?.followers_count || 0,
-        creator_category: creators?.category || null,
-        creator_influence_score: creators?.influence_score || 0,
-        creator_trending_score: creators?.trending_score || 0,
+        creator_name: creatorInfo?.display_name || body.kol_id,
+        creator_avatar_url: creatorInfo?.avatar_url || null,
+        creator_username: creatorInfo?.username || "",
+        creator_verified: creatorInfo?.verified || false,
+        creator_bio: creatorInfo?.bio || null,
+        creator_followers_count: creatorInfo?.followers_count || 0,
+        creator_category: creatorInfo?.category || null,
+        creator_influence_score: creatorInfo?.influence_score || 0,
+        creator_trending_score: creatorInfo?.trending_score || 0,
       },
       { status: 201 }
     );

@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({ favorited: !!data, data });
     } else {
-      // Get all favorites with full creator info
+      // Get all favorites
       const { data, error } = await supabase
         .from("user_post_favorites")
         .select(
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
           id,
           notes,
           created_at,
-          social_posts (*, creators (display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score))
+          social_posts (*)
         `
         )
         .eq("user_id", user.id)
@@ -176,27 +176,52 @@ export async function GET(request: NextRequest) {
         throw error;
       }
 
+      // Get unique creator IDs for manual join
+      const posts = (data || [])
+        .map((item: any) => item.social_posts)
+        .filter(Boolean);
+      const creatorIds = Array.from(
+        new Set(posts.map((post: any) => post?.creator_id).filter(Boolean))
+      );
+
+      // Manually join creator data
+      const { data: creatorsData, error: creatorsError } = await supabase
+        .from("creators")
+        .select(
+          "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
+        )
+        .in("id", creatorIds);
+
+      if (creatorsError) {
+        console.error("Creators query error:", creatorsError);
+      }
+
+      // Create a map of creators by ID
+      const creatorsMap = new Map(
+        (creatorsData || []).map((creator) => [creator.id, creator])
+      );
+
       // Enhance favorites with full creator info
-      const enhancedFavorites = (data || []).map((item: any) => ({
-        ...item,
-        social_posts: item.social_posts
-          ? {
-              ...item.social_posts,
-              creator_name: item.social_posts.creators?.display_name || "",
-              creator_avatar_url: item.social_posts.creators?.avatar_url || "",
-              creator_username: item.social_posts.creators?.username || "",
-              creator_verified: item.social_posts.creators?.verified || false,
-              creator_bio: item.social_posts.creators?.bio || null,
-              creator_followers_count:
-                item.social_posts.creators?.followers_count || 0,
-              creator_category: item.social_posts.creators?.category || null,
-              creator_influence_score:
-                item.social_posts.creators?.influence_score || 0,
-              creator_trending_score:
-                item.social_posts.creators?.trending_score || 0,
-            }
-          : null,
-      }));
+      const enhancedFavorites = (data || []).map((item: any) => {
+        const creator = creatorsMap.get(item.social_posts?.creator_id);
+        return {
+          ...item,
+          social_posts: item.social_posts
+            ? {
+                ...item.social_posts,
+                creator_name: creator?.display_name || "",
+                creator_avatar_url: creator?.avatar_url || "",
+                creator_username: creator?.username || "",
+                creator_verified: creator?.verified || false,
+                creator_bio: creator?.bio || null,
+                creator_followers_count: creator?.followers_count || 0,
+                creator_category: creator?.category || null,
+                creator_influence_score: creator?.influence_score || 0,
+                creator_trending_score: creator?.trending_score || 0,
+              }
+            : null,
+        };
+      });
 
       return NextResponse.json({ favorites: enhancedFavorites });
     }

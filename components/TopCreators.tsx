@@ -256,7 +256,7 @@ export default function TopCreators({
             value={sortBy}
             onValueChange={(value) => setSortBy(value as SortBy)}
           >
-            <SelectTrigger className="flex-1 w-full sm:w-[200px] h-8 text-xs">
+            <SelectTrigger className="flex-1 w-full sm:w-[200px] text-xs">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -278,15 +278,42 @@ export default function TopCreators({
                 setSelectedPlatform(value as Platform | "all")
               }
             >
-              <SelectTrigger className="flex-1 w-full sm:w-[150px] h-8 text-xs">
+              <SelectTrigger className="flex-1 w-full sm:w-[150px] text-xs">
                 <SelectValue placeholder="All Platforms" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Platforms</SelectItem>
-                <SelectItem value="TWITTER">X (Twitter)</SelectItem>
-                <SelectItem value="REDDIT">Reddit</SelectItem>
-                <SelectItem value="YOUTUBE">YouTube</SelectItem>
-                <SelectItem value="REDNOTE">Rednote</SelectItem>
+                <SelectItem value="TWITTER" className="flex items-center gap-2">
+                  <Image src="/logo/x.svg" alt="X" width={16} height={16} />
+                  <span className="text-xs">X (Twitter)</span>
+                </SelectItem>
+                <SelectItem value="REDDIT" className="flex items-center gap-2">
+                  <Image
+                    src="/logo/reddit.svg"
+                    alt="Reddit"
+                    width={16}
+                    height={16}
+                  />
+                  <span className="text-xs">Reddit</span>
+                </SelectItem>
+                <SelectItem value="YOUTUBE" className="flex items-center gap-2">
+                  <Image
+                    src="/logo/youtube.svg"
+                    alt="YouTube"
+                    width={16}
+                    height={16}
+                  />
+                  <span className="text-xs">YouTube</span>
+                </SelectItem>
+                <SelectItem value="REDNOTE" className="flex items-center gap-2">
+                  <Image
+                    src="/logo/rednote.svg"
+                    alt="Rednote"
+                    width={16}
+                    height={16}
+                  />
+                  <span className="text-xs">Rednote</span>
+                </SelectItem>
               </SelectContent>
             </Select>
           )}
