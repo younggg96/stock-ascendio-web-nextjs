@@ -35,8 +35,6 @@ export default function KOLPageClient() {
         REDNOTE: "rednote",
       };
 
-      console.log(tracking);
-
       return {
         id: tracking.kol_id, // Use kol_id directly as ID
         name: tracking.creator_name || tracking.kol_id,
