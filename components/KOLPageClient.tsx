@@ -35,14 +35,15 @@ export default function KOLPageClient() {
         REDNOTE: "rednote",
       };
 
+      console.log(tracking);
+
       return {
         id: tracking.kol_id, // Use kol_id directly as ID
         name: tracking.creator_name || tracking.kol_id,
         username: tracking.creator_username || tracking.kol_id,
-        platform: platformMap[tracking.platform] || "twitter",
+        platform: platformMap[tracking.platform],
         followers: tracking.creator_followers_count || 0,
-        description:
-          tracking.creator_bio || `${tracking.posts_count || 0} posts`,
+        description: tracking.creator_bio || "-",
         avatarUrl: tracking.creator_avatar_url || undefined,
         isTracking: true,
         createdAt: tracking.updated_at,

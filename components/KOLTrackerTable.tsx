@@ -35,13 +35,13 @@ import {
   Platform,
   platformConfig,
   formatFollowers,
-  updateKOL,
   CreateKOLInput,
 } from "@/lib/kolApi";
 import { trackKOL, untrackKOL } from "@/lib/trackedKolApi";
 import type { Platform as DBPlatform } from "@/lib/supabase/database.types";
-import { Trash2, Plus, Star, CheckCircle } from "lucide-react";
+import { Trash2, Plus, Star } from "lucide-react";
 import { toast } from "sonner";
+import { CardSkeleton } from "./LoadingSkeleton";
 
 interface KOLTrackerTableProps {
   kols: KOL[];
@@ -56,9 +56,7 @@ export default function KOLTrackerTable({
 }: KOLTrackerTableProps) {
   const { isMobile } = useBreakpoints();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingKOL, setEditingKOL] = useState<KOL | null>(null);
   const [deletingKOLId, setDeletingKOLId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPlatform, setFilterPlatform] = useState<Platform | "all">("all");
@@ -127,23 +125,6 @@ export default function KOLTrackerTable({
     }
   };
 
-  // Handle edit KOL
-  const handleEdit = async () => {
-    if (!editingKOL) return;
-
-    try {
-      await updateKOL(editingKOL.id, formData);
-      toast.success("KOL updated successfully");
-      setIsEditDialogOpen(false);
-      setEditingKOL(null);
-      resetForm();
-      onUpdate();
-    } catch (error) {
-      toast.error("Failed to update KOL");
-      console.error(error);
-    }
-  };
-
   // Open delete confirmation dialog
   const openDeleteDialog = (id: string) => {
     setDeletingKOLId(id);
@@ -207,18 +188,103 @@ export default function KOLTrackerTable({
     setIsAddDialogOpen(true);
   };
 
-  // Loading state
+  // Loading state - KOL Table Skeleton
+  const KOLTableRowSkeleton = () => (
+    <TableRow>
+      <TableCell className="py-3">
+        <div className="flex items-center gap-2.5 animate-pulse">
+          <div className="w-9 h-9 rounded-full bg-gray-300 dark:bg-white/10 flex-shrink-0"></div>
+          <div className="flex-1 min-w-0">
+            <div className="h-4 bg-gray-300 dark:bg-white/10 rounded w-24 mb-1.5"></div>
+            <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-20"></div>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="py-3">
+        <div className="flex items-center gap-1.5 animate-pulse">
+          <div className="w-4 h-4 bg-gray-300 dark:bg-white/10 rounded"></div>
+          <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-16"></div>
+        </div>
+      </TableCell>
+      <TableCell className="text-center py-3">
+        <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-16 mx-auto animate-pulse"></div>
+      </TableCell>
+      <TableCell className="hidden lg:table-cell py-3">
+        <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-40 animate-pulse"></div>
+      </TableCell>
+      <TableCell className="text-right py-3">
+        <div className="flex justify-end gap-1">
+          <div className="w-8 h-8 bg-gray-300 dark:bg-white/10 rounded animate-pulse"></div>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+
+  const KOLCardSkeleton = () => (
+    <div className="border border-border-light dark:border-border-dark rounded-lg p-3 bg-card-light dark:bg-card-dark animate-pulse">
+      <div className="flex items-start gap-3 mb-2">
+        <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-white/10 flex-shrink-0"></div>
+        <div className="flex-1 min-w-0">
+          <div className="h-4 bg-gray-300 dark:bg-white/10 rounded w-24 mb-1.5"></div>
+          <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-20"></div>
+        </div>
+        <div className="flex gap-1">
+          <div className="w-7 h-7 bg-gray-300 dark:bg-white/10 rounded"></div>
+          <div className="w-7 h-7 bg-gray-300 dark:bg-white/10 rounded"></div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-20"></div>
+        <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-24"></div>
+      </div>
+      <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-full mb-1"></div>
+      <div className="h-3 bg-gray-300 dark:bg-white/10 rounded w-3/4"></div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="flex justify-center items-center py-12">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-sm text-gray-500 dark:text-white/50">
-              Loading tracked KOLs...
-            </p>
+        {/* Filters Skeleton */}
+        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between animate-pulse">
+          <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full">
+            <div className="h-10 bg-gray-200 dark:bg-white/5 rounded-lg border border-border-light dark:border-border-dark flex-1"></div>
+            <div className="h-10 bg-gray-200 dark:bg-white/5 rounded-lg border border-border-light dark:border-border-dark w-full sm:w-[200px]"></div>
           </div>
+          <div className="h-10 bg-gray-200 dark:bg-white/5 rounded-lg w-full sm:w-auto sm:min-w-[140px]"></div>
         </div>
+
+        {/* Table/Cards Skeleton */}
+        {isMobile ? (
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <KOLCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="border border-border-light dark:border-border-dark rounded-lg overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Creator</TableHead>
+                  <TableHead className="text-xs">Platform</TableHead>
+                  <TableHead className="text-xs text-center">
+                    Followers
+                  </TableHead>
+                  <TableHead className="text-xs hidden lg:table-cell">
+                    Description
+                  </TableHead>
+                  <TableHead className="text-xs text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(5)].map((_, i) => (
+                  <KOLTableRowSkeleton key={i} />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     );
   }
@@ -239,7 +305,7 @@ export default function KOLTrackerTable({
               setFilterPlatform(value as Platform | "all")
             }
           >
-            <SelectTrigger className="w-full sm:w-[200px] text-xs">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="All Platforms" />
             </SelectTrigger>
             <SelectContent>
@@ -254,7 +320,7 @@ export default function KOLTrackerTable({
         <Button
           onClick={openAddDialog}
           size="lg"
-          className="flex items-center gap-1.5 h-[40px] text-xs w-full sm:w-auto"
+          className="flex items-center gap-1.5 h-[40px] w-full sm:w-auto"
         >
           <Plus className="w-3.5 h-3.5" />
           Track New KOL
@@ -436,7 +502,7 @@ export default function KOLTrackerTable({
                     </TableCell>
                     {/* Description */}
                     <TableCell className="text-xs max-w-[250px] truncate hidden lg:table-cell py-3">
-                      {kol.description || "-"}
+                      {kol.description}
                     </TableCell>
                     {/* Actions */}
                     <TableCell className="text-right py-3">
@@ -526,126 +592,6 @@ export default function KOLTrackerTable({
               disabled={!formData.username.trim()}
             >
               Track
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit KOL</DialogTitle>
-            <DialogDescription>
-              Update the KOL information and tracking status.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-name" className="text-xs">
-                Name *
-              </Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Enter KOL name"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-username" className="text-xs">
-                Username *
-              </Label>
-              <Input
-                id="edit-username"
-                value={formData.username}
-                onChange={(e) =>
-                  setFormData({ ...formData, username: e.target.value })
-                }
-                placeholder="@username"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-platform" className="text-xs">
-                Platform *
-              </Label>
-              <Select
-                value={formData.platform}
-                onValueChange={(value: Platform) =>
-                  setFormData({ ...formData, platform: value })
-                }
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="twitter">X (Twitter)</SelectItem>
-                  <SelectItem value="reddit">Reddit</SelectItem>
-                  <SelectItem value="rednote">Rednote</SelectItem>
-                  <SelectItem value="youtube">YouTube</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-followers" className="text-xs">
-                Followers
-              </Label>
-              <Input
-                id="edit-followers"
-                type="number"
-                value={formData.followers}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    followers: parseInt(e.target.value) || 0,
-                  })
-                }
-                placeholder="0"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-description" className="text-xs">
-                Description
-              </Label>
-              <Input
-                id="edit-description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Brief description"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="edit-tracking"
-                checked={formData.isTracking}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isTracking: checked })
-                }
-              />
-              <Label htmlFor="edit-tracking" className="text-xs">
-                Tracking this KOL
-              </Label>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditDialogOpen(false)}
-              className="h-8 text-xs"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleEdit} size="sm" className="h-8 text-xs">
-              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
