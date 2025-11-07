@@ -15,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   BookmarkIcon,
+  Hash,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { Button } from "./ui/button";
@@ -49,6 +50,11 @@ const mainNavItems = [
     icon: TrendingUp,
     title: "Stocks",
     href: "/dashboard/stocks",
+  },
+  {
+    icon: Hash,
+    title: "Trending Topics",
+    href: "/dashboard/trending",
   },
 ];
 

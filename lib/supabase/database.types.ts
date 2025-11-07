@@ -318,6 +318,56 @@ export interface Database {
           updated_at?: string;
         };
       };
+      trending_topics: {
+        Row: {
+          id: string;
+          topic: string;
+          topic_type: string;
+          platform: Platform;
+          mention_count: number;
+          engagement_score: number;
+          trending_score: number;
+          unique_authors_count: number;
+          related_tickers: string[] | null;
+          sample_post_ids: string[] | null;
+          first_seen_at: string | null;
+          last_seen_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          topic: string;
+          topic_type?: string;
+          platform: Platform;
+          mention_count?: number;
+          engagement_score?: number;
+          trending_score?: number;
+          unique_authors_count?: number;
+          related_tickers?: string[] | null;
+          sample_post_ids?: string[] | null;
+          first_seen_at?: string | null;
+          last_seen_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          topic?: string;
+          topic_type?: string;
+          platform?: Platform;
+          mention_count?: number;
+          engagement_score?: number;
+          trending_score?: number;
+          unique_authors_count?: number;
+          related_tickers?: string[] | null;
+          sample_post_ids?: string[] | null;
+          first_seen_at?: string | null;
+          last_seen_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }
@@ -376,3 +426,10 @@ export type TrendingTickerInsert =
   Database["public"]["Tables"]["trending_tickers"]["Insert"];
 export type TrendingTickerUpdate =
   Database["public"]["Tables"]["trending_tickers"]["Update"];
+
+export type TrendingTopic =
+  Database["public"]["Tables"]["trending_topics"]["Row"];
+export type TrendingTopicInsert =
+  Database["public"]["Tables"]["trending_topics"]["Insert"];
+export type TrendingTopicUpdate =
+  Database["public"]["Tables"]["trending_topics"]["Update"];
