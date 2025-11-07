@@ -99,9 +99,9 @@ export async function GET(request: NextRequest) {
     const { data: creatorsData, error: creatorsError } = await supabase
       .from("creators")
       .select(
-        "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
+        "id, creator_id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
       )
-      .in("id", creatorIds);
+      .in("creator_id", creatorIds);
 
     if (creatorsError) {
       console.error("Creators query error:", creatorsError);
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
 
     // Create a map of creators by ID
     const creatorsMap = new Map(
-      (creatorsData || []).map((creator) => [creator.id, creator])
+      (creatorsData || []).map((creator) => [creator.creator_id, creator])
     );
 
     // Get post IDs for batch queries

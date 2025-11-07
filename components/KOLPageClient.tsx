@@ -9,13 +9,8 @@ import { SwitchTab } from "@/components/ui/switch-tab";
 import { KOL } from "@/lib/kolApi";
 import { Star, TrendingUp } from "lucide-react";
 import { useTrackedKOLs } from "@/hooks";
-import type { Platform } from "@/lib/supabase/database.types";
 
-interface KOLPageClientProps {
-  initialKOLs: KOL[];
-}
-
-export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
+export default function KOLPageClient() {
   const [activeTab, setActiveTab] = useState<"trackingKOLs" | "ranking">(
     "ranking"
   );
@@ -30,7 +25,7 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
   // Convert trackingKOLs to KOL format for compatibility with KOLTrackerTable
   const convertedTrackingKOLs = useMemo<KOL[]>(() => {
     return apiTrackingKOLs.map((tracking) => {
-      // Map platform types
+      // Map platform types from database format to KOL API format
       const platformMap: {
         [key: string]: "twitter" | "reddit" | "youtube" | "rednote";
       } = {
@@ -41,13 +36,14 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
       };
 
       return {
-        id: `${tracking.platform}-${tracking.kol_id}`,
+        id: tracking.kol_id, // Use kol_id directly as ID
         name: tracking.creator_name || tracking.kol_id,
-        username: tracking.kol_id,
+        username: tracking.creator_username || tracking.kol_id,
         platform: platformMap[tracking.platform] || "twitter",
-        followers: 0, // This info is not available from user_kol_entries
-        description: `${tracking.posts_count || 0} posts`,
-        avatarUrl: tracking.creator_avatar_url || "",
+        followers: tracking.creator_followers_count || 0,
+        description:
+          tracking.creator_bio || `${tracking.posts_count || 0} posts`,
+        avatarUrl: tracking.creator_avatar_url || undefined,
         isTracking: true,
         createdAt: tracking.updated_at,
         updatedAt: tracking.updated_at,
@@ -104,6 +100,7 @@ export default function KOLPageClient({ initialKOLs }: KOLPageClientProps) {
               <KOLTrackerTable
                 kols={convertedTrackingKOLs}
                 onUpdate={refreshTrackingKOLs}
+                loading={isLoadingTrackingKOLs}
               />
             ) : (
               <TopCreators

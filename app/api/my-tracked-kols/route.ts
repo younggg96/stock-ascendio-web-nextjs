@@ -81,13 +81,12 @@ export async function GET(request: NextRequest) {
     // Get unique creator IDs for batch query
     const creatorIds = (trackedKOLs || []).map((kol) => kol.kol_id);
 
-    // Batch query creators data
     const { data: creatorsData, error: creatorsError } = await supabase
       .from("creators")
       .select(
-        "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
+        "id, creator_id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
       )
-      .in("id", creatorIds);
+      .in("creator_id", creatorIds);
 
     if (creatorsError) {
       console.error("Creators query error:", creatorsError);
@@ -95,40 +94,24 @@ export async function GET(request: NextRequest) {
 
     // Create a map of creators by ID
     const creatorsMap = new Map(
-      (creatorsData || []).map((creator) => [creator.id, creator])
+      (creatorsData || []).map((creator) => [creator.creator_id, creator])
     );
 
     // 获取每个 KOL 的额外信息（从 social_posts 表）
     const enrichedKOLs = await Promise.all(
       (trackedKOLs || []).map(async (kol) => {
-        // 获取该 KOL 的帖子统计信息
-        const { data: posts, count } = await supabase
-          .from("social_posts")
-          .select("published_at", {
-            count: "exact",
-            head: false,
-          })
-          .eq("creator_id", kol.kol_id)
-          .eq("platform", kol.platform)
-          .order("published_at", { ascending: false })
-          .limit(1);
-
-        const latestPost: any = posts?.[0];
         const creatorInfo = creatorsMap.get(kol.kol_id);
-
         return {
           ...kol,
-          creator_name: creatorInfo?.display_name || kol.kol_id,
-          creator_avatar_url: creatorInfo?.avatar_url || null,
+          creator_name: creatorInfo?.display_name || "",
+          creator_avatar_url: creatorInfo?.avatar_url || "",
           creator_username: creatorInfo?.username || "",
           creator_verified: creatorInfo?.verified || false,
-          creator_bio: creatorInfo?.bio || null,
+          creator_bio: creatorInfo?.bio || "",
           creator_followers_count: creatorInfo?.followers_count || 0,
-          creator_category: creatorInfo?.category || null,
+          creator_category: creatorInfo?.category || "",
           creator_influence_score: creatorInfo?.influence_score || 0,
           creator_trending_score: creatorInfo?.trending_score || 0,
-          posts_count: count || 0,
-          latest_post_date: latestPost?.published_at || null,
         } as TrackedKOL;
       })
     );
@@ -221,15 +204,17 @@ export async function POST(request: NextRequest) {
     const { data: creatorInfo, error: creatorError } = await supabase
       .from("creators")
       .select(
-        "id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
+        "id, creator_id, display_name, avatar_url, username, verified, bio, followers_count, category, influence_score, trending_score"
       )
-      .eq("id", body.kol_id)
+      .eq("creator_id", body.kol_id)
       .limit(1)
       .maybeSingle();
 
     if (creatorError) {
       console.error("Creator query error:", creatorError);
     }
+
+    console.log(creatorInfo);
 
     return NextResponse.json(
       {

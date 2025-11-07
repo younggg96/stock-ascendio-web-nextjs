@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { useBreakpoints } from "@/hooks";
 import {
@@ -29,6 +29,7 @@ import {
   ArrowUpDown,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TrendingTopicsTableProps {
   topics: TrendingTopic[];
@@ -68,6 +69,7 @@ export default function TrendingTopicsTable({
   loading = false,
 }: TrendingTopicsTableProps) {
   const { isMobile } = useBreakpoints();
+  const [isMounted, setIsMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPlatform, setFilterPlatform] = useState<Platform | "all">("all");
   const [filterTopicType, setFilterTopicType] = useState<string>("all");
@@ -75,6 +77,11 @@ export default function TrendingTopicsTable({
     "trending_score" | "mention_count" | "engagement_score"
   >("trending_score");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+
+  // Prevent hydration mismatch by only using isMobile after mount
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Filter and sort topics
   const filteredAndSortedTopics = useMemo(() => {
@@ -128,9 +135,106 @@ export default function TrendingTopicsTable({
   if (loading) {
     return (
       <div className="space-y-3">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+        {/* Filters Skeleton */}
+        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center mt-2">
+          <Skeleton className="h-8 w-full sm:flex-1" />
+          <Skeleton className="h-8 w-full sm:w-[150px]" />
+          <Skeleton className="h-8 w-full sm:w-[150px]" />
         </div>
+
+        {/* Table/Cards Skeleton */}
+        {isMounted && isMobile ? (
+          // Mobile Cards Skeleton
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="border border-border-light dark:border-border-dark rounded-lg p-3 bg-card-light dark:bg-card-dark"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-4" />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-4 w-10" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-4 w-8" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-4 w-8" />
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Skeleton className="h-5 w-12" />
+                  <Skeleton className="h-5 w-12" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Desktop Table Skeleton
+          <div className="border border-border-light dark:border-border-dark rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Topic</TableHead>
+                  <TableHead className="text-xs">Platform</TableHead>
+                  <TableHead className="text-xs text-center">
+                    Mentions
+                  </TableHead>
+                  <TableHead className="text-xs text-center">
+                    Engagement
+                  </TableHead>
+                  <TableHead className="text-xs text-center">
+                    Trending
+                  </TableHead>
+                  <TableHead className="text-xs">Related Stocks</TableHead>
+                  <TableHead className="text-xs text-center">
+                    Last Seen
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <Skeleton className="h-4 w-4 rounded" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Skeleton className="h-4 w-12 mx-auto" />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Skeleton className="h-4 w-10 mx-auto" />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Skeleton className="h-4 w-10 mx-auto" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Skeleton className="h-5 w-12" />
+                        <Skeleton className="h-5 w-12" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Skeleton className="h-3 w-16 mx-auto" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     );
   }
@@ -179,7 +283,7 @@ export default function TrendingTopicsTable({
       </div>
 
       {/* Mobile Card View */}
-      {isMobile ? (
+      {isMounted && isMobile ? (
         <div className="space-y-2">
           {filteredAndSortedTopics.length === 0 ? (
             <div className="text-center py-8 border border-border-light dark:border-border-dark rounded-lg">

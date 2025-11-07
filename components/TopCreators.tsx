@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import {
   Select,
   SelectContent,
@@ -37,6 +38,7 @@ import {
   Check,
   Plus,
   Loader2,
+  Search,
 } from "lucide-react";
 import { useBreakpoints } from "@/hooks";
 
@@ -99,6 +101,7 @@ export default function TopCreators({
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | "all">(
     platform || "all"
   );
+  const [searchTerm, setSearchTerm] = useState("");
   const [trackingStates, setTrackingStates] = useState<Record<string, boolean>>(
     {}
   );
@@ -247,16 +250,43 @@ export default function TopCreators({
     );
   };
 
+  // Client-side search filtering
+  const filteredCreators = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return creators;
+    }
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return creators.filter(
+      (creator) =>
+        creator.display_name.toLowerCase().includes(lowerSearchTerm) ||
+        creator.username?.toLowerCase().includes(lowerSearchTerm) ||
+        creator.creator_id.toLowerCase().includes(lowerSearchTerm)
+    );
+  }, [creators, searchTerm]);
+
   return (
     <div className="space-y-3">
       {/* Filters */}
       {showFilters && (
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-white/40" />
+            <Input
+              type="text"
+              placeholder="Search creators..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
           <Select
             value={sortBy}
             onValueChange={(value) => setSortBy(value as SortBy)}
           >
-            <SelectTrigger className="flex-1 w-full sm:w-[200px] text-xs">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -278,40 +308,21 @@ export default function TopCreators({
                 setSelectedPlatform(value as Platform | "all")
               }
             >
-              <SelectTrigger className="flex-1 w-full sm:w-[150px] text-xs">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="All Platforms" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Platforms</SelectItem>
-                <SelectItem value="TWITTER" className="flex items-center gap-2">
-                  <Image src="/logo/x.svg" alt="X" width={16} height={16} />
+                <SelectItem value="TWITTER">
                   <span className="text-xs">X (Twitter)</span>
                 </SelectItem>
-                <SelectItem value="REDDIT" className="flex items-center gap-2">
-                  <Image
-                    src="/logo/reddit.svg"
-                    alt="Reddit"
-                    width={16}
-                    height={16}
-                  />
+                <SelectItem value="REDDIT">
                   <span className="text-xs">Reddit</span>
                 </SelectItem>
-                <SelectItem value="YOUTUBE" className="flex items-center gap-2">
-                  <Image
-                    src="/logo/youtube.svg"
-                    alt="YouTube"
-                    width={16}
-                    height={16}
-                  />
+                <SelectItem value="YOUTUBE">
                   <span className="text-xs">YouTube</span>
                 </SelectItem>
-                <SelectItem value="REDNOTE" className="flex items-center gap-2">
-                  <Image
-                    src="/logo/rednote.svg"
-                    alt="Rednote"
-                    width={16}
-                    height={16}
-                  />
+                <SelectItem value="REDNOTE">
                   <span className="text-xs">Rednote</span>
                 </SelectItem>
               </SelectContent>
@@ -330,21 +341,25 @@ export default function TopCreators({
       )}
 
       {/* Empty State */}
-      {!isLoading && creators.length === 0 && (
+      {!isLoading && filteredCreators.length === 0 && (
         <EmptyState
           title="No creators found"
-          description="Try adjusting your filters to see more results."
+          description={
+            searchTerm
+              ? "No creators match your search. Try a different search term."
+              : "Try adjusting your filters to see more results."
+          }
         />
       )}
 
       {/* Mobile Card View */}
-      {!isLoading && creators.length > 0 && isMobile && (
+      {!isLoading && filteredCreators.length > 0 && isMobile && (
         <div
           className="space-y-2 overflow-auto"
           style={{ maxHeight }}
           onScroll={handleScroll}
         >
-          {creators.map((creator, index) => (
+          {filteredCreators.map((creator, index) => (
             <div
               key={creator.id}
               className="border border-gray-200 dark:border-white/10 rounded-lg p-2 hover:shadow-sm transition-shadow"
@@ -465,7 +480,7 @@ export default function TopCreators({
           )}
 
           {/* No More Data Indicator */}
-          {!hasMore && creators.length > 0 && !isLoadingMore && (
+          {!hasMore && filteredCreators.length > 0 && !isLoadingMore && (
             <div className="text-center py-3 text-xs text-gray-400 dark:text-white/40">
               No more data
             </div>
@@ -474,7 +489,7 @@ export default function TopCreators({
       )}
 
       {/* Desktop Table View */}
-      {!isLoading && creators.length > 0 && !isMobile && (
+      {!isLoading && filteredCreators.length > 0 && !isMobile && (
         <div className="border border-border-light dark:border-border-dark rounded-lg overflow-hidden">
           <div
             className="overflow-auto"
@@ -567,7 +582,7 @@ export default function TopCreators({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {creators.map((creator, index) => (
+                {filteredCreators.map((creator, index) => (
                   <TableRow
                     key={creator.id}
                     className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-100 dark:border-white/5"
@@ -711,7 +726,7 @@ export default function TopCreators({
                 )}
 
                 {/* No More Data Indicator */}
-                {!hasMore && creators.length > 0 && !isLoadingMore && (
+                {!hasMore && filteredCreators.length > 0 && !isLoadingMore && (
                   <TableRow>
                     <TableCell
                       colSpan={10}

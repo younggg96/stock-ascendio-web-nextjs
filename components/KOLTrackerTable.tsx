@@ -40,17 +40,19 @@ import {
 } from "@/lib/kolApi";
 import { trackKOL, untrackKOL } from "@/lib/trackedKolApi";
 import type { Platform as DBPlatform } from "@/lib/supabase/database.types";
-import { Trash2, Plus, Star } from "lucide-react";
+import { Trash2, Plus, Star, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface KOLTrackerTableProps {
   kols: KOL[];
   onUpdate: () => void;
+  loading?: boolean;
 }
 
 export default function KOLTrackerTable({
   kols,
   onUpdate,
+  loading = false,
 }: KOLTrackerTableProps) {
   const { isMobile } = useBreakpoints();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -153,16 +155,22 @@ export default function KOLTrackerTable({
     if (!deletingKOLId) return;
 
     try {
-      // Parse the composite ID to get platform and kol_id
-      const parts = deletingKOLId.split("-");
-      if (parts.length >= 2) {
-        const platform = parts[0] as DBPlatform;
-        const kolId = parts.slice(1).join("-");
-        await untrackKOL(kolId, platform);
-        toast.success("KOL removed from tracking list successfully");
-      } else {
-        throw new Error("Invalid KOL ID format");
+      // Find the KOL to get its platform
+      const kol = kols.find((k) => k.id === deletingKOLId);
+      if (!kol) {
+        throw new Error("KOL not found");
       }
+
+      // Map platform type to database format
+      const platformMap: { [key: string]: DBPlatform } = {
+        twitter: "TWITTER",
+        reddit: "REDDIT",
+        youtube: "YOUTUBE",
+        rednote: "REDNOTE",
+      };
+
+      await untrackKOL(deletingKOLId, platformMap[kol.platform]);
+      toast.success("KOL removed from tracking list successfully");
       setIsDeleteDialogOpen(false);
       setDeletingKOLId(null);
       onUpdate();
@@ -175,17 +183,17 @@ export default function KOLTrackerTable({
   // Handle toggle tracking - now uses real tracking API
   const handleToggleTracking = async (kol: KOL) => {
     try {
-      // Parse the composite ID to get platform and kol_id
-      const parts = kol.id.split("-");
-      if (parts.length >= 2) {
-        const platform = parts[0] as DBPlatform;
-        const kolId = parts.slice(1).join("-");
-        // In the tracked tab, toggle means untrack
-        await untrackKOL(kolId, platform);
-        toast.success("Stopped tracking KOL");
-      } else {
-        throw new Error("Invalid KOL ID format");
-      }
+      // Map platform type to database format
+      const platformMap: { [key: string]: DBPlatform } = {
+        twitter: "TWITTER",
+        reddit: "REDDIT",
+        youtube: "YOUTUBE",
+        rednote: "REDNOTE",
+      };
+
+      // In the tracked tab, toggle means untrack
+      await untrackKOL(kol.id, platformMap[kol.platform]);
+      toast.success("Stopped tracking KOL");
       onUpdate();
     } catch (error) {
       toast.error("Failed to update tracking status");
@@ -193,26 +201,27 @@ export default function KOLTrackerTable({
     }
   };
 
-  // Open edit dialog
-  const openEditDialog = (kol: KOL) => {
-    setEditingKOL(kol);
-    setFormData({
-      name: kol.name,
-      username: kol.username,
-      platform: kol.platform,
-      followers: kol.followers,
-      description: kol.description || "",
-      avatarUrl: kol.avatarUrl || "",
-      isTracking: kol.isTracking,
-    });
-    setIsEditDialogOpen(true);
-  };
-
   // Open add dialog
   const openAddDialog = () => {
     resetForm();
     setIsAddDialogOpen(true);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        <div className="flex justify-center items-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm text-gray-500 dark:text-white/50">
+              Loading tracked KOLs...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -269,12 +278,31 @@ export default function KOLTrackerTable({
                 key={kol.id}
                 className="border border-border-light dark:border-border-dark rounded-lg p-3 bg-card-light dark:bg-card-dark"
               >
-                {/* Header with Name and Actions */}
-                <div className="flex items-start justify-between mb-2">
+                {/* Header with Avatar, Name and Actions */}
+                <div className="flex items-start gap-3 mb-2">
+                  {/* Avatar */}
+                  {kol.avatarUrl ? (
+                    <Image
+                      src={kol.avatarUrl}
+                      alt={kol.name}
+                      width={40}
+                      height={40}
+                      className="w-10 h-10 rounded-full flex-shrink-0 ring-2 ring-gray-200 dark:ring-white/10"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0 ring-2 ring-gray-200 dark:ring-white/10">
+                      <span className="text-xs font-bold text-gray-600 dark:text-white/60">
+                        {kol.name.substring(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                      {kol.name}
-                    </h3>
+                    <div className="flex items-center gap-1">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        {kol.name}
+                      </h3>
+                    </div>
                     <p className="text-xs text-gray-600 dark:text-white/60 truncate">
                       {kol.username}
                     </p>
@@ -336,10 +364,10 @@ export default function KOLTrackerTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs">Name</TableHead>
+                <TableHead className="text-xs">Creator</TableHead>
                 <TableHead className="text-xs">Platform</TableHead>
-                <TableHead className="text-xs">Followers</TableHead>
-                <TableHead className="text-xs hidden md:table-cell">
+                <TableHead className="text-xs text-center">Followers</TableHead>
+                <TableHead className="text-xs hidden lg:table-cell">
                   Description
                 </TableHead>
                 <TableHead className="text-xs text-right">Actions</TableHead>
@@ -348,7 +376,7 @@ export default function KOLTrackerTable({
             <TableBody>
               {filteredKOLs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     <p className="text-xs text-gray-500 dark:text-white/50">
                       {kols.length === 0
                         ? "No tracked KOLs yet. Click 'Track New KOL' button to start tracking."
@@ -359,30 +387,59 @@ export default function KOLTrackerTable({
               ) : (
                 filteredKOLs.map((kol) => (
                   <TableRow key={kol.id}>
-                    <TableCell className="text-xs font-medium">
-                      {kol.name}
+                    {/* Creator with Avatar */}
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-2.5">
+                        {kol.avatarUrl ? (
+                          <Image
+                            src={kol.avatarUrl}
+                            alt={kol.name}
+                            width={36}
+                            height={36}
+                            className="w-9 h-9 rounded-full ring-2 ring-gray-100 dark:ring-white/10 flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center ring-2 ring-gray-100 dark:ring-white/10 flex-shrink-0">
+                            <span className="text-xs font-bold text-gray-600 dark:text-white/60">
+                              {kol.name.substring(0, 2).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            {kol.name}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-white/50 truncate">
+                            {kol.username}
+                          </div>
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell>
+                    {/* Platform */}
+                    <TableCell className="py-3">
                       <div className="flex items-center gap-1.5">
                         <Image
                           src={platformConfig[kol.platform].icon}
                           alt={platformConfig[kol.platform].name}
                           width={16}
                           height={16}
-                          className="opacity-70"
+                          className="opacity-80"
                         />
                         <span className="text-xs">
                           {platformConfig[kol.platform].name}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs">
+                    {/* Followers */}
+                    <TableCell className="text-xs text-center font-semibold py-3">
                       {formatFollowers(kol.followers)}
                     </TableCell>
-                    <TableCell className="text-xs max-w-[200px] truncate hidden md:table-cell">
+                    {/* Description */}
+                    <TableCell className="text-xs max-w-[250px] truncate hidden lg:table-cell py-3">
                       {kol.description || "-"}
                     </TableCell>
-                    <TableCell className="text-right">
+                    {/* Actions */}
+                    <TableCell className="text-right py-3">
                       <div className="flex justify-end gap-1">
                         <Button
                           variant="ghost"
@@ -409,13 +466,14 @@ export default function KOLTrackerTable({
           <DialogHeader>
             <DialogTitle>Track New KOL</DialogTitle>
             <DialogDescription>
-              Add a KOL to your tracking list to see their content and updates.
+              Add a creator from our database to your tracking list. You can
+              find creator IDs from the Top Ranking tab.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-3">
             <div className="space-y-1.5">
               <Label htmlFor="username" className="text-xs">
-                Username *
+                Creator ID *
               </Label>
               <Input
                 id="username"
@@ -423,9 +481,12 @@ export default function KOLTrackerTable({
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
                 }
-                placeholder="@username"
+                placeholder="Enter creator ID from database"
                 className="h-8 text-xs"
               />
+              <p className="text-xs text-gray-500 dark:text-white/50">
+                Find creators in the Top Ranking tab and use their ID
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="platform" className="text-xs">
@@ -458,7 +519,12 @@ export default function KOLTrackerTable({
             >
               Cancel
             </Button>
-            <Button onClick={handleAdd} size="sm" className="h-8 text-xs">
+            <Button
+              onClick={handleAdd}
+              size="sm"
+              className="h-8 text-xs"
+              disabled={!formData.username.trim()}
+            >
               Track
             </Button>
           </DialogFooter>

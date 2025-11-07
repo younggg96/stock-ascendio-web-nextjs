@@ -1,233 +1,134 @@
 import { NextRequest, NextResponse } from "next/server";
-import { KOL, CreateKOLInput, UpdateKOLInput } from "@/lib/kolApi";
+import type { KOL, Platform as KOLPlatform } from "@/lib/kolApi";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { Platform } from "@/lib/supabase/database.types";
 
-// Mock data store - In production, replace with database
-let kolData: KOL[] = [
-  {
-    id: "1",
-    name: "Elon Musk",
-    username: "@elonmusk",
-    platform: "twitter",
-    followers: 180000000,
-    description: "CEO of Tesla, SpaceX",
-    avatarUrl: "",
-    isTracking: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    name: "Cathie Wood",
-    username: "@CathieDWood",
-    platform: "twitter",
-    followers: 1500000,
-    description: "CEO & CIO of ARK Invest",
-    avatarUrl: "",
-    isTracking: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    name: "wallstreetbets",
-    username: "r/wallstreetbets",
-    platform: "reddit",
-    followers: 15000000,
-    description: "Community for stock market discussions",
-    avatarUrl: "",
-    isTracking: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "4",
-    name: "Graham Stephan",
-    username: "@GrahamStephan",
-    platform: "youtube",
-    followers: 4500000,
-    description: "Finance & Real Estate YouTuber",
-    avatarUrl: "",
-    isTracking: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "5",
-    name: "股市老司机",
-    username: "@stockmaster",
-    platform: "rednote",
-    followers: 850000,
-    description: "分享股市投资心得",
-    avatarUrl: "",
-    isTracking: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "6",
-    name: "Meet Kevin",
-    username: "@MeetKevin",
-    platform: "youtube",
-    followers: 2100000,
-    description: "Real Estate & Stock Market Investing",
-    avatarUrl: "",
-    isTracking: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "7",
-    name: "Warren Buffett Fan",
-    username: "u/BuffettFan",
-    platform: "reddit",
-    followers: 250000,
-    description: "Value investing discussions",
-    avatarUrl: "",
-    isTracking: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "8",
-    name: "投资小白日记",
-    username: "@investdiary",
-    platform: "rednote",
-    followers: 320000,
-    description: "新手投资指南",
-    avatarUrl: "",
-    isTracking: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+// Map KOL platform types to database platform types
+const platformMap: Record<KOLPlatform, Platform> = {
+  twitter: "TWITTER",
+  reddit: "REDDIT",
+  youtube: "YOUTUBE",
+  rednote: "REDNOTE",
+};
 
-// GET - Fetch all KOLs
+const reversePlatformMap: Record<Platform, KOLPlatform> = {
+  TWITTER: "twitter",
+  REDDIT: "reddit",
+  YOUTUBE: "youtube",
+  REDNOTE: "rednote",
+};
+
+// GET - Fetch all KOLs from Supabase creators table
 export async function GET(request: NextRequest) {
   try {
-    // Get query parameters for filtering
     const searchParams = request.nextUrl.searchParams;
-    const platform = searchParams.get("platform");
+    const platform = searchParams.get("platform") as KOLPlatform | null;
     const isTracking = searchParams.get("isTracking");
 
-    let filteredData = [...kolData];
+    const supabase = createServerSupabaseClient();
 
-    // Filter by platform
+    // Get current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Build query for creators
+    let query = supabase.from("creators").select("*");
+
+    // Filter by platform if provided
     if (platform) {
-      filteredData = filteredData.filter((kol) => kol.platform === platform);
+      const dbPlatform = platformMap[platform];
+      query = query.eq("platform", dbPlatform);
     }
 
-    // Filter by tracking status
-    if (isTracking !== null) {
-      const tracking = isTracking === "true";
-      filteredData = filteredData.filter((kol) => kol.isTracking === tracking);
+    const { data: creators, error } = await query;
+
+    if (error) {
+      console.error("Error fetching creators:", error);
+      throw new Error(`Failed to fetch creators: ${error.message}`);
     }
 
-    return NextResponse.json(filteredData);
-  } catch (error) {
-    console.error("Error fetching KOLs:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch KOLs" },
-      { status: 500 }
-    );
-  }
-}
+    // Get user's tracked creators if authenticated
+    let userTrackedCreators: Set<string> = new Set();
+    if (user && creators && creators.length > 0) {
+      const creatorIds = creators.map((creator) => creator.creator_id);
 
-// POST - Create a new KOL
-export async function POST(request: NextRequest) {
-  try {
-    const body: CreateKOLInput = await request.json();
+      const { data: trackedData } = await supabase
+        .from("user_kol_entries")
+        .select("kol_id")
+        .eq("user_id", user.id)
+        .in("kol_id", creatorIds);
 
-    // Validate required fields
-    if (!body.name || !body.username || !body.platform) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
+      userTrackedCreators = new Set(
+        (trackedData || []).map((item) => item.kol_id)
       );
     }
 
-    // Create new KOL
-    const newKOL: KOL = {
-      id: Date.now().toString(),
-      name: body.name,
-      username: body.username,
-      platform: body.platform,
-      followers: body.followers || 0,
-      description: body.description,
-      avatarUrl: body.avatarUrl,
-      isTracking: body.isTracking ?? false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    // Transform creators data to KOL format
+    let kols: KOL[] = (creators || []).map((creator) => ({
+      id: creator.id,
+      name: creator.display_name,
+      username: creator.username || creator.creator_id,
+      platform: reversePlatformMap[creator.platform as Platform],
+      followers: creator.followers_count,
+      description: creator.bio || undefined,
+      avatarUrl: creator.avatar_url || undefined,
+      isTracking: userTrackedCreators.has(creator.creator_id),
+      createdAt: creator.created_at,
+      updatedAt: creator.updated_at,
+    }));
 
-    kolData.push(newKOL);
+    // Filter by tracking status if provided
+    if (isTracking !== null) {
+      const tracking = isTracking === "true";
+      kols = kols.filter((kol) => kol.isTracking === tracking);
+    }
 
-    return NextResponse.json(newKOL, { status: 201 });
+    return NextResponse.json(kols);
   } catch (error) {
-    console.error("Error creating KOL:", error);
+    console.error("Error fetching KOLs:", error);
     return NextResponse.json(
-      { error: "Failed to create KOL" },
+      {
+        error: "Failed to fetch KOLs",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
 }
 
-// PATCH - Update an existing KOL
+// POST - Create a new KOL (Not supported - creators are managed by the system)
+export async function POST(request: NextRequest) {
+  return NextResponse.json(
+    {
+      error: "Creating creators is not supported through this API",
+      message:
+        "Creators are automatically discovered and managed by the system",
+    },
+    { status: 403 }
+  );
+}
+
+// PATCH - Update an existing KOL (Not supported - creators are managed by the system)
 export async function PATCH(request: NextRequest) {
-  try {
-    const body: UpdateKOLInput & { id: string } = await request.json();
-
-    if (!body.id) {
-      return NextResponse.json({ error: "Missing KOL ID" }, { status: 400 });
-    }
-
-    const index = kolData.findIndex((kol) => kol.id === body.id);
-
-    if (index === -1) {
-      return NextResponse.json({ error: "KOL not found" }, { status: 404 });
-    }
-
-    // Update KOL
-    kolData[index] = {
-      ...kolData[index],
-      ...body,
-      id: body.id, // Ensure ID doesn't change
-      updatedAt: new Date().toISOString(),
-    };
-
-    return NextResponse.json(kolData[index]);
-  } catch (error) {
-    console.error("Error updating KOL:", error);
-    return NextResponse.json(
-      { error: "Failed to update KOL" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    {
+      error: "Updating creators is not supported through this API",
+      message:
+        "Creators are automatically updated by the system. To track/untrack a creator, use the tracking API instead.",
+    },
+    { status: 403 }
+  );
 }
 
-// DELETE - Delete a KOL
+// DELETE - Delete a KOL (Not supported - creators are managed by the system)
 export async function DELETE(request: NextRequest) {
-  try {
-    const body: { id: string } = await request.json();
-
-    if (!body.id) {
-      return NextResponse.json({ error: "Missing KOL ID" }, { status: 400 });
-    }
-
-    const index = kolData.findIndex((kol) => kol.id === body.id);
-
-    if (index === -1) {
-      return NextResponse.json({ error: "KOL not found" }, { status: 404 });
-    }
-
-    // Remove KOL
-    kolData.splice(index, 1);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting KOL:", error);
-    return NextResponse.json(
-      { error: "Failed to delete KOL" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    {
+      error: "Deleting creators is not supported through this API",
+      message:
+        "Creators are managed by the system. To untrack a creator, use the tracking API instead.",
+    },
+    { status: 403 }
+  );
 }
