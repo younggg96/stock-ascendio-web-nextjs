@@ -11,66 +11,24 @@ import { EmptyState } from "./EmptyState";
 import { socialPostToUnifiedPost, UnifiedPost } from "@/lib/postTypes";
 import { SwitchTab } from "./ui/switch-tab";
 import PostFeedList from "./PostFeedList";
+import { PLATFORM_TAB_OPTIONS } from "@/lib/platformConfig";
 
-const PlatformTabOption = [
-  {
-    value: "all",
-    label: "All",
-    icon: "",
-  },
-  {
-    value: "x",
-    label: "X",
-    icon: (
-      <Image
-        src="/logo/x.svg"
-        alt="X"
-        width={16}
-        height={16}
-        className="w-4 h-4"
-      />
-    ),
-  },
-  {
-    value: "reddit",
-    label: "Reddit",
-    icon: (
-      <Image
-        src="/logo/reddit.svg"
-        alt="Reddit"
-        width={16}
-        height={16}
-        className="w-4 h-4"
-      />
-    ),
-  },
-  {
-    value: "youtube",
-    label: "YouTube",
-    icon: (
-      <Image
-        src="/logo/youtube.svg"
-        alt="YouTube"
-        width={16}
-        height={16}
-        className="w-4 h-4"
-      />
-    ),
-  },
-  {
-    value: "rednote",
-    label: "Rednote",
-    icon: (
-      <Image
-        src="/logo/rednote.svg"
-        alt="Rednote"
-        width={16}
-        height={16}
-        className="w-4 h-4"
-      />
-    ),
-  },
-];
+// Convert platform config to SwitchTab format with React components
+const PlatformTabOption = PLATFORM_TAB_OPTIONS.map((option) => ({
+  value: option.value,
+  label: option.label,
+  icon: option.iconPath ? (
+    <Image
+      src={option.iconPath}
+      alt={option.label}
+      width={16}
+      height={16}
+      className="w-4 h-4"
+    />
+  ) : (
+    ""
+  ),
+}));
 
 export default function FavoritePostsPageClient() {
   const [favoritedPosts, setFavoritedPosts] = useState<UnifiedPost[]>([]);

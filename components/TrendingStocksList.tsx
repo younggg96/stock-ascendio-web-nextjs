@@ -17,15 +17,11 @@ import { TrendingTickerWithPrice } from "@/app/api/trending-tickers/route";
 import { MessageSquare, Plus, Users } from "lucide-react";
 import sp500Data from "@/data/sp500.constituents.wikilogo.json";
 import { Button } from "./ui/button";
+import { PLATFORM_CONFIG } from "@/lib/platformConfig";
 
-const platformConfig = {
-  TWITTER: { name: "X", icon: "/logo/x.svg" },
-  REDDIT: { name: "Reddit", icon: "/logo/reddit.svg" },
-  YOUTUBE: { name: "YouTube", icon: "/logo/youtube.svg" },
-  REDNOTE: { name: "Rednote", icon: "/logo/rednote.svg" },
-};
+const platformConfig = PLATFORM_CONFIG;
 
-interface StockDisplayItem {
+interface TrendingStockDisplayItem {
   ticker: string;
   companyName?: string;
   platform?: string;
@@ -38,8 +34,8 @@ interface StockDisplayItem {
   logoUrl?: string | null;
 }
 
-interface HotStocksListProps {
-  stocks?: StockDisplayItem[];
+interface TrendingStocksListProps {
+  stocks?: TrendingStockDisplayItem[];
   fetchFromApi?: boolean;
   loading?: boolean;
   title?: string;
@@ -50,7 +46,7 @@ interface HotStocksListProps {
   onAddClick?: () => void;
 }
 
-interface HotStockItemProps {
+interface TrendingStockItemProps {
   ticker: string;
   mentionCount?: number;
   sentimentScore?: number;
@@ -66,7 +62,7 @@ interface HotStockItemProps {
   onClick: () => void;
 }
 
-function HotStockItem({
+function TrendingStockItem({
   ticker,
   mentionCount,
   sentimentScore,
@@ -80,7 +76,7 @@ function HotStockItem({
   showPlatform = true,
   showMetrics = true,
   onClick,
-}: HotStockItemProps) {
+}: TrendingStockItemProps) {
   const getSentimentColor = (score?: number) => {
     if (!score) return "text-gray-900 dark:text-white";
     if (score > 50) return "text-green-500";
@@ -191,7 +187,7 @@ function HotStockItem({
   );
 }
 
-function HotStockSkeleton() {
+function TrendingStockSkeleton() {
   return (
     <TableRow className="border-b border-gray-100 dark:border-white/5">
       <TableCell className="py-3">
@@ -221,7 +217,7 @@ function HotStockSkeleton() {
   );
 }
 
-export default function HotStocksList({
+export default function TrendingStocksList({
   stocks: externalStocks,
   fetchFromApi = false,
   loading: externalLoading = false,
@@ -231,7 +227,7 @@ export default function HotStocksList({
   enableInfiniteScroll = false,
   maxHeight = "32rem",
   onAddClick,
-}: HotStocksListProps = {}) {
+}: TrendingStocksListProps = {}) {
   const router = useRouter();
   const [trendingTickers, setTrendingTickers] = useState<
     TrendingTickerWithPrice[]
@@ -245,7 +241,7 @@ export default function HotStocksList({
   const loading = fetchFromApi ? internalLoading : externalLoading;
 
   // Convert trendingTickers to StockDisplayItem format
-  const convertedTrendingTickers: StockDisplayItem[] = useMemo(() => {
+  const convertedTrendingTickers: TrendingStockDisplayItem[] = useMemo(() => {
     return trendingTickers.map((ticker) => ({
       ticker: ticker.ticker,
       platform: ticker.platform,
@@ -404,7 +400,7 @@ export default function HotStocksList({
               {loading && displayStocks.length === 0 ? (
                 <>
                   {[...Array(6)].map((_, i) => (
-                    <HotStockSkeleton key={i} />
+                    <TrendingStockSkeleton key={i} />
                   ))}
                 </>
               ) : displayStocks.length === 0 ? (
@@ -421,7 +417,7 @@ export default function HotStocksList({
                   {displayStocks.map((stock, index) => {
                     const stockInfo = stockLogoMap.get(stock.ticker);
                     return (
-                      <HotStockItem
+                      <TrendingStockItem
                         key={`${stock.ticker}-${index}`}
                         ticker={stock.ticker}
                         mentionCount={stock.mentionCount}
@@ -478,6 +474,4 @@ export default function HotStocksList({
     </SectionCard>
   );
 }
-
-// Export the type for reuse
-export type { StockDisplayItem };
+export type { TrendingStockDisplayItem };

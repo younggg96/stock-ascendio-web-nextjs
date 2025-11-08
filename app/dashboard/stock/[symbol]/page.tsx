@@ -31,7 +31,6 @@ export default function StockPage({ params }: StockPageProps) {
     setMounted(true);
     setCurrentTime(new Date());
 
-    // 检查是否有历史记录可以返回，并根据来源设置返回按钮文本
     const hasHistory = window.history.length > 1;
     setCanGoBack(hasHistory);
 

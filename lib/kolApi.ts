@@ -1,6 +1,7 @@
 // KOL types and API functions
+import { PLATFORM_CONFIG_LOWERCASE, PlatformLowercase } from "./platformConfig";
 
-export type Platform = "twitter" | "reddit" | "rednote" | "youtube";
+export type Platform = PlatformLowercase;
 
 export interface KOL {
   id: string;
@@ -35,31 +36,7 @@ export interface UpdateKOLInput {
 }
 
 // Platform display names and icons
-export const platformConfig: Record<
-  Platform,
-  { name: string; icon: string; color: string }
-> = {
-  twitter: {
-    name: "X (Twitter)",
-    icon: "/logo/x.svg",
-    color: "text-black dark:text-white",
-  },
-  reddit: {
-    name: "Reddit",
-    icon: "/logo/reddit.svg",
-    color: "text-[#FF4500]",
-  },
-  rednote: {
-    name: "Rednote",
-    icon: "/logo/rednote.svg",
-    color: "text-[#FF2442]",
-  },
-  youtube: {
-    name: "YouTube",
-    icon: "/logo/youtube.svg",
-    color: "text-[#FF0000]",
-  },
-};
+export const platformConfig = PLATFORM_CONFIG_LOWERCASE;
 
 // Format follower count
 export function formatFollowers(count: number): string {

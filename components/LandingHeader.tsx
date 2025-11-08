@@ -39,6 +39,9 @@ export default function LandingHeader() {
     return "U";
   };
 
+  // Check if profile is fully loaded
+  const isProfileLoading = isAuthenticated && !profile?.username;
+
   const handleAvatarClick = () => {
     router.push("/dashboard");
   };
@@ -60,7 +63,17 @@ export default function LandingHeader() {
         </span>
       </Link>
       <div className="flex items-center gap-3 sm:gap-4">
-        {!isLoading && (
+        {isLoading || isProfileLoading ? (
+          // Loading state - use same Button structure to prevent layout shift
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled
+            className="flex items-center gap-2 cursor-default"
+          >
+            <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          </Button>
+        ) : (
           <>
             {isAuthenticated ? (
               <>

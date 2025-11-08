@@ -23,21 +23,11 @@ import LiveButton from "./LiveButton";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { POST_TAB_OPTIONS } from "@/lib/platformConfig";
 
 type Platform = "x" | "reddit" | "youtube" | "rednote";
 
-const PostTabOption = [
-  {
-    value: "all",
-    label: "All",
-    icon: "",
-  },
-  {
-    value: "tracking",
-    label: "Tracking",
-    icon: "",
-  },
-];
+const PostTabOption = POST_TAB_OPTIONS;
 
 const PlatformTabOption = [
   {

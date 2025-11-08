@@ -38,9 +38,10 @@ import {
   Check,
   Plus,
   Loader2,
-  Search,
 } from "lucide-react";
 import { useBreakpoints } from "@/hooks";
+import { PLATFORM_CONFIG } from "@/lib/platformConfig";
+import { SearchInput } from "@/components/ui/search-input";
 
 interface TopCreatorsProps {
   limit?: number;
@@ -50,12 +51,7 @@ interface TopCreatorsProps {
   maxHeight?: string;
 }
 
-export const platformConfig = {
-  TWITTER: { name: "X", icon: "/logo/x.svg" },
-  REDDIT: { name: "Reddit", icon: "/logo/reddit.svg" },
-  YOUTUBE: { name: "YouTube", icon: "/logo/youtube.svg" },
-  REDNOTE: { name: "Rednote", icon: "/logo/rednote.svg" },
-};
+export const platformConfig = PLATFORM_CONFIG;
 
 const sortOptions: { value: SortBy; label: string; icon: React.ReactNode }[] = [
   {
@@ -271,16 +267,12 @@ export default function TopCreators({
       {showFilters && (
         <div className="flex flex-col sm:flex-row gap-2">
           {/* Search Input */}
-          <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-white/40" />
-            <Input
-              type="text"
-              placeholder="Search creators..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+          <SearchInput
+            type="text"
+            placeholder="Search KOLs..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
 
           <Select
             value={sortBy}
@@ -294,7 +286,7 @@ export default function TopCreators({
                 <SelectItem key={option.value} value={option.value}>
                   <div className="flex items-center gap-2">
                     {option.icon}
-                    <span>{option.label}</span>
+                    <span className="text-xs">{option.label}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -308,11 +300,15 @@ export default function TopCreators({
                 setSelectedPlatform(value as Platform | "all")
               }
             >
-              <SelectTrigger className="w-full sm:w-[150px]">
-                <SelectValue placeholder="All Platforms" />
+              <SelectTrigger className="w-full sm:w-[150px] text-xs">
+                <SelectValue>
+                  <span className="text-xs">All Platforms</span>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Platforms</SelectItem>
+                <SelectItem value="all">
+                  <span className="text-xs">All Platforms</span>
+                </SelectItem>
                 <SelectItem value="TWITTER">
                   <span className="text-xs">X (Twitter)</span>
                 </SelectItem>

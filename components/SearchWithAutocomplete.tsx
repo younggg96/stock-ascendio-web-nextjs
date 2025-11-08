@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, ReactNode } from "react";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SearchInput } from "@/components/ui/search-input";
 
 interface SearchItem {
   id: string;
@@ -92,14 +91,15 @@ export default function SearchWithAutocomplete<T extends SearchItem>({
 
   return (
     <div ref={searchRef} className={cn("relative", className)}>
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
-      <Input
+      <SearchInput
         placeholder={placeholder}
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         onClick={handleInputClick}
+        containerClassName="flex-none w-full"
+        iconClassName="z-10"
         className={cn(
-          "pl-10 h-9 bg-white dark:bg-card-dark border-gray-200 dark:border-white/10 text-sm",
+          "h-9 bg-white dark:bg-card-dark border-gray-200 dark:border-white/10 text-sm",
           inputClassName
         )}
       />

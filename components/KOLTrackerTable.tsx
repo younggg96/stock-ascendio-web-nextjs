@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Dialog,
   DialogContent,
@@ -294,7 +295,7 @@ export default function KOLTrackerTable({
       {/* Filters and Search */}
       <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full">
-          <Input
+          <SearchInput
             placeholder="Search tracked KOLs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -306,14 +307,26 @@ export default function KOLTrackerTable({
             }
           >
             <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="All Platforms" />
+              <SelectValue>
+                <span className="text-xs">All Platforms</span>
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Platforms</SelectItem>
-              <SelectItem value="twitter">X (Twitter)</SelectItem>
-              <SelectItem value="reddit">Reddit</SelectItem>
-              <SelectItem value="rednote">Rednote</SelectItem>
-              <SelectItem value="youtube">YouTube</SelectItem>
+              <SelectItem value="all">
+                <span className="text-xs">All Platforms</span>
+              </SelectItem>
+              <SelectItem value="twitter">
+                <span className="text-xs">X (Twitter)</span>
+              </SelectItem>
+              <SelectItem value="reddit">
+                <span className="text-xs">Reddit</span>
+              </SelectItem>
+              <SelectItem value="rednote">
+                <span className="text-xs">Rednote</span>
+              </SelectItem>
+              <SelectItem value="youtube">
+                <span className="text-xs">YouTube</span>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

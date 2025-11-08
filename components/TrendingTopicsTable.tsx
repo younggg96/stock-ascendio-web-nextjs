@@ -30,27 +30,14 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PLATFORM_CONFIG } from "@/lib/platformConfig";
+import { SearchInput } from "@/components/ui/search-input";
 
 interface TrendingTopicsTableProps {
   topics: TrendingTopic[];
   onUpdate?: () => void;
   loading?: boolean;
 }
-
-// Platform configuration
-const platformConfig: Record<
-  Platform,
-  { name: string; icon: string; color: string }
-> = {
-  TWITTER: {
-    name: "X (Twitter)",
-    icon: "/logo/x.svg",
-    color: "#1DA1F2",
-  },
-  YOUTUBE: { name: "YouTube", icon: "/logo/youtube.svg", color: "#FF0000" },
-  REDDIT: { name: "Reddit", icon: "/logo/reddit.svg", color: "#FF4500" },
-  REDNOTE: { name: "Rednote", icon: "/logo/rednote.svg", color: "#FF2442" },
-};
 
 // Format large numbers
 const formatNumber = (num: number): string => {
@@ -243,7 +230,7 @@ export default function TrendingTopicsTable({
     <div className="space-y-3">
       {/* Filters and Search */}
       <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center mt-2">
-        <Input
+        <SearchInput
           placeholder="Search topics..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -309,8 +296,8 @@ export default function TrendingTopicsTable({
                   </div>
                   <div className="flex items-center gap-1.5 ml-2">
                     <Image
-                      src={platformConfig[topic.platform].icon}
-                      alt={platformConfig[topic.platform].name}
+                      src={PLATFORM_CONFIG[topic.platform].icon}
+                      alt={PLATFORM_CONFIG[topic.platform].name}
                       width={16}
                       height={16}
                       className="opacity-70"
@@ -352,7 +339,7 @@ export default function TrendingTopicsTable({
                     {topic.related_tickers.slice(0, 3).map((ticker) => (
                       <span
                         key={ticker}
-                        className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs"
+                        className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded text-xs"
                       >
                         ${ticker}
                       </span>
@@ -444,14 +431,14 @@ export default function TrendingTopicsTable({
                     <TableCell>
                       <div className="flex items-center gap-1.5">
                         <Image
-                          src={platformConfig[topic.platform].icon}
-                          alt={platformConfig[topic.platform].name}
+                          src={PLATFORM_CONFIG[topic.platform].icon}
+                          alt={PLATFORM_CONFIG[topic.platform].name}
                           width={16}
                           height={16}
                           className="opacity-70"
                         />
                         <span className="text-xs hidden xl:inline">
-                          {platformConfig[topic.platform].name}
+                          {PLATFORM_CONFIG[topic.platform].name}
                         </span>
                       </div>
                     </TableCell>
@@ -480,7 +467,7 @@ export default function TrendingTopicsTable({
                             {topic.related_tickers.slice(0, 3).map((ticker) => (
                               <span
                                 key={ticker}
-                                className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs"
+                                className="px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded text-xs"
                               >
                                 ${ticker}
                               </span>

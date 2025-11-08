@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import HotStocksList from "./HotStocksList";
+import HotStocksList from "./TrendingStocksList";
 import TrackedStocksTable from "@/components/TrackedStocksTable";
 import StockSearchDialog from "@/components/StockSearchDialog";
 import {
   TrackedStock,
   createTrackedStock,
   deleteTrackedStock,
-  updateTrackedStock,
 } from "@/lib/trackedStockApi";
 import { toast } from "sonner";
 
