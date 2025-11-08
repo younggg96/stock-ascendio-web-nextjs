@@ -27,7 +27,7 @@ import { POST_TAB_OPTIONS } from "@/lib/platformConfig";
 
 type Platform = "x" | "reddit" | "youtube" | "rednote";
 
-const PostTabOption = POST_TAB_OPTIONS;
+const PostTabOption = [...POST_TAB_OPTIONS];
 
 const PlatformTabOption = [
   {

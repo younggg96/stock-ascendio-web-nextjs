@@ -6,6 +6,7 @@ import type { Platform } from "@/lib/supabase/database.types";
 // Map KOL platform types to database platform types
 const platformMap: Record<KOLPlatform, Platform> = {
   twitter: "TWITTER",
+  x: "TWITTER", // X is an alias for Twitter
   reddit: "REDDIT",
   youtube: "YOUTUBE",
   rednote: "REDNOTE",

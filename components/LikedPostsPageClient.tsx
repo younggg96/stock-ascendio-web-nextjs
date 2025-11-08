@@ -17,7 +17,7 @@ import { PLATFORM_TAB_OPTIONS } from "@/lib/platformConfig";
 const PlatformTabOption = PLATFORM_TAB_OPTIONS.map((option) => ({
   value: option.value,
   label: option.label,
-  icon: option.iconPath ? (
+  icon: "iconPath" in option && option.iconPath ? (
     <Image
       src={option.iconPath}
       alt={option.label}
