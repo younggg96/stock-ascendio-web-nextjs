@@ -27,6 +27,8 @@ import {
   MessageSquare,
   Users,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -117,6 +119,20 @@ export default function TrendingTopicsTable({
       setSortBy(field);
       setSortDirection("desc");
     }
+  };
+
+  // Get sort icon based on current sort state
+  const getSortIcon = (
+    field: "trending_score" | "mention_count" | "engagement_score"
+  ) => {
+    if (sortBy !== field) {
+      return <ArrowUpDown className="w-3 h-3" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="w-3 h-3" />
+    ) : (
+      <ArrowDown className="w-3 h-3" />
+    );
   };
 
   if (loading) {
@@ -370,43 +386,55 @@ export default function TrendingTopicsTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs">Topic</TableHead>
-                <TableHead className="text-xs">Platform</TableHead>
-                <TableHead className="text-xs text-center">
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => handleSort("mention_count")}
-                    className="h-6 px-2 hover:bg-transparent"
-                  >
-                    Mentions
-                    <ArrowUpDown className="ml-1 w-3 h-3" />
-                  </Button>
+                <TableHead className="text-xs font-semibold">Topic</TableHead>
+                <TableHead className="text-xs font-semibold">
+                  Platform
                 </TableHead>
-                <TableHead className="text-xs text-center">
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => handleSort("engagement_score")}
-                    className="h-6 px-2 hover:bg-transparent"
-                  >
-                    Engagement
-                    <ArrowUpDown className="ml-1 w-3 h-3" />
-                  </Button>
+                <TableHead className="text-xs text-center font-semibold">
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Mentions</span>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => handleSort("mention_count")}
+                      className="!px-1 !py-0 hover:bg-gray-200 dark:hover:bg-white/20"
+                    >
+                      {getSortIcon("mention_count")}
+                    </Button>
+                  </div>
                 </TableHead>
-                <TableHead className="text-xs text-center">
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => handleSort("trending_score")}
-                    className="h-6 px-2 hover:bg-transparent"
-                  >
-                    Trending
-                    <ArrowUpDown className="ml-1 w-3 h-3" />
-                  </Button>
+                <TableHead className="text-xs text-center font-semibold">
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Engagement</span>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => handleSort("engagement_score")}
+                      className="!px-1 !py-0 hover:bg-gray-200 dark:hover:bg-white/20"
+                    >
+                      {getSortIcon("engagement_score")}
+                    </Button>
+                  </div>
                 </TableHead>
-                <TableHead className="text-xs">Related Stocks</TableHead>
-                <TableHead className="text-xs text-center">Last Seen</TableHead>
+                <TableHead className="text-xs text-center font-semibold">
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Trending</span>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => handleSort("trending_score")}
+                      className="!px-1 !py-0 hover:bg-gray-200 dark:hover:bg-white/20"
+                    >
+                      {getSortIcon("trending_score")}
+                    </Button>
+                  </div>
+                </TableHead>
+                <TableHead className="text-xs font-semibold">
+                  Related Stocks
+                </TableHead>
+                <TableHead className="text-xs text-center font-semibold">
+                  Last Seen
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
